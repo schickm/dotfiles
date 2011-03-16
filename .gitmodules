@@ -1,0 +1,3 @@
+[submodule "python.el"]
+	path = python.el
+	url = git://github.com/schickm/python.el.git
