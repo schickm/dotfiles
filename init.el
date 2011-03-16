@@ -37,7 +37,6 @@
 
 ;;; make stuff pretty
 (require 'color-theme)
-(require 'zenburn)
 
 ;;;
 ;;; flymake
