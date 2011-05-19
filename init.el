@@ -135,18 +135,33 @@
 			      (local-set-key (kbd "M-n") 'flymake-goto-next-error)
 			      (local-set-key (kbd "M-p") 'flymake-goto-prev-error)))
 
-(when (load "flymake" t) 
-  (defun flymake-pyflakes-init () 
-    (let* ((temp-file (flymake-init-create-temp-buffer-copy 
-                       'flymake-create-temp-inplace)) 
-           (local-file (file-relative-name 
-                        temp-file 
-                        (file-name-directory buffer-file-name)))) 
-      (list "pyflakes" (list local-file)))) 
-  (add-to-list 'flymake-allowed-file-name-masks 
-               '("\\.py\\'" flymake-pyflakes-init)))
-(add-hook 'python-mode-hook 'flymake-mode)
+;; old flymake using pyflakes
+;; (when (load "flymake" t) 
+;;   (defun flymake-pyflakes-init () 
+;;     (let* ((temp-file (flymake-init-create-temp-buffer-copy 
+;;                        'flymake-create-temp-inplace)) 
+;;            (local-file (file-relative-name 
+;;                         temp-file 
+;;                         (file-name-directory buffer-file-name)))) 
+;;       (list "pyflakes" (list local-file)))) 
+;;   (add-to-list 'flymake-allowed-file-name-masks 
+;;                '("\\.py\\'" flymake-pyflakes-init)))
 
+
+(when (load "flymake" t)
+  (defun flymake-pylint-init ()
+    (let* ((temp-file (flymake-init-create-temp-buffer-copy
+                       'flymake-create-temp-inplace))
+           (local-file (file-relative-name
+                        temp-file
+                        (file-name-directory buffer-file-name))))
+      (list "~/.emacs.d/pyflymake.py" (list local-file))))
+
+  (add-to-list 'flymake-allowed-file-name-masks
+               '("\\.py\\'" flymake-pylint-init)))
+
+(add-hook 'python-mode-hook 'flymake-mode)
+(add-hook 'find-file-hook 'flymake-find-file-hook)
 ;;;
 ;;; and custom stuff
 ;;;
