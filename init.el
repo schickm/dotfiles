@@ -135,19 +135,6 @@
 			      (local-set-key (kbd "M-n") 'flymake-goto-next-error)
 			      (local-set-key (kbd "M-p") 'flymake-goto-prev-error)))
 
-;; old flymake using pyflakes
-;; (when (load "flymake" t) 
-;;   (defun flymake-pyflakes-init () 
-;;     (let* ((temp-file (flymake-init-create-temp-buffer-copy 
-;;                        'flymake-create-temp-inplace)) 
-;;            (local-file (file-relative-name 
-;;                         temp-file 
-;;                         (file-name-directory buffer-file-name)))) 
-;;       (list "pyflakes" (list local-file)))) 
-;;   (add-to-list 'flymake-allowed-file-name-masks 
-;;                '("\\.py\\'" flymake-pyflakes-init)))
-
-
 (when (load "flymake" t)
   (defun flymake-pylint-init ()
     (let* ((temp-file (flymake-init-create-temp-buffer-copy
@@ -162,6 +149,19 @@
 
 (add-hook 'python-mode-hook 'flymake-mode)
 (add-hook 'find-file-hook 'flymake-find-file-hook)
+
+;;;
+;;; javascript stuff
+;;;
+
+(require 'flymake-jslint)
+(add-hook 'js-mode-hook
+	  (lambda () 
+	    (flymake-mode t)
+	    (local-set-key (kbd "RET") 'newline-and-indent)
+	    (local-set-key (kbd "M-n") 'flymake-goto-next-error)
+	    (local-set-key (kbd "M-p") 'flymake-goto-prev-error)))
+
 ;;;
 ;;; and custom stuff
 ;;;
@@ -173,7 +173,8 @@
   ;; If there is more than one, they won't work right.
  '(ido-enable-flex-matching t)
  '(ido-mode (quote both) nil (ido))
- '(safe-local-variable-values (quote ((Encoding . utf-8) (Package . CL-USER) (Syntax . Common-Lisp) (Package . net\.html\.generator) (Package . imho) (Package . wco) (package . asdf) (Package . wco-framework) (Package . wco-framework-utils) (Package . odcl) (Package . wco-system) (Package . wcof) (Syntax . Ansi-Common-Lisp) (Package . cl-user) (Base . 10) (Syntax . ANSI-Common-Lisp)))))
+ '(lintnode-location "/home/matt/.emacs.d/lintnode")
+ '(safe-local-variable-values (quote ((Package . HUNCHENTOOT) (Syntax . COMMON-LISP) (Encoding . utf-8) (Package . CL-USER) (Syntax . Common-Lisp) (Package . net\.html\.generator) (Package . imho) (Package . wco) (package . asdf) (Package . wco-framework) (Package . wco-framework-utils) (Package . odcl) (Package . wco-system) (Package . wcof) (Syntax . Ansi-Common-Lisp) (Package . cl-user) (Base . 10) (Syntax . ANSI-Common-Lisp)))))
 (custom-set-faces
   ;; custom-set-faces was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.
