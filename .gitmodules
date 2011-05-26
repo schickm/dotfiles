@@ -5,3 +5,6 @@
 	path = flymake-python
 	url = git@github.com:schickm/flymake-python.git
 
+[submodule "JSlint"]
+	path = JSlint
+	url = git@github.com:schickm/JSLint.git
