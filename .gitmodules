@@ -4,6 +4,4 @@
 [submodule "flymake-python"]
 	path = flymake-python
 	url = git@github.com:schickm/flymake-python.git
-[submodule "lintnode"]
-	path = lintnode
-	url = git@github.com:schickm/lintnode.git
+
