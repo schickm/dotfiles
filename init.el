@@ -1,3 +1,4 @@
+
 ;;;
 ;;; interface/general emacs stuff
 ;;;
@@ -60,6 +61,9 @@
 
 (load-library "flymake-cursor")
 
+(custom-set-faces
+ '(flymake-errline ((((class color)) (:background "LightYellow" :underline "OrangeRed"))))
+ '(flymake-warnline ((((class color)) (:background "LightBlue2" :underline "Yellow")))))
 
 ;;;
 ;;; lua
@@ -132,6 +136,7 @@
 ;; and bind flymake next/prev to sane defaults
 (add-hook 'python-mode-hook '(lambda ()
 			      (local-set-key (kbd "RET") 'newline-and-indent)
+			      (add-hook 'before-save-hook 'delete-trailing-whitespace)
 			      (local-set-key (kbd "M-n") 'flymake-goto-next-error)
 			      (local-set-key (kbd "M-p") 'flymake-goto-prev-error)))
 

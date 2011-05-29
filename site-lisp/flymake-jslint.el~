@@ -16,8 +16,9 @@
 	    flymake-allowed-file-name-masks))
 
 (setq flymake-err-line-patterns 
-      (cons '("^  \\([[:digit:]]+\\) \\([[:digit:]]+\\),\\([[:digit:]]+\\): \\(.+\\)$"  
-	      nil 2 3 4)
-	    flymake-err-line-patterns))
+      (cons ; '("^  \\([[:digit:]]+\\) \\([[:digit:]]+\\),\\([[:digit:]]+\\): \\(.+\\)$" nil 2 3 4)\
+       '("^  \\([[:digit:]]+\\) \\([[:digit:]]+\\),\\([[:digit:]]+\\): \\(.+\\)$"  
+	 nil 2 4)
+       flymake-err-line-patterns))
 
 (provide 'flymake-jslint)
