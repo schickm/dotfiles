@@ -8,3 +8,7 @@
 [submodule "JSlint"]
 	path = JSlint
 	url = git@github.com:schickm/JSLint.git
+
+[submodule "django-mode"]
+	path = django-mode
+	url = git@github.com:schickm/django-mode.git

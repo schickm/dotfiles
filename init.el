@@ -165,6 +165,18 @@
 (add-hook 'python-mode-hook 'flymake-mode)
 (add-hook 'find-file-hook 'flymake-find-file-hook)
 
+
+;;;
+;;; django-mode
+;;;
+
+(require 'django-html-mode)
+(require 'django-mode)
+(yas/load-directory "~/.emacs.d/django-mode/snippets")
+
+(add-hook 'django-mode-hook '(lambda ()
+			      (add-to-list 'auto-mode-alist '("\.html$" . django-html-mode))))
+
 ;;;
 ;;; javascript stuff
 ;;;
