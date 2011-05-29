@@ -28,7 +28,7 @@
 (setq tramp-default-method "scp")
 
 ;; ignore svn dirs when grepping
-(setq grep-find-command 
+(setq grep-find-command
   "find . -type f '!' -wholename '*/.svn/*' -print0 | xargs -0 -e grep -nH -e ")
 
 ;; sweet buffer swapping action http://www.emacswiki.org/cgi-bin/wiki/buffer-move.el
@@ -53,6 +53,16 @@
       (require 'edit-server)
       (setq edit-server-new-frame nil)
       (edit-server-start)))
+
+;;;
+;;; yasnippet
+;;;
+
+(add-to-list 'load-path
+	     "~/.emacs.d/plugins/yasnippet-0.6.1c")
+(require 'yasnippet) ;; not yasnippet-bundle
+(yas/initialize)
+(yas/load-directory "~/.emacs.d/plugins/yasnippet-0.6.1c/snippets")
 
 
 ;;;
@@ -93,7 +103,7 @@
 (setq webco-dir (getenv "WEBCO_DIR"))
 ; default to the symlink
 (unless webco-dir
-  (setf webco-dir "~/web-co"))  
+  (setf webco-dir "~/web-co"))
 
 (add-to-list 'load-path (format "%s/production/third-party-source/slime" webco-dir))
 (setq inferior-lisp-program (format "%s/production/bin/devel.sh" webco-dir))
@@ -117,7 +127,7 @@
 
 (require 'slime)
 
-;;; 
+;;;
 ;;; python
 ;;;
 
@@ -161,7 +171,7 @@
 
 (require 'flymake-jslint)
 (add-hook 'js-mode-hook
-	  (lambda () 
+	  (lambda ()
 	    (flymake-mode t)
 	    (local-set-key (kbd "RET") 'newline-and-indent)
 	    (local-set-key (kbd "M-n") 'flymake-goto-next-error)
