@@ -72,8 +72,13 @@
 (load-library "flymake-cursor")
 
 (custom-set-faces
- '(flymake-errline ((((class color)) (:background "LightYellow" :underline "OrangeRed"))))
- '(flymake-warnline ((((class color)) (:background "LightBlue2" :underline "Yellow")))))
+  ;; custom-set-faces was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ '(flymake-errline ((((class color)) (:underline "OrangeRed"))))
+ '(flymake-infoline ((((class color) (background dark)) (:underline "DarkGreen"))))
+ '(flymake-warnline ((((class color)) (:underline "Yellow")))))
 
 ;;;
 ;;; lua
@@ -202,10 +207,5 @@
  '(ido-mode (quote both) nil (ido))
  '(lintnode-location "/home/matt/.emacs.d/lintnode")
  '(safe-local-variable-values (quote ((Package . HUNCHENTOOT) (Syntax . COMMON-LISP) (Encoding . utf-8) (Package . CL-USER) (Syntax . Common-Lisp) (Package . net\.html\.generator) (Package . imho) (Package . wco) (package . asdf) (Package . wco-framework) (Package . wco-framework-utils) (Package . odcl) (Package . wco-system) (Package . wcof) (Syntax . Ansi-Common-Lisp) (Package . cl-user) (Base . 10) (Syntax . ANSI-Common-Lisp)))))
-(custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- )
+
 (put 'upcase-region 'disabled nil)
