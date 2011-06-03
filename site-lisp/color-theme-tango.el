@@ -4,7 +4,7 @@
   (interactive)
   (color-theme-install
    '(color-theme-tango
-     ((background-color . "#2e3436")
+     ((background-color . "#1a1a1a")
       (background-mode . dark)
       (border-color . "#888a85")
       (cursor-color . "#fce94f")
@@ -34,10 +34,10 @@
      (font-lock-function-name-face ((t (:foreground "#edd400" :bold t :italic t))))
      (comint-highlight-input ((t (:italic t :bold t))))
      (comint-highlight-prompt ((t (:foreground "#8ae234"))))
-     (isearch ((t (:background "#f57900" :foreground "#2e3436"))))
-     (isearch-lazy-highlight-face ((t (:foreground "#2e3436" :background "#e9b96e"))))
-     (show-paren-match-face ((t (:foreground "#2e3436" :background "#73d216"))))
-     (show-paren-mismatch-face ((t (:background "#ad7fa8" :foreground "#2e3436"))))
+     (isearch ((t (:background "#f57900" :foreground "#1a1a1a"))))
+     (isearch-lazy-highlight-face ((t (:foreground "#1a1a1a" :background "#e9b96e"))))
+     (show-paren-match-face ((t (:foreground "#1a1a1a" :background "#73d216"))))
+     (show-paren-mismatch-face ((t (:background "#ad7fa8" :foreground "#1a1a1a"))))
      (minibuffer-prompt ((t (:foreground "#729fcf" :bold t))))
      (info-xref ((t (:foreground "#729fcf"))))
      (info-xref-visited ((t (:foreground "#ad7fa8"))))

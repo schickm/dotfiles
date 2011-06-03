@@ -1,4 +1,5 @@
 
+
 ;;;
 ;;; interface/general emacs stuff
 ;;;
@@ -6,6 +7,7 @@
 (tool-bar-mode -1)
 (menu-bar-mode 0)
 (scroll-bar-mode nil)
+(setq-default indent-tabs-mode nil) ; spaces over tabs
 
 (add-to-list 'load-path "~/.emacs.d/site-lisp/")
 
@@ -47,6 +49,15 @@
 (setq default-frame-alist
       '((scroll-bar-width . 5)))
 
+;; irc for emacs (erc)
+(require 'erc)
+;; Interpret mIRC-style color commands in IRC chats
+(setq erc-interpret-mirc-color t)
+
+(require 'erc-match)
+(setq erc-keywords '("matt"))
+
+
 ;; startup edit server for interacting with other apps
 (if (locate-library "edit-server")
     (progn
@@ -76,6 +87,8 @@
   ;; If you edit it by hand, you could mess it up, so be careful.
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
+ '(erc-prompt-face ((t (:background "#aaa" :foreground "Black" :weight bold))))
+ '(erc-timestamp-face ((t (:foreground "#555555" :weight bold))))
  '(flymake-errline ((((class color)) (:underline "OrangeRed"))))
  '(flymake-infoline ((((class color) (background dark)) (:underline "DarkGreen"))))
  '(flymake-warnline ((((class color)) (:underline "Yellow")))))
@@ -203,6 +216,8 @@
   ;; If you edit it by hand, you could mess it up, so be careful.
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
+ '(erc-modules (quote (autojoin button completion fill irccontrols list match menu move-to-prompt netsplit networks noncommands readonly ring scrolltobottom stamp track)))
+ '(erc-prompt "===>")
  '(ido-enable-flex-matching t)
  '(ido-mode (quote both) nil (ido))
  '(lintnode-location "/home/matt/.emacs.d/lintnode")
