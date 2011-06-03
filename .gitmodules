@@ -12,3 +12,6 @@
 [submodule "django-mode"]
 	path = django-mode
 	url = git@github.com:schickm/django-mode.git
+[submodule "autopair"]
+	path = autopair
+	url = git@github.com:schickm/autopair.git

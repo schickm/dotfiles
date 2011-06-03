@@ -1,5 +1,4 @@
 
-
 ;;;
 ;;; interface/general emacs stuff
 ;;;
@@ -75,6 +74,14 @@
 (yas/initialize)
 (yas/load-directory "~/.emacs.d/plugins/yasnippet-0.6.1c/snippets")
 
+
+;;;
+;;; autopair
+;;;
+
+(require 'autopair)
+(autopair-global-mode) ;; enable autopair in all buffers
+(add-hook 'lisp-mode-hook (lambda () (setq autopair-dont-activate t)))
 
 ;;;
 ;;; flymake
