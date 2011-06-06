@@ -1,4 +1,3 @@
-
 ;;;
 ;;; interface/general emacs stuff
 ;;;
@@ -55,7 +54,15 @@
 
 (require 'erc-match)
 (setq erc-keywords '("matt"))
+(setq erc-autojoin-channels-alist
+          '(("irc.onshored.com" "#dev" "#playground" "#webco")))
 
+(add-hook 'erc-mode-hook '(lambda ()
+                           (setq browse-url-browser-function 'browse-url-generic
+                                 browse-url-generic-program "google-chrome")
+                           ;(set (make-local-variable 'browse-url-browser-function 'browse-url-generic
+                           ;      browse-url-generic-program "google-chrome"))
+                            ))
 
 ;; startup edit server for interacting with other apps
 (if (locate-library "edit-server")
@@ -80,8 +87,12 @@
 ;;;
 
 (require 'autopair)
-(autopair-global-mode) ;; enable autopair in all buffers
-(add-hook 'lisp-mode-hook (lambda () (setq autopair-dont-activate t)))
+(defvar autopair-modes '(js-mode python-mode))
+(defun turn-on-autopair-mode () (autopair-mode 1))
+(dolist (mode autopair-modes)
+  (add-hook (intern (concat (symbol-name mode) "-hook")) 'turn-on-autopair-mode))
+
+
 
 ;;;
 ;;; flymake
@@ -94,6 +105,7 @@
   ;; If you edit it by hand, you could mess it up, so be careful.
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
+ '(erc-input-face ((t nil)))
  '(erc-prompt-face ((t (:background "#aaa" :foreground "Black" :weight bold))))
  '(erc-timestamp-face ((t (:foreground "#555555" :weight bold))))
  '(flymake-errline ((((class color)) (:underline "OrangeRed"))))
@@ -114,11 +126,11 @@
 ;; paredit always for lisp code
 (autoload 'paredit-mode "paredit"
   "Minor mode for pseudo-structurally editing Lisp code." t)
-(add-hook 'lisp-mode-hook (lambda () (paredit-mode +1)))
-
-;; autoindent always for lisp code
-(add-hook 'lisp-mode-hook '(lambda ()
-      (local-set-key (kbd "RET") 'newline-and-indent)))
+(add-hook 'lisp-mode-hook (lambda ()
+                            (paredit-mode +1)
+                            (setq autopair-dont-activate t)
+                            (local-set-key (kbd "RET") 'newline-and-indent)
+                            (slime-mode t)))
 
 ;; slime
 (global-set-key "\C-cs" 'slime-selector)
@@ -147,8 +159,7 @@
   (setq slime-startup-animation nil)
   (setq slime-complete-symbol*-fancy t)
   (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol
-   lisp-indent-function 'common-lisp-indent-function)
-  (add-hook 'lisp-mode-hook (lambda () (slime-mode t)))))
+   lisp-indent-function 'common-lisp-indent-function)))
 
 (require 'slime)
 
