@@ -27,6 +27,13 @@
 (require 'tramp)
 (setq tramp-default-method "scp")
 
+;; setup rudel for group editing
+;(add-to-list 'load-path "~/.emacs.d/rudel-0.2-4/")
+;(add-to-list 'load-path "~/.emacs.d/rudel-0.2-4/")
+;(add-to-list 'load-path "~/.emacs.d/rudel-0.2-4/")
+(load-file "~/.emacs.d/rudel-0.2-4/rudel-loaddefs.el")
+(global-rudel-minor-mode 1)
+
 ;; ignore svn dirs when grepping
 (setq grep-find-command
   "find . -type f '!' -wholename '*/.svn/*' -print0 | xargs -0 -e grep -nH -e ")
@@ -59,17 +66,21 @@
 
 (add-hook 'erc-mode-hook '(lambda ()
                            (setq browse-url-browser-function 'browse-url-generic
-                                 browse-url-generic-program "google-chrome")
+                                 browse-url-generic-program "chromium")
                            ;(set (make-local-variable 'browse-url-browser-function 'browse-url-generic
                            ;      browse-url-generic-program "google-chrome"))
                             ))
 
-;; startup edit server for interacting with other apps
+;;
+;; Edit in Emacs google chrome plugin
+;;
+
 (if (locate-library "edit-server")
     (progn
       (require 'edit-server)
       (setq edit-server-new-frame nil)
       (edit-server-start)))
+
 
 ;;;
 ;;; yasnippet
@@ -87,11 +98,10 @@
 ;;;
 
 (require 'autopair)
-(defvar autopair-modes '(js-mode python-mode))
+(defvar autopair-modes '(js-mode python-mode css-mode))
 (defun turn-on-autopair-mode () (autopair-mode 1))
 (dolist (mode autopair-modes)
   (add-hook (intern (concat (symbol-name mode) "-hook")) 'turn-on-autopair-mode))
-
 
 
 ;;;
@@ -112,12 +122,14 @@
  '(flymake-infoline ((((class color) (background dark)) (:underline "DarkGreen"))))
  '(flymake-warnline ((((class color)) (:underline "Yellow")))))
 
+
 ;;;
 ;;; lua
 ;;;
 
 (setq auto-mode-alist (cons '("\.lua$" . lua-mode) auto-mode-alist))
 (autoload 'lua-mode "lua-mode" "Lua editing mode." t)
+
 
 ;;;
 ;;; lisp
@@ -132,7 +144,10 @@
                             (local-set-key (kbd "RET") 'newline-and-indent)
                             (slime-mode t)))
 
-;; slime
+;;;
+;;; slime
+;;;
+
 (global-set-key "\C-cs" 'slime-selector)
 (setq inferior-lisp-program "/usr/bin/sbcl")
 
@@ -163,6 +178,8 @@
 
 (require 'slime)
 
+(setf slime-net-coding-system 'utf-8-unix)
+
 ;;;
 ;;; python
 ;;;
@@ -186,19 +203,19 @@
 			      (local-set-key (kbd "M-n") 'flymake-goto-next-error)
 			      (local-set-key (kbd "M-p") 'flymake-goto-prev-error)))
 
-(when (load "flymake" t)
-  (defun flymake-pylint-init ()
-    (let* ((temp-file (flymake-init-create-temp-buffer-copy
-                       'flymake-create-temp-inplace))
-           (local-file (file-relative-name
-                        temp-file
-                        (file-name-directory buffer-file-name))))
-      (list "~/.emacs.d/pyflymake.py" (list local-file))))
+;; (when (load "flymake" t)
+;;   (defun flymake-pylint-init ()
+;;     (let* ((temp-file (flymake-init-create-temp-buffer-copy
+;;                        'flymake-create-temp-inplace))
+;;            (local-file (file-relative-name
+;;                         temp-file
+;;                         (file-name-directory buffer-file-name))))
+;;       (list "~/.emacs.d/pyflymake.py" (list local-file))))
 
-  (add-to-list 'flymake-allowed-file-name-masks
-               '("\\.py\\'" flymake-pylint-init)))
+;;   (add-to-list 'flymake-allowed-file-name-masks
+;;                '("\\.py\\'" flymake-pylint-init)))
 
-(add-hook 'python-mode-hook 'flymake-mode)
+;; (add-hook 'python-mode-hook 'flymake-mode)
 (add-hook 'find-file-hook 'flymake-find-file-hook)
 
 
@@ -236,6 +253,7 @@
   ;; If there is more than one, they won't work right.
  '(erc-modules (quote (autojoin button completion fill irccontrols list match menu move-to-prompt netsplit networks noncommands readonly ring scrolltobottom stamp track)))
  '(erc-prompt "===>")
+ '(erc-track-exclude-types (quote ("JOIN" "NICK" "PART" "QUIT" "MODE" "333" "353")))
  '(ido-enable-flex-matching t)
  '(ido-mode (quote both) nil (ido))
  '(lintnode-location "/home/matt/.emacs.d/lintnode")
