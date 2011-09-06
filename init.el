@@ -21,7 +21,10 @@
 
 ;; browse docs in w3m in emacs
 (require 'w3m-load)
-(setq browse-url-browser-function 'w3m)
+;;(setq browse-url-browser-function 'w3m)
+
+(setq browse-url-browser-function 'browse-url-generic
+      browse-url-generic-program "chromium")
 
 ;; enable tramp for root editing
 (require 'tramp)
@@ -33,6 +36,19 @@
 ;(add-to-list 'load-path "~/.emacs.d/rudel-0.2-4/")
 (load-file "~/.emacs.d/rudel-0.2-4/rudel-loaddefs.el")
 (global-rudel-minor-mode 1)
+
+;; ack
+
+(add-to-list 'load-path "/path/to/ack-and-a-half")
+(autoload 'ack-and-a-half-same "ack-and-a-half" nil t)
+(autoload 'ack-and-a-half "ack-and-a-half" nil t)
+(autoload 'ack-and-a-half-find-file-samee "ack-and-a-half" nil t)
+(autoload 'ack-and-a-half-find-file "ack-and-a-half" nil t)
+;; Create shorter aliases
+(defalias 'ack 'ack-and-a-half)
+(defalias 'ack-same 'ack-and-a-half-same)
+(defalias 'ack-find-file 'ack-and-a-half-find-file)
+(defalias 'ack-find-file-same 'ack-and-a-half-find-file-same)
 
 ;; ignore svn dirs when grepping
 (setq grep-find-command
@@ -150,6 +166,8 @@
 
 (global-set-key "\C-cs" 'slime-selector)
 (setq inferior-lisp-program "/usr/bin/sbcl")
+(set-language-environment "UTF-8")
+(setf slime-net-coding-system 'utf-8-unix)
 
 ; try to get specified location of webcheckout
 (setq webco-dir (getenv "WEBCO_DIR"))
@@ -157,8 +175,8 @@
 (unless webco-dir
   (setf webco-dir "~/web-co"))
 
-(add-to-list 'load-path (format "%s/production/third-party-source/slime" webco-dir))
-(setq inferior-lisp-program (format "%s/production/bin/devel.sh" webco-dir))
+(add-to-list 'load-path (format "%s/third-party-source/slime" webco-dir))
+(setq inferior-lisp-program (format "%s/bin/devel.sh" webco-dir))
 
 (eval-after-load "slime"
 '(progn
@@ -178,7 +196,6 @@
 
 (require 'slime)
 
-(setf slime-net-coding-system 'utf-8-unix)
 
 ;;;
 ;;; python
@@ -186,6 +203,7 @@
 
 (setq
  python-shell-interpreter "ipython"
+ python-shell-virtualenv-path "/home/matt/vc/env_emulsion"
  python-shell-interpreter-args ""
  python-shell-prompt-regexp "In \\[[0-9]+\\]: "
  python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
@@ -254,6 +272,7 @@
  '(erc-modules (quote (autojoin button completion fill irccontrols list match menu move-to-prompt netsplit networks noncommands readonly ring scrolltobottom stamp track)))
  '(erc-prompt "===>")
  '(erc-track-exclude-types (quote ("JOIN" "NICK" "PART" "QUIT" "MODE" "333" "353")))
+ '(eshell-aliases-file "/home/matt/.emacs.d/eshell/alias")
  '(ido-enable-flex-matching t)
  '(ido-mode (quote both) nil (ido))
  '(lintnode-location "/home/matt/.emacs.d/lintnode")
