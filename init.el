@@ -160,12 +160,13 @@
                             (local-set-key (kbd "RET") 'newline-and-indent)
                             (slime-mode t)))
 
+(put 'if-bind 'common-lisp-indent-function '3)
+
 ;;;
 ;;; slime
 ;;;
 
 (global-set-key "\C-cs" 'slime-selector)
-(setq inferior-lisp-program "/usr/bin/sbcl")
 (set-language-environment "UTF-8")
 (setf slime-net-coding-system 'utf-8-unix)
 
@@ -175,8 +176,10 @@
 (unless webco-dir
   (setf webco-dir "~/web-co"))
 
-(add-to-list 'load-path (format "%s/third-party-source/slime" webco-dir))
+(add-to-list 'load-path (format "%s/lib/lisp/slime" webco-dir))
 (setq inferior-lisp-program (format "%s/bin/devel.sh" webco-dir))
+
+(make-directory "/tmp/slime-fasls/" t)
 
 (eval-after-load "slime"
 '(progn
@@ -190,9 +193,17 @@
 		 slime-xref-browser))
   (slime-autodoc-mode)
   (setq slime-startup-animation nil)
+  (setq slime-compile-file-options '(:fasl-directory "/tmp/slime-fasls/"))
   (setq slime-complete-symbol*-fancy t)
   (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol
    lisp-indent-function 'common-lisp-indent-function)))
+
+(add-hook 'slime-mode-hook
+          '(lambda ()
+            (define-key slime-mode-map (kbd "<f2>") 'find-tag)
+            (define-key slime-mode-map (kbd "<f3>") 'tags-search)
+            (define-key slime-mode-map (kbd "M-<f3>") 'tags-loop-continue)
+            (define-key slime-mode-map (kbd "<f4>") 'tags-query-replace)))
 
 (require 'slime)
 
@@ -203,7 +214,7 @@
 
 (setq
  python-shell-interpreter "ipython"
- python-shell-virtualenv-path "/home/matt/vc/env_emulsion"
+ python-shell-virtualenv-path "/home/matt/vc/env_emulsion/"
  python-shell-interpreter-args ""
  python-shell-prompt-regexp "In \\[[0-9]+\\]: "
  python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
