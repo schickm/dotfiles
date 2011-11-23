@@ -121,6 +121,27 @@
 
 
 ;;;
+;;; auto-complete
+;;;
+
+(require 'auto-complete-config)
+(ac-config-default)
+
+(require 'ac-slime)
+
+
+;; (defun jsn-slime-source ()
+;;   (let* ((end (move-marker (make-marker) (slime-symbol-end-pos)))
+;;   (beg (move-marker (make-marker) (slime-symbol-start-pos)))
+;;   (prefix (buffer-substring-no-properties beg end))
+;;   (completion-result (slime-contextual-completions beg end))
+;;   (completion-set (first completion-result)))
+;;     completion-set))
+
+;; (defvar ac-source-slime '((candidates . jsn-slime-source)))
+
+
+;;;
 ;;; flymake
 ;;;
 
@@ -158,7 +179,8 @@
                             (paredit-mode +1)
                             (setq autopair-dont-activate t)
                             (local-set-key (kbd "RET") 'newline-and-indent)
-                            (slime-mode t)))
+                            (slime-mode t)
+                            (auto-complete-mode t)))
 
 (put 'if-bind 'common-lisp-indent-function '3)
 
@@ -204,6 +226,8 @@
             (define-key slime-mode-map (kbd "<f3>") 'tags-search)
             (define-key slime-mode-map (kbd "M-<f3>") 'tags-loop-continue)
             (define-key slime-mode-map (kbd "<f4>") 'tags-query-replace)))
+
+(add-hook 'slime-mode-hook 'set-up-slime-ac)
 
 (require 'slime)
 
