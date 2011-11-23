@@ -1,1 +1,1 @@
-../python.el/python.el
+../lib/python.el/python.el

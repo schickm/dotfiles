@@ -15,3 +15,6 @@
 [submodule "ac-slime"]
 	path = ac-slime
 	url = git://github.com/purcell/ac-slime.git
+[submodule "lib/python.el"]
+	path = lib/python.el
+	url = git://github.com/fgallina/python.el.git
