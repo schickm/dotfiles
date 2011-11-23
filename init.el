@@ -256,19 +256,23 @@
 			      (local-set-key (kbd "M-n") 'flymake-goto-next-error)
 			      (local-set-key (kbd "M-p") 'flymake-goto-prev-error)))
 
-;; (when (load "flymake" t)
-;;   (defun flymake-pylint-init ()
-;;     (let* ((temp-file (flymake-init-create-temp-buffer-copy
-;;                        'flymake-create-temp-inplace))
-;;            (local-file (file-relative-name
-;;                         temp-file
-;;                         (file-name-directory buffer-file-name))))
-;;       (list "~/.emacs.d/pyflymake.py" (list local-file))))
+(defun flymake-create-temp-in-system-tempdir (filename prefix)
+    (make-temp-file (or prefix "flymake")))
 
-;;   (add-to-list 'flymake-allowed-file-name-masks
-;;                '("\\.py\\'" flymake-pylint-init)))
+(when (load "flymake" t)
+  (defun flymake-pylint-init ()
+    (let* ((temp-file (flymake-init-create-temp-buffer-copy
+                       'flymake-create-temp-in-system-tempdir))
+           (local-file (file-relative-name
+                        temp-file
+                        (file-name-directory buffer-file-name))))
+      (message temp-file)
+      (list "~/.emacs.d/pyflymake.py" (list temp-file))))
 
-;; (add-hook 'python-mode-hook 'flymake-mode)
+   (add-to-list 'flymake-allowed-file-name-masks
+                '("\\.py\\'" flymake-pylint-init)))
+
+(add-hook 'python-mode-hook 'flymake-mode)
 (add-hook 'find-file-hook 'flymake-find-file-hook)
 
 
@@ -276,12 +280,20 @@
 ;;; django-mode
 ;;;
 
-(require 'django-html-mode)
-(require 'django-mode)
-(yas/load-directory "~/.emacs.d/django-mode/snippets")
+;; (require 'django-html-mode)
+;; (require 'django-mode)
+;; (yas/load-directory "~/.emacs.d/django-mode/snippets")
 
-(add-hook 'django-mode-hook '(lambda ()
-			      (add-to-list 'auto-mode-alist '("\.html$" . django-html-mode))))
+;; (add-hook 'django-mode-hook '(lambda ()
+;; 			      (add-to-list 'auto-mode-alist '("\.html$" . django-html-mode))))
+
+
+;;;
+;;; pony-mode
+;;;
+(add-to-list 'load-path "~/.emacs.d/lib/pony-mode")
+(require 'pony-mode)
+
 
 ;;;
 ;;; javascript stuff
