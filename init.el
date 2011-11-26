@@ -7,7 +7,17 @@
 (scroll-bar-mode nil)
 (setq-default indent-tabs-mode nil) ; spaces over tabs
 
+(setq mac-option-key-is-meta nil)
+(setq mac-command-key-is-meta t)
+(setq mac-command-modifier 'meta)
+(setq mac-option-modifier 'control)
+
+(setq font-lock-verbose nil) ; prevent emacs from waiting to fontify things
+
 (add-to-list 'load-path "~/.emacs.d/site-lisp/")
+
+(set-default-font "-apple-Monaco-medium-normal-normal-*-13-*-*-*-m-0-iso10646-1")
+(setq-default line-spacing 2)
 
 (require 'windmove)
 ;(windmove-default-keybindings 'shift)
@@ -63,8 +73,8 @@
 
 ;;; make stuff pretty
 (require 'color-theme)
-(require 'color-theme-tango)
-(color-theme-tango)
+(require 'color-theme-railscasts)
+(color-theme-railscasts)
 
 ;; defaults for windows
 (setq default-frame-alist
@@ -123,11 +133,11 @@
 ;;;
 ;;; auto-complete
 ;;;
+;(add-to-list 'load-path "~/.emacs.d/lib/auto-complete")
+;(require 'auto-complete-config)
+;(ac-config-default)
 
-(require 'auto-complete-config)
-(ac-config-default)
-
-(require 'ac-slime)
+;(require 'ac-slime)
 
 
 ;; (defun jsn-slime-source ()
@@ -256,23 +266,24 @@
 			      (local-set-key (kbd "M-n") 'flymake-goto-next-error)
 			      (local-set-key (kbd "M-p") 'flymake-goto-prev-error)))
 
-(defun flymake-create-temp-in-system-tempdir (filename prefix)
-    (make-temp-file (or prefix "flymake")))
+;; (defun flymake-create-temp-in-system-tempdir (filename prefix)
+;;     (make-temp-file (or prefix "flymake")))
 
-(when (load "flymake" t)
-  (defun flymake-pylint-init ()
-    (let* ((temp-file (flymake-init-create-temp-buffer-copy
-                       'flymake-create-temp-in-system-tempdir))
-           (local-file (file-relative-name
-                        temp-file
-                        (file-name-directory buffer-file-name))))
-      (message temp-file)
-      (list "~/.emacs.d/pyflymake.py" (list temp-file))))
+;; (when (load "flymake" t)
+;;   (defun flymake-pylint-init ()
+;;     (let* ((temp-file (flymake-init-create-temp-buffer-copy
+;;                        'flymake-create-temp-in-system-tempdir))
+;;            (local-file (file-relative-name
+;;                         temp-file
+;;                         (file-name-directory buffer-file-name))))
+;;       (message temp-file)
+;;       (list "~/.emacs.d/pyflymake.py" (list temp-file))))
 
-   (add-to-list 'flymake-allowed-file-name-masks
-                '("\\.py\\'" flymake-pylint-init)))
+;;    (add-to-list 'flymake-allowed-file-name-masks
+;;                 '("\\.py\\'" flymake-pylint-init)))
 
-(add-hook 'python-mode-hook 'flymake-mode)
+;; (add-hook 'python-mode-hook 'flymake-mode)
+
 (add-hook 'find-file-hook 'flymake-find-file-hook)
 
 
@@ -326,3 +337,4 @@
  '(safe-local-variable-values (quote ((Package . HUNCHENTOOT) (Syntax . COMMON-LISP) (Encoding . utf-8) (Package . CL-USER) (Syntax . Common-Lisp) (Package . net\.html\.generator) (Package . imho) (Package . wco) (package . asdf) (Package . wco-framework) (Package . wco-framework-utils) (Package . odcl) (Package . wco-system) (Package . wcof) (Syntax . Ansi-Common-Lisp) (Package . cl-user) (Base . 10) (Syntax . ANSI-Common-Lisp)))))
 
 (put 'upcase-region 'disabled nil)
+(put 'erase-buffer 'disabled nil)
