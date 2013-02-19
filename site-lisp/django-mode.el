@@ -1,1 +1,0 @@
-../django-mode/django-mode.el
