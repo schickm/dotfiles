@@ -2,6 +2,8 @@
 ;;; interface/general emacs stuff
 ;;;
 
+(setq temporary-file-directory "~/AppData/Local/Temp")
+
 (tool-bar-mode -1)
 (menu-bar-mode 0)
 (scroll-bar-mode nil)
@@ -17,6 +19,9 @@
 
 (setq-default line-spacing 2)
 
+(if (file-directory-p "c:/cygwin/bin")
+    (add-to-list 'exec-path "c:/cygwin/bin"))
+
 (require 'windmove)
 ;(windmove-default-keybindings 'shift)
 (global-set-key "\M-e" 'windmove-left)
@@ -30,7 +35,16 @@
 
 ;; enable tramp for root editing
 (require 'tramp)
-(setq tramp-default-method "scp")
+(setq tramp-debug-buffer t
+      ;tramp-chunksize 250
+      tramp-verbose 6
+      tramp-default-method "scpx")
+(setq vc-ignore-dir-regexp
+      (format "\\(%s\\)\\|\\(%s\\)"
+              vc-ignore-dir-regexp
+              tramp-file-name-regexp))
+;(add-to-list 'tramp-default-proxies-alist '("dumptruck.local" nil "/ssh:matt@lachesis.onshored.com:"))
+
 
 ;; ignore svn dirs when grepping
 (setq grep-find-command
@@ -87,8 +101,7 @@
             (paredit-mode +1)
             (setq autopair-dont-activate t)
             (local-set-key (kbd "RET") 'newline-and-indent)
-            (slime-mode t)
-            (auto-complete-mode t)))
+            (slime-mode t)))
 
 (add-hook 'lisp-interaction-mode-hook
           (lambda ()
@@ -100,14 +113,46 @@
 
 (put 'if-bind 'common-lisp-indent-function '3)
 
+
+
+(add-to-list 'load-path "~/.emacs.d/site-lisp/slime/")
+(require 'slime)
+(slime-setup '(slime-fancy slime-tramp))
+
+;;;
+;;; elisp
+;;;
+
+(global-set-key (kbd "C-h C-f") 'find-function)
+
+(require 'trace)
+
+(defun trace-function-background-with-default (function)
+  "Call trace-function-background but grab default value from cursor position."
+  (interactive
+   (list
+    (intern
+     (completing-read "Trace function in background: " obarray 'fboundp t
+                      (symbol-name (variable-at-point t))))))
+  (trace-function-background function))
+
+(global-set-key (kbd "C-h C-t") 'trace-function-background-with-default)
+
 ;;;
 ;;; microsoft windows specific stuff
 ;;;
 
 (setq default-directory "C:/Users/matt/")
+(setq shell-file-name "bash")
+(setq explicit-shell-file-name shell-file-name)
+;(require 'windows-path)
+;(windows-path-activate)
+
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(ido-everywhere t))
+ '(ido-everywhere t)
+ '(safe-local-variable-values (quote ((Package . wco) (Package . imho) (Package . wcof) (Base . 10) (Syntax . Ansi-Common-Lisp)))))
