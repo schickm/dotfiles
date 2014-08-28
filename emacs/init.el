@@ -1,15 +1,15 @@
+;;; symlink emacs directory to ~/.emacs.d
+;;; eg.  ln -s ~/Projects/dotemacs/emacs/ ~/.emacs.d
+
 ;;;
 ;;; interface/general emacs stuff
 ;;;
-
-(setq temporary-file-directory "~/AppData/Local/Temp")
 
 (tool-bar-mode -1)
 (menu-bar-mode 0)
 (scroll-bar-mode nil)
 (setq-default indent-tabs-mode nil) ; spaces over tabs
 
-(server-start)
 
 (setq font-lock-verbose nil) ; prevent emacs from waiting to fontify things
 
@@ -19,8 +19,7 @@
 
 (setq-default line-spacing 2)
 
-(if (file-directory-p "c:/cygwin/bin")
-    (add-to-list 'exec-path "c:/cygwin/bin"))
+
 
 (require 'windmove)
 ;(windmove-default-keybindings 'shift)
@@ -33,17 +32,12 @@
 (require 'ido)
 (ido-mode t)
 
-;; enable tramp for root editing
-(require 'tramp)
-(setq tramp-debug-buffer t
-      ;tramp-chunksize 250
-      tramp-verbose 6
-      tramp-default-method "scpx")
-(setq vc-ignore-dir-regexp
-      (format "\\(%s\\)\\|\\(%s\\)"
-              vc-ignore-dir-regexp
-              tramp-file-name-regexp))
-;(add-to-list 'tramp-default-proxies-alist '("dumptruck.local" nil "/ssh:matt@lachesis.onshored.com:"))
+;; place backup files in temp directory
+(setq backup-directory-alist
+      `((".*" . ,temporary-file-directory)))
+(setq auto-save-file-name-transforms
+      `((".*" ,temporary-file-directory t)))
+
 
 
 ;; ignore svn dirs when grepping
@@ -60,33 +54,6 @@
 ;; defaults for windows
 (setq default-frame-alist
       '((scroll-bar-width . 5)))
-
-;; irc for emacs (erc)
-(require 'erc)
-;; Interpret mIRC-style color commands in IRC chats
-(setq erc-interpret-mirc-color t)
-
-(require 'erc-match)
-(setq erc-keywords '("matt"))
-(setq erc-autojoin-channels-alist
-          '(("irc.onshored.com" "#dev" "#playground" "#webco")))
-
-(add-hook 'erc-mode-hook '(lambda ()
-                           (setq browse-url-browser-function 'browse-url-generic
-                                 browse-url-generic-program "chromium")
-                           ;(set (make-local-variable 'browse-url-browser-function 'browse-url-generic
-                           ;      browse-url-generic-program "google-chrome"))
-                            ))
-
-
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(erc-input-face ((t nil)))
- '(erc-prompt-face ((t (:background "#aaa" :foreground "Black" :weight bold))))
- '(erc-timestamp-face ((t (:foreground "#555555" :weight bold)))))
 
 
 ;;;
@@ -115,9 +82,7 @@
 
 
 
-(add-to-list 'load-path "~/.emacs.d/site-lisp/slime/")
-(require 'slime)
-(slime-setup '(slime-fancy slime-tramp))
+
 
 ;;;
 ;;; elisp
@@ -137,16 +102,6 @@
   (trace-function-background function))
 
 (global-set-key (kbd "C-h C-t") 'trace-function-background-with-default)
-
-;;;
-;;; microsoft windows specific stuff
-;;;
-
-(setq default-directory "C:/Users/matt/")
-(setq shell-file-name "bash")
-(setq explicit-shell-file-name shell-file-name)
-;(require 'windows-path)
-;(windows-path-activate)
 
 
 (custom-set-variables
