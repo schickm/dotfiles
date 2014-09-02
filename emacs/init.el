@@ -13,7 +13,17 @@
 
 (setq font-lock-verbose nil) ; prevent emacs from waiting to fontify things
 
-(set-face-font 'default "Consolas-13.0")
+;; Font stuff
+(when (eq system-type 'darwin)  
+  ;; default Latin font (e.g. Consolas)
+  (set-face-attribute 'default nil :family "Consolas")
+  
+  ;; default font size (point * 10)
+  ;;
+  ;; WARNING!  Depending on the default font,
+  ;; if the size is not supported very well, the frame will be clipped
+  ;; so that the beginning of the buffer may not be visible correctly. 
+  (set-face-attribute 'default nil :height 165))
 
 (add-to-list 'load-path "~/.emacs.d/site-lisp/")
 
@@ -38,7 +48,9 @@
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
 
-
+;; global key bindings
+(define-key global-map (kbd "C-x f") 'find-file-in-project)
+(define-key global-map (kbd "RET") 'newline-and-indent)
 
 ;; ignore svn dirs when grepping
 (setq grep-find-command
@@ -54,6 +66,14 @@
 ;; defaults for windows
 (setq default-frame-alist
       '((scroll-bar-width . 5)))
+
+
+;;;
+;;; web-mode
+;;;
+
+(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+(add-to-list 'ac-modes 'web-mode)
 
 
 ;;;
@@ -110,4 +130,11 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(ido-everywhere t)
+ '(package-archives (quote (("gnu" . "http://elpa.gnu.org/packages/") ("marmalade" . "http://marmalade-repo.org/packages/"))))
  '(safe-local-variable-values (quote ((Package . wco) (Package . imho) (Package . wcof) (Base . 10) (Syntax . Ansi-Common-Lisp)))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
