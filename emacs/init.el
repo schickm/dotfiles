@@ -1,6 +1,12 @@
 ;;; symlink emacs directory to ~/.emacs.d
 ;;; eg.  ln -s ~/Projects/dotemacs/emacs/ ~/.emacs.d
 
+;; override package loading setup and do things manually
+(require 'package)
+(setq package-enable-at-startup nil)
+(package-initialize)
+
+
 ;;;
 ;;; interface/general emacs stuff
 ;;;
@@ -67,6 +73,21 @@
 (setq default-frame-alist
       '((scroll-bar-width . 5)))
 
+;;;
+;;; auto-complete
+;;;
+(require 'auto-complete)
+(add-to-list 'ac-dictionary-directories "~/.emacs.d/dict")
+(require 'auto-complete-config)
+(ac-config-default)
+
+;;;
+;;; autopair
+;;;
+
+(require 'autopair)
+
+
 
 ;;;
 ;;; web-mode
@@ -74,7 +95,30 @@
 
 (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
 (add-to-list 'ac-modes 'web-mode)
+(defun my-web-mode-hook ()
+  "Hooks for Web mode."
+  (emmet-mode)
+  (setq web-mode-markup-indent-offset 4)
+  (setq web-mode-css-indent-offset 4)
+  (setq web-mode-code-indent-offset 4)
+  (setq web-mode-enable-current-element-highlight t))
 
+(add-hook 'web-mode-hook  'my-web-mode-hook)
+
+;;;
+;;; emmet
+;;;
+
+(add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
+(add-hook 'css-mode-hook  'emmet-mode)
+
+
+;;;
+;;; javascript
+;;;
+
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+(add-hook 'js2-mode-hook #'(lambda () (autopair-mode)))
 
 ;;;
 ;;; lisp/paredit
@@ -129,6 +173,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(create-lockfiles nil)
  '(ido-everywhere t)
  '(package-archives (quote (("gnu" . "http://elpa.gnu.org/packages/") ("marmalade" . "http://marmalade-repo.org/packages/"))))
  '(safe-local-variable-values (quote ((Package . wco) (Package . imho) (Package . wcof) (Base . 10) (Syntax . Ansi-Common-Lisp)))))
