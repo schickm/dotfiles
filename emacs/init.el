@@ -7,6 +7,7 @@
 (package-initialize)
 
 
+
 ;;;
 ;;; interface/general emacs stuff
 ;;;
@@ -35,7 +36,7 @@
 
 (setq-default line-spacing 2)
 
-
+(global-auto-revert-mode t)
 
 (require 'windmove)
 ;(windmove-default-keybindings 'shift)
@@ -54,7 +55,11 @@
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
 
-;; global key bindings
+;; global key bindings, make command be meta and option be control
+(setq mac-command-modifier 'meta)
+(setq mac-option-modifier 'ctrl)
+
+
 (define-key global-map (kbd "C-x f") 'find-file-in-project)
 (define-key global-map (kbd "RET") 'newline-and-indent)
 
@@ -118,7 +123,64 @@
 ;;;
 
 (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-(add-hook 'js2-mode-hook #'(lambda () (autopair-mode)))
+(add-hook 'js2-mode-hook #'(lambda ()
+                             (define-key js2-mode-map (kbd "M-j") 'windmove-down)
+                             (autopair-mode)))
+(setq-default js2-concat-multiline-strings 'eol)
+
+;; taken from https://github.com/mangalam-research/software-standards/tree/master/emacs
+(defun find-file-recursively-up (regexp)
+  "Searches for regexp in the current directory and recursively in parents
+   until it finds the file or fails to find it."
+  (let* ((find-file-r (lambda (path)
+                        (or
+                         ;; search here
+                         (directory-files path t regexp)
+                         ;; not found, so move up
+                         (let* ((parent (file-name-directory
+                                         (directory-file-name path))))
+                           (and parent
+                                ;; Eventually path is "/", at which
+                                ;; point getting its parent is also
+                                ;; "/". So w/o this test, we'd recurse
+                                ;; forever.
+                                (not (string= parent path))
+                                (funcall find-file-r parent))))))
+         (start (if (or (null buffer-file-name)
+                        (file-directory-p buffer-file-name))
+                    buffer-file-name
+                  (file-name-directory buffer-file-name))))
+    (when start
+      (funcall find-file-r start))))
+
+(defun ldd-js2-parse-jshintrc ()
+  "This looks recursively up for a .jshintrc and extracts the
+globals from it to add them to js2-additional-externs."
+  (let* ((jshintrc (find-file-recursively-up "^\\.jshintrc$"))
+         (json (and jshintrc
+                    (json-read-file (car jshintrc))))
+         (globals (and json
+                       (cdr (assq 'globals json)))))
+    (when globals
+      (setq js2-additional-externs
+            (append
+             (mapcar (lambda (pair)
+                         (symbol-name (car pair)))
+                     globals)
+             js2-additional-externs))
+      (js2-reparse t))))
+
+(add-hook 'js2-init-hook 'ldd-js2-parse-jshintrc)
+
+
+
+;;;
+;;; JSON
+;;;
+
+(add-hook 'json-mode-hook #'(lambda ()
+                              (autopair-mode)))
+
 
 ;;;
 ;;; lisp/paredit
@@ -182,4 +244,4 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(web-mode-current-element-highlight-face ((t (:background "controlHighlightColor")))))
