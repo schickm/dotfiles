@@ -8,6 +8,7 @@ alias tre='tree -FCA'
 alias cpwd="pwd | tr -d '\n' | pbcopy"
 alias g='git'
 alias s='svn'
+alias npm-exec='PATH=$(npm bin):$PATH'
 
 alias emulsion.me='ssh emulsion@emulsion.me'
 alias mattschick.com='ssh mattschick.com@s35017.gridserver.com'
