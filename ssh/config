@@ -2,3 +2,8 @@ Host mattschick.com
 
 HostName mattschick.com
 User schickm
+
+
+Host rcmacmini
+HostName 66.146.207.67
+User mschick
