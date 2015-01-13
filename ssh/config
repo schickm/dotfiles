@@ -1,4 +1,7 @@
 Host mattschick.com
+	HostName mattschick.com
+	User schickm
 
-HostName mattschick.com
-User schickm
+Host otsfm
+     HostName 66.146.207.67
+     User mschick
