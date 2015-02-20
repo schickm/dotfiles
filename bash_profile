@@ -14,6 +14,15 @@ alias emulsion.me='ssh emulsion@emulsion.me'
 alias mattschick.com='ssh mattschick.com@s35017.gridserver.com'
 alias schickm.com='ssh schickmc@schickm.com'
 
+
+# load git completion file if present
+if [ -f ~/.git-completion.bash ]; then
+  . ~/.git-completion.bash
+fi
+
+# Autocomplete for 'g' as well
+complete -o default -o nospace -F _git g
+
 function parse_git_branch () {
   git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
 }

@@ -1,0 +1,24 @@
+[user]
+	email = matt@schickm.com
+	name = Matt Schick
+[push]
+	default = simple
+[filter "media"]
+	required = true
+	clean = git media clean %f
+	smudge = git media smudge %f
+[filter "hawser"]
+	clean = git hawser clean %f
+	smudge = git hawser smudge %f
+	required = true
+[alias]
+	cam = commit -am
+	st = status
+[core]
+	excludesfile = /Users/shlick/.gitignore_global
+[difftool "sourcetree"]
+	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+	path = 
+[mergetool "sourcetree"]
+	cmd = /Applications/SourceTree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	trustExitCode = true
