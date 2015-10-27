@@ -11,13 +11,18 @@ alias s='svn'
 alias npm-exec='PATH=$(npm bin):$PATH'
 
 alias emulsion.me='ssh emulsion@emulsion.me'
-alias mattschick.com='ssh mattschick.com@s35017.gridserver.com'
+alias mattschick.com='ssh schickm@mattschick.com'
 alias schickm.com='ssh schickmc@schickm.com'
 
 
 # load git completion file if present
 if [ -f ~/.git-completion.bash ]; then
   . ~/.git-completion.bash
+fi
+
+# load custom path if present
+if [ -f ~/.path ]; then
+  source ~/.path
 fi
 
 # Autocomplete for 'g' as well
