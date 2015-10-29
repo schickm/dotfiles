@@ -9,6 +9,7 @@ alias cpwd="pwd | tr -d '\n' | pbcopy"
 alias g='git'
 alias s='svn'
 alias npm-exec='PATH=$(npm bin):$PATH'
+alias htop='sudo htop'
 
 alias emulsion.me='ssh emulsion@emulsion.me'
 alias mattschick.com='ssh schickm@mattschick.com'
