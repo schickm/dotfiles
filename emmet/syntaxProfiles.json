@@ -2,5 +2,9 @@
 	"html": {
 		"self_closing_tag": false,
 		"attr_quotes": "single"
-	}
+	},
+    "jsx": {
+        "self_closing_tag": false,
+        "attr_quotes": "single"
+    }
 }
