@@ -10,17 +10,18 @@ alias g='git'
 alias s='svn'
 alias npm-exec='PATH=$(npm bin):$PATH'
 alias htop='sudo htop'
+alias pbcopy="perl -p -e 'chomp if eof' | pbcopy"
 alias atom='open -a Atom'
 
 alias emulsion.me='ssh emulsion@emulsion.me'
 alias mattschick.com='ssh schickm@mattschick.com'
-alias schickm.com='ssh schickmc@schickm.com'
+alias schickm.com='ssh schickm@schickm.com'
 
 
-# load git completion file if present
-if [ -f ~/.git-completion.bash ]; then
-  . ~/.git-completion.bash
-fi
+# load bash completion from homebrew if present
+if [ -f $(brew --prefix)/etc/bash_completion ]; then
+  . $(brew --prefix)/etc/bash_completion
+  fi
 
 # load custom path if present
 if [ -f ~/.path ]; then
