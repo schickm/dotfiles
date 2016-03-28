@@ -22,5 +22,10 @@ if [ -f ~/.path ]; then
   source ~/.path
 fi
 
-# Autocomplete for 'g' as well
-# complete -o default -o nospace -F _git g
+# up that history size
+SAVEHIST=10000
+HISTSIZE=10000
+
+# single ENTER during history completion
+zmodload zsh/complist
+bindkey -M menuselect '^M' .accept-line
