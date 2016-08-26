@@ -2,7 +2,7 @@
 	email = matt@schickm.com
 	name = Matt Schick
 [push]
-	default = simple
+	default = current
 [filter "media"]
 	required = true
 	clean = git media clean %f
@@ -13,6 +13,8 @@
 	required = true
 [alias]
 	cam = commit -am
+	cm = commit -m
+	cp = commit --patch
 	st = status
 [core]
 	excludesfile = ~/.gitignore_global
