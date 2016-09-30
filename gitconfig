@@ -16,7 +16,8 @@
 	cm = commit -m
 	cp = commit --patch
 	c = commit
-	st = status
+	st = status --short
+	log = log --graph --decorate
 [core]
 	excludesfile = ~/.gitignore_global
 	editor = /Applications/Komet.app/Contents/MacOS/Komet
