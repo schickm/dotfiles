@@ -15,6 +15,7 @@
 	cam = commit -am
 	cm = commit -m
 	cp = commit --patch
-	st = status
+	st = status --short
+	log = log --graph --decorate
 [core]
 	excludesfile = ~/.gitignore_global
