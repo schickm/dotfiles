@@ -6,3 +6,7 @@ Host mattschick.com
 Host otsfm
      HostName 66.146.207.67
      User mschick
+
+Host dbretailops
+	HostName p1-galera.ex.retailops.com
+	User schickm
