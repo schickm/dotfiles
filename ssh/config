@@ -10,3 +10,7 @@ Host otsfm
 Host dbretailops
 	HostName p1-galera.ex.retailops.com
 	User schickm
+
+Host workbench
+	HostName p0-workbench.ex.retailops.com
+	User schickm
