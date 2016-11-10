@@ -23,6 +23,10 @@ endif
 set background=light
 let g:one_allow_italics=1
 colorscheme one
+" Override the existing One color scheme for status bars, I prefer dark to
+" signify that it's active
+hi StatusLine guibg=#5c6370 guifg=#cccccc 
+hi StatusLineNC guibg=#494b53 guifg=#f0f0f0
 
 " Highlight more characters then the default
 set list lcs=eol:$,tab:→∙,space:▫︎
