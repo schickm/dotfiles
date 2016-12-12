@@ -21,3 +21,5 @@
 [core]
 	excludesfile = ~/.gitignore_global
 	editor = /Applications/Komet.app/Contents/MacOS/Komet
+[colors]
+	ui = true
