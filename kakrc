@@ -19,6 +19,10 @@ hook global BufCreate .*\.(hbs) %{
     set buffer filetype html
 }
 
+hook global BufCreate .*\.jshintrc %{
+	set buffer filetype json
+}
+
 # use editor config on load
 hook global BufOpen .* %{editorconfig-load}
 
@@ -59,7 +63,40 @@ hook global NormalIdle .* %{
 
 # linting
 hook global WinSetOption filetype=javascript %{
-	set buffer lintcmd 'jshint --reporter ~/vc/dotfiles/kak/jshint-reporter.js'
+	%sh{
+		log () {
+			echo "echo -debug \"$1\""
+        }
+
+        gnureadlink() {
+            if hash greadlink 2>/dev/null; then
+                greadlink "$@"
+            else
+                readlink "$@"
+            fi
+        }
+
+        find_in_closest_parent_dir() {
+            filename=$1
+            path=$2
+            while [[ $path != "/" ]]
+            do
+        	out=$(find $path -maxdepth 1 -mindepth 1 -name $filename)
+
+        	if [[ -n $out ]] 
+                then 
+                    echo "$path/$filename"
+        	    break
+        	fi
+
+                path=$(gnureadlink -f $path/..)
+            done
+        }
+		target_dir=$(dirname $kak_buffile)
+    	jshint_path=$(find_in_closest_parent_dir .jshintrc ${target_dir})
+
+    	echo "set buffer lintcmd 'jshint --config $jshint_path --reporter ~/vc/dotfiles/kak/jshint-reporter.js'"
+    }
 	lint-enable
 	lint
 
