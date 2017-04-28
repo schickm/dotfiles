@@ -14,3 +14,7 @@ Host dbretailops
 Host workbench
 	HostName p0-workbench.ex.retailops.com
 	User schickm
+
+Host replica
+    HostName p0-replica-1.ex.retailops.com
+    User schickm
