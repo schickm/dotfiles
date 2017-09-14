@@ -20,9 +20,25 @@
 	st = status --short
 	log = log --graph --decorate
 [core]
+    editor = kak -e 'exec A'
 	excludesfile = ~/.gitignore_global
-	editor = /Applications/Komet.app/Contents/MacOS/Komet
 [colors]
 	ui = true
+[difftool "kdiff3"]
+    trustExitCode = false
+[mergetool "kdiff3"]
+    trustExitCode = false
+    cmd = kdiff3 $BASE $LOCAL $REMOTE -o $MERGED
+[mergetool]
+    keepBackup = false
+[merge]
+	tool = kdiff3
+[diff]
+    tool = kdiff3
+
 [tig]
     line-graphics = utf-8
+    refresh-mode = auto
+    mouse = true
+[rerere]
+	enabled = true

@@ -11,10 +11,13 @@ alias npm-exec='PATH=$(npm bin):$PATH'
 alias htop='sudo htop'
 alias pbcopy="perl -p -e 'chomp if eof' | pbcopy"
 alias atom='open -a Atom'
+alias tig='tig status'
+alias rr='ranger --choosefiles=/tmp/ranger-files'
 
 alias emulsion.me='ssh emulsion@emulsion.me'
 alias mattschick.com='ssh schickm@mattschick.com'
 alias schickm.com='ssh schickm@schickm.com'
+export GOPATH=$HOME/go
 
 
 # load custom path if present
@@ -29,3 +32,12 @@ HISTSIZE=10000
 # single ENTER during history completion
 zmodload zsh/complist
 bindkey -M menuselect '^M' .accept-line
+
+unsetopt share_history
+
+gdf() {
+    echo 'Commits that exist in '$1' but not in '$2':'
+    git log --graph --pretty=format:'%Cred%h%Creset %s' --abbrev-commit $2..$1
+    echo 'Commits that exist in '$2' but not in '$1':'
+    git log --graph --pretty=format:'%Cred%h%Creset %s' --abbrev-commit $1..$2
+}
