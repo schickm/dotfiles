@@ -16,7 +16,6 @@ set global aligntab false
 set global grepcmd 'git grep -n'
 
 # use space to enter user mode
-map global normal <space> , -docstring 'leader'
 map global user w ':write<ret>' -docstring 'write current buffer'
 map global user W ':write-all<ret>' -docstring 'write all modified buffers'
 
