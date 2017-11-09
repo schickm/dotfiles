@@ -5,12 +5,6 @@ def git-edit -allow-override -params 1 -shell-candidates %{ git ls-files } %{ ed
 map global normal <a-p> ':git-edit '
 map global insert <a-p> '<esc>:git-edit '
 
-# save/save all with alt-s/alt-S
-map global normal <a-s> ':w<ret>'
-map global insert <a-s> '<esc>:w<ret>'
-map global normal <a-S> ':wa<ret>'
-map global insert <a-S> '<esc>:wa<ret>'
-
 # show git branch in modeline
 set global modelinefmt '⎇ %opt{modeline_git_branch}  %val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]'
 
@@ -21,9 +15,11 @@ set global aligntab false
 # always use git grep
 set global grepcmd 'git grep -n'
 
-# always use spaces for tab key
-# map global insert <tab> '<a-;><gt>'
-# map global insert <backtab> '<a-;><lt>'
+# use space to enter user mode
+map global normal <space> , -docstring 'leader'
+map global user w ':write<ret>' -docstring 'write current buffer'
+map global user W ':write-all<ret>' -docstring 'write all modified buffers'
+
 
 # easy access to editing my kakrc
 def kakrc -allow-override -docstring "open kakrc in a less fastidious way" %{
