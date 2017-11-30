@@ -59,11 +59,6 @@ def ide -allow-override %{
                 echo "try %{ source '${rcfile}' } catch %{ echo -debug Autoload: could not load '${rcfile}' }";
             fi
         done
-        for subdir in ${dir}/*; do
-            if [ -d "$subdir" ]; then
-                autoload $subdir
-            fi
-        done
     }
 
 	autoload ~/vc/dotfiles/kak
@@ -79,7 +74,7 @@ hook global InsertChar j %{ try %{
 hook global WinCreate .* %{
     hook window InsertChar \t %{ exec -draft -itersel h@ }
     # show line numbers on all files
-    addhl number_lines
+    addhl global/ number_lines
     search-highlighting-enable
 }
 
@@ -110,6 +105,10 @@ hook global WinCreate .* %{
 
 hook global NormalIdle .* %{
 	git update-diff
+}
+
+hook global WinSetOption filetype=perl %{
+    set window formatcmd 'perltidy'
 }
 
 # linting
@@ -166,16 +165,12 @@ def github-blame -allow-override -docstring 'Open blame on github for current fi
     open "https://$repo_url/blame/$remote_branch_name/$kak_bufname#L$line_number"
 }}
 
-def prettier-format -allow-override -docstring 'Format file with prettier' %{ %sh{
-    prettier --tab-width 4 --single-quote --trailing-comma es5 --write $kak_buffile 2>&1
-}}
-
 def -allow-override \
     -docstring 'Switch back and forth between ember template and associated route/component' \
     ember-jump  %{ %sh{
 
     subdir=$(echo "${kak_bufname}" | sed -n 's/^app\/\([[:alpha:]\-]*\)\/.*$/\1/p')
-    item_path=$(echo "${kak_bufname}" | sed -n 's/^app\/[[:alpha:]\-]*\/\(.*$\)/\1/p')
+    cur_buf=$(echo "${kak_bufname}" | sed -n 's/^app\/[[:alpha:]\-]*\/\(.*$\)/\1/p')
 
     echo "echo '${item_path}'";
 }}
