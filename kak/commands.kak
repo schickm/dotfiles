@@ -9,7 +9,7 @@ def kakrc -override -docstring "open kakrc in a less fastidious way" %{
     edit %sh{ echo ${XDG_CONFIG_HOME:-${HOME}/.config}/kak/kakrc }
 }
 
-def github-blame -override -docstring 'Open blame on github for current file and line' %{ %sh{
+def github-blame -override -docstring 'Open blame on github for current file and line' %{ evaluate-commands %sh{
     local_branch_name=$(git name-rev --name-only HEAD)
     remote_name=$(git config branch.$local_branch_name.remote || echo "origin")
     remote_branch_name=$(git config branch.$local_branch_name.merge | sed 's|refs/heads/||')
