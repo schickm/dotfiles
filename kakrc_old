@@ -1,0 +1,72 @@
+# replace fresh tabs with spaces
+hook global WinCreate .* %{
+    hook window InsertChar \t %{ exec -draft -itersel h@ }
+}
+
+# linting
+hook global WinSetOption filetype=javascript %{
+	%sh{
+		log () {
+			echo "echo -debug \"$1\""
+        }
+
+        gnureadlink() {
+            if hash greadlink 2>/dev/null; then
+                greadlink "$@"
+            else
+                readlink "$@"
+            fi
+        }
+
+        find_in_closest_parent_dir() {
+            filename=$1
+            path=$2
+            while [[ $path != "/" ]]
+            do
+        	out=$(find $path -maxdepth 1 -mindepth 1 -name $filename)
+
+        	if [[ -n $out ]] 
+                then 
+                    echo "$path/$filename"
+        	    break
+        	fi
+
+                path=$(gnureadlink -f $path/..)
+            done
+        }
+		target_dir=$(dirname $kak_buffile)
+    	jshint_path=$(find_in_closest_parent_dir .jshintrc ${target_dir})
+
+    	echo "set buffer lintcmd 'jshint --config $jshint_path --reporter ~/vc/dotfiles/kak/jshint-reporter.js'"
+    }
+    lint-enable
+    lint
+
+	hook window BufWritePost .* %{
+		lint
+	}
+}
+
+
+
+def -override \
+    -docstring 'Switch back and forth between ember template and associated route/component' \
+    ember-jump  %{ %sh{
+
+    subdir=$(echo "${kak_bufname}" | sed -n 's/^app\/\([[:alpha:]\-]*\)\/.*$/\1/p')
+    cur_buf=$(echo "${kak_bufname}" | sed -n 's/^app\/[[:alpha:]\-]*\/\(.*$\)/\1/p')
+
+    echo "echo '${item_path}'";
+}}
+# /tmp/ranger-files is populated by ranger --choosefiles
+def ranger2 -override -docstring 'Open files previously chosen by ranger' %{ %sh{
+    while read f; do
+        echo "edit $f;"
+    done < '/tmp/ranger-files'
+}}
+map global user r :ranger<ret>
+
+def suspend2 -override -params 1 %{ %sh{
+    kill -SIGTSTP $PPID
+    echo "$1"
+}}
