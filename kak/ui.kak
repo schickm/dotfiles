@@ -8,7 +8,7 @@ face global MatchingChar red,white+b
 # Show git gutter always
 hook global WinCreate .* %{
     git show-diff
-    add-highlighter window show_matching
+    add-highlighter window/ show-matching
 }
 
 # continously update git gutter
