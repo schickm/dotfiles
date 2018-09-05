@@ -8,6 +8,7 @@ hook global InsertChar j %{ try %{
   exec <esc>
 }}
 
-# use space to enter user mode
+# user mode
 map global user w ':write<ret>' -docstring 'write current buffer'
 map global user W ':write-all<ret>' -docstring 'write all modified buffers'
+map global user t ':suspend-and-resume tig<ret>' -docstring 'launch tig'
