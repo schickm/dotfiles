@@ -5,4 +5,4 @@ def -hidden load-files-from-ranger -override %{ evaluate-commands %sh{
   done < '/tmp/ranger-files'
 }}
 
-map global user r ':suspend " ranger --choosefiles=/tmp/ranger-files &&fg" load-files-from-ranger<ret>' -docstring 'select files in ranger'
+map global user r ':suspend-and-resume " ranger --choosefiles=/tmp/ranger-files" load-files-from-ranger<ret>' -docstring 'select files in ranger'
