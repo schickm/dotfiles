@@ -31,6 +31,7 @@ zmodload zsh/complist
 bindkey -M menuselect '^M' .accept-line
 
 unsetopt share_history
+setopt HIST_IGNORE_SPACE
 
 gdf() {
     echo 'Commits that exist in '$1' but not in '$2':'

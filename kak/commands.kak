@@ -19,8 +19,8 @@ def github-blame -override -docstring 'Open blame on github for current file and
     open "https://$repo_url/blame/$remote_branch_name/$kak_bufname#L$line_number"
 }}
 
-def suspend -override -params 1 %{ evaluate-commands %sh{
-  nohup sh -c "sleep 0.2; osascript -e 'tell application \"System Events\" to keystroke \"$1\\n\" '" > /dev/null 2>&1 &
+def suspend -override -params 2 %{ evaluate-commands %sh{
+  nohup sh -c "sleep 0.2; osascript -e 'tell application \"System Events\" to keystroke \"$1\\n\" ' && fg" > /dev/null 2>&1 &
   /bin/kill -SIGTSTP $PPID
-  echo "$1"
+  echo "$2"
 }}
