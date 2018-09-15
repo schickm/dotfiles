@@ -2,10 +2,11 @@
 map global normal <a-p> ':git-edit '
 map global insert <a-p> '<esc>:git-edit '
 
+
 # map jj to esc
 hook global InsertChar j %{ try %{
   exec -draft hH <a-k>jj<ret> d
-  exec <esc>
+  exec -with-hooks <esc>
 }}
 
 # user mode
