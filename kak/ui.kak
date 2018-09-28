@@ -4,6 +4,7 @@ add-highlighter global/ number-lines -hlcursor
 # Face customizations
 face global GitDiffFlags default
 face global MatchingChar red,white+b
+face global LineNumberCursor black,rgb:dddddd
 
 # Show git gutter always
 hook global WinCreate .* %{
