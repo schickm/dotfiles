@@ -11,6 +11,7 @@ source ~/vc/dotfiles/kak/auto-pairs.kak
 source ~/vc/dotfiles/kak/colorscheme.kak
 source ~/vc/dotfiles/kak/search.kak
 source ~/vc/dotfiles/kak/lsp.kak
+source ~/vc/dotfiles/kak/ember.kak
 
 source ~/.config/kak/plugins/plug.kak/rc/plug.kak
 plug Delapouite/kakoune-buffers
