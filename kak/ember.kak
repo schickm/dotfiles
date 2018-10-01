@@ -70,8 +70,11 @@ define-command ember-toggle-template \
         printf "edit %s" $(printf "$kak_bufname" | sed 's/^app/app\/templates/ ; s/\.[jt]s$/.hbs/' )
 
     elif grep_bufname '\.hbs$'; then
-    # echo "bis=baz foo=bar bran=bra" | sed -n -e "s|^.*[[:space:]]\{0,1\}foo=\(.*\)[[:space:]]\{0,1\}.*$|\1|p"
-        printf "echo %s" $(printf "$kak_opt_ember_template_toggle_map" | sed "s|.*${kak_bufname}=\(.*\).*|\1|")
+        test_var=$(printf "$kak_opt_ember_template_toggle_map" | sed "s|.*[[:space:]]\{0,1\}${kak_bufname}=\([^ ]*\).*|\1|")
+        # this is weird, for somereason test_var ends with a single quote...don't know what's going on here
+        # But I'm just stripping it off for now, will investigate later
+        test_var=$(printf "$test_var" | sed "s/\(.*\)'/\1/")
+        printf "edit $test_var\n"
     fi
 } }
 
