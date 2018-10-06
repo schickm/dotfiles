@@ -8,7 +8,6 @@ source ~/vc/dotfiles/kak/editorconfig.kak
 source ~/vc/dotfiles/kak/ranger.kak
 source ~/vc/dotfiles/kak/modeline.kak
 source ~/vc/dotfiles/kak/auto-pairs.kak
-source ~/vc/dotfiles/kak/colorscheme.kak
 source ~/vc/dotfiles/kak/search.kak
 source ~/vc/dotfiles/kak/lsp.kak
 
