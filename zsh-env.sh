@@ -5,6 +5,7 @@ alias pg='p | grep -i'
 alias tre='tree -FCA'
 alias cpwd="pwd | tr -d '\n' | pbcopy"
 alias g='git'
+alias t='tig'
 alias dc='docker-compose'
 alias npm-exec='PATH=$(npm bin):$PATH'
 alias htop='sudo htop'
