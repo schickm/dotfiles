@@ -1,5 +1,5 @@
 add-highlighter global/ number-lines -hlcursor
-
+colorscheme solarized-dark
 
 # Face customizations
 face global GitDiffFlags default

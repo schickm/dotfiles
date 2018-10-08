@@ -1,6 +1,6 @@
 
 # fuzzy find using git
-def git-edit -override -params 1 -shell-candidates %{ git ls-files } %{
+def git-edit -override -params 1 -shell-script-candidates %{ git ls-files } %{
     edit %arg{1}
 }
 

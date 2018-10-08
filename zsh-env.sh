@@ -1,4 +1,8 @@
 # add 'source dotfiles/bash_profile' to ~/.bash_profile
+export GOPATH="${HOME}/.go"
+export GOROOT="$(brew --prefix golang)/libexec"
+
+export PATH=$HOME/bin:${GOPATH}/bin:${GOROOT}/bin:$PATH
 
 alias p='ls -GF'
 alias pg='p | grep -i'
