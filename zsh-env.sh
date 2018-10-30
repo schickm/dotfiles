@@ -44,3 +44,5 @@ gdf() {
     echo 'Commits that exist in '$2' but not in '$1':'
     git log --graph --pretty=format:'%Cred%h%Creset %s' --abbrev-commit $1..$2
 }
+
+eval "$(direnv hook zsh)"
