@@ -13,3 +13,4 @@ hook global InsertChar j %{ try %{
 map global user w ':write<ret>' -docstring 'write current buffer'
 map global user W ':write-all<ret>' -docstring 'write all modified buffers'
 map global user t ':suspend-and-resume tig<ret>' -docstring 'launch tig'
+map global user g ':grep<ret>' -docstring 'grep current selection'
