@@ -7,4 +7,4 @@ ln -s ~/vc/dotfiles/tmux.conf ~/.tmux.conf
 ln -s ~/vc/dotfiles/kakrc ~/.config/kak/kakrc
 ln -s ~/vc/dotfiles/ssh/config ~/.ssh/config
 
-brew install direnv
+brew install direnv zsh zsh-completions
