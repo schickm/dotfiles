@@ -16,3 +16,10 @@ source ~/vc/dotfiles/kak/lsp.kak
 source ~/vc/dotfiles/kak/buffers.kak
 
 plug schickm/kakoune-ember
+
+evaluate-commands %sh{
+    if [ -f .kakrc.local ]
+    then
+        printf "source .kakrc.local"
+    fi
+}
