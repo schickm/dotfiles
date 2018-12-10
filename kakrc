@@ -1,4 +1,4 @@
-source ~/.config/kak/plugins/plug.kak/rc/plug.kak
+source "%val{config}/plugins/plug.kak/rc/plug.kak"
 
 source ~/vc/dotfiles/kak/commands.kak
 source ~/vc/dotfiles/kak/options.kak
