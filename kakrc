@@ -2,9 +2,9 @@ source "%val{config}/plugins/plug.kak/rc/plug.kak"
 
 source ~/vc/dotfiles/kak/commands.kak
 source ~/vc/dotfiles/kak/options.kak
+source ~/vc/dotfiles/kak/key-mapping.kak
 source ~/vc/dotfiles/kak/linting.kak
 source ~/vc/dotfiles/kak/formatting.kak
-source ~/vc/dotfiles/kak/key-mapping.kak
 source ~/vc/dotfiles/kak/tabs-vs-spaces.kak
 source ~/vc/dotfiles/kak/ui.kak
 source ~/vc/dotfiles/kak/editorconfig.kak
