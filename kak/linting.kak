@@ -14,23 +14,26 @@
 # 	cat ${lint_file_in} | yarn -s eslint --config .eslintrc.js --format=node_modules/eslint-formatter-kakoune --stdin-filename ${kak_buffile} --output-file ${lint_file_out} --stdin || true
 
 evaluate-commands %sh{
-    if [ -z "$kak_lintcmd" ]; then
-        printf "echo -debug 'linting.kak - environment var \"kak_lintcmd\" not defined, linting will be disabled'"
+    lintcmd='cat ${lint_file_in} | npx --quiet eslint --config .eslintrc.yml --format=$(npm root -g)/eslint-formatter-kakoune --stdin-filename ${kak_buffile} --output-file ${lint_file_out} --stdin || true'
+    if [ -z "$kak_javascript_lintcmd" ]; then
+        printf "echo -debug 'linting.kak - environment var \"kak_javascript_lintcmd\" not defined, using stock command'"
     else
-        printf "
-            hook global WinSetOption filetype=javascript %%{
-                set buffer lintcmd '$kak_lintcmd'
-                lint-enable
-                lint
-
-                hook -group javascript-lint-hooks window InsertEnd .* lint
-            }
-
-            hook global WinSetOption filetype=(?!javascript).* %%{
-                remove-hooks window javascript-lint-hooks
-            }
-        "
+        lintcmd="$kak_javascript_lintcmd"
     fi
+
+    printf "
+        hook global WinSetOption filetype=javascript %%{
+            set buffer lintcmd '$lintcmd'
+            lint-enable
+            lint
+
+            hook -group javascript-lint-hooks window InsertEnd .* lint
+        }
+
+        hook global WinSetOption filetype=(?!javascript).* %%{
+            remove-hooks window javascript-lint-hooks
+        }
+    "
 }
 
 
