@@ -11,3 +11,11 @@ hook global WinCreate .* %{
 hook global NormalIdle .* %{
     git update-diff
 }
+
+hook global WinSetOption filetype=markdown %{
+    add-highlighter window/ wrap
+}
+
+hook global WinSetOption filetype=(?!markdown).* %{
+    remove-highlighter window/wrap
+}
