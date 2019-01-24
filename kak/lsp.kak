@@ -8,3 +8,7 @@ evaluate-commands %sh{
     fi
 }
 eval %sh{kak-lsp --kakoune -s $kak_session}
+lsp-enable
+hook global WinSetOption filetype=javascript %{
+    lsp-enable-window
+}
