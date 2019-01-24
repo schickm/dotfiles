@@ -1,10 +1,10 @@
-source ~/.config/kak/plugins/plug.kak/rc/plug.kak
+source "%val{config}/plugins/plug.kak/rc/plug.kak"
 
 source ~/vc/dotfiles/kak/commands.kak
 source ~/vc/dotfiles/kak/options.kak
+source ~/vc/dotfiles/kak/key-mapping.kak
 source ~/vc/dotfiles/kak/linting.kak
 source ~/vc/dotfiles/kak/formatting.kak
-source ~/vc/dotfiles/kak/key-mapping.kak
 source ~/vc/dotfiles/kak/tabs-vs-spaces.kak
 source ~/vc/dotfiles/kak/ui.kak
 source ~/vc/dotfiles/kak/editorconfig.kak
@@ -16,3 +16,10 @@ source ~/vc/dotfiles/kak/lsp.kak
 source ~/vc/dotfiles/kak/buffers.kak
 
 plug schickm/kakoune-ember
+
+evaluate-commands %sh{
+    if [ -f .kakrc.local ]
+    then
+        printf "source .kakrc.local"
+    fi
+}
