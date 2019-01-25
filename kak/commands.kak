@@ -19,6 +19,10 @@ def github-blame -override -docstring 'Open blame on github for current file and
     open "https://$repo_url/blame/$remote_branch_name/$kak_bufname#L$line_number"
 }}
 
+def tig-blame -override -docstring 'Open blame in tig for current file and line' %{
+    suspend-and-resume "tig blame +%val{cursor_line} %val{buffile}" 
+}
+
 def suspend-and-resume \
     -override \
     -params 1..2 \
