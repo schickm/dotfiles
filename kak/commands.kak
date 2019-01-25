@@ -20,13 +20,14 @@ def github-blame -override -docstring 'Open blame on github for current file and
 }}
 
 def suspend-and-resume \
-	-override \
-	-params 1..2 \
-	-docstring 'suspend-and-resume <cli command> [<kak command after resume>]' \
-	%{ evaluate-commands %sh{
-  nohup sh -c "sleep 0.1; osascript -e 'tell application \"System Events\" to keystroke \"$1 &&fg\\n\" '" > /dev/null 2>&1 &
-  /bin/kill -SIGTSTP $kak_client_pid
-  if [ ! -z "$2" ]; then
-      echo "$2"
-  fi
+    -override \
+    -params 1..2 \
+    -docstring 'suspend-and-resume <cli command> [<kak command after resume>]' \
+    %{ evaluate-commands %sh{
+
+    nohup sh -c "sleep 0.1; osascript -e 'tell application \"System Events\" to keystroke \"$1 &&fg\\n\" '" > /dev/null 2>&1 &
+    /bin/kill -SIGTSTP $kak_client_pid
+    if [ ! -z "$2" ]; then
+        echo "$2"
+    fi
 }}
