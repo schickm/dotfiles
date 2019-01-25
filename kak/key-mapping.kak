@@ -9,10 +9,14 @@ hook global InsertChar j %{ try %{
   exec -with-hooks <esc>
 }}
 
+# tig mode
+declare-user-mode tig
+map global tig b ':tig-blame<ret>' -docstring 'show blame (with tig)'
+map global tig s ':suspend-and-resume "tig status"<ret>' -docstring 'show git status(with tig)'
+
 # user mode
 map global user w ':write<ret>' -docstring 'write current buffer'
 map global user W ':write-all<ret>' -docstring 'write all modified buffers'
-map global user t ':suspend-and-resume tig<ret>' -docstring 'launch tig'
-map global user b ':tig-blame<ret>' -docstring 'show blame (with tig)'
+map global user t ':enter-user-mode tig<ret>' -docstring 'tig commands'
 map global user g ':grep<ret> gg' -docstring 'grep current selection'
 map global user l ':enter-user-mode lsp<ret>' -docstring 'lsp commands'
