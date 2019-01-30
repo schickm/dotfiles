@@ -16,6 +16,7 @@ source ~/vc/dotfiles/kak/buffers.kak
 plug "andreyorst/plug.kak" noload
 plug "schickm/kakoune-ember"
 plug "alexherbo2/auto-pairs.kak"
+source ~/vc/dotfiles/kak/auto-pairs-settings.kak
 
 evaluate-commands %sh{
     if [ -f .kakrc.local ]

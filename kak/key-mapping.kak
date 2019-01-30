@@ -21,3 +21,5 @@ map global user W ':<space>write-all<ret>' -docstring 'write all modified buffer
 map global user t ':<space>enter-user-mode tig<ret>' -docstring 'tig commands'
 map global user g ':<space>grep<ret> gg' -docstring 'grep current selection'
 map global user l ':<space>enter-user-mode lsp<ret>' -docstring 'lsp commands'
+map global user s ':<space>auto-pairs-surround<ret>' -docstring 'surround'
+
