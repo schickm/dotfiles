@@ -29,15 +29,17 @@ def suspend-and-resume \
     -docstring 'suspend-and-resume <cli command> [<kak command after resume>]' \
     %{ evaluate-commands %sh{
 
+	cli_cmd="$1 && fg"
+	post_resume_cmd="$2"
 	platform=$(uname -s)
 	case $platform in
 		Darwin)
-			automate_cmd="sleep 0.01; osascript -e 'tell application \"System Events\" to keystroke \"$1 && fg\\n\" '"
+			automate_cmd="sleep 0.01; osascript -e 'tell application \"System Events\" to keystroke \"$cli_cmd\\n\" '"
 			kill_cmd="/bin/kill"
 			break
 			;;
 		Linux)
-			automate_cmd="sleep 0.2; xdotool type '$1 && fg'; xdotool key Return"
+			automate_cmd="sleep 0.2; xdotool type '$cli_cmd'; xdotool key Return"
 			kill_cmd="/usr/bin/kill"
 			break
 		    ;;
@@ -45,8 +47,8 @@ def suspend-and-resume \
 
 	nohup sh -c "$automate_cmd"  > /dev/null 2>&1 &
 	$kill_cmd -SIGTSTP $kak_client_pid
-	if [ ! -z "$2" ]; then
-		echo "$2"
+	if [ ! -z "$post_resume_cmd" ]; then
+		echo "$post_resume_cmd"
 	fi
 
 }}
