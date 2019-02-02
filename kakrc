@@ -7,7 +7,6 @@ source ~/vc/dotfiles/kak/linting.kak
 source ~/vc/dotfiles/kak/formatting.kak
 source ~/vc/dotfiles/kak/ui.kak
 source ~/vc/dotfiles/kak/editorconfig.kak
-source ~/vc/dotfiles/kak/ranger.kak
 source ~/vc/dotfiles/kak/modeline.kak
 source ~/vc/dotfiles/kak/search.kak
 source ~/vc/dotfiles/kak/lsp.kak

@@ -47,8 +47,25 @@ def suspend-and-resume \
 
 	nohup sh -c "$automate_cmd"  > /dev/null 2>&1 &
 	$kill_cmd -SIGTSTP $kak_client_pid
+
 	if [ ! -z "$post_resume_cmd" ]; then
 		echo "$post_resume_cmd"
 	fi
 
 }}
+
+def for-each-line \
+	-docstring "for-each-line <command> <path to file>: run command with the value of each line in the file" \
+	-params 2 \
+	%{ evaluate-commands %sh{
+
+	while read f; do
+		printf "$1 $f\n"
+	done < "$2"
+}}
+
+def toggle-ranger %{
+	suspend-and-resume \
+		"ranger --choosefiles=/tmp/ranger-files-%val{client_pid}" \
+		"for-each-line edit /tmp/ranger-files-%val{client_pid}"
+}
