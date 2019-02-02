@@ -1,0 +1,6 @@
+#!/bin/sh
+
+BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | grep -oE "[A-Z]+-[0-9]+")
+if [ -n "$BRANCH_NAME" ]; then
+    echo "[$BRANCH_NAME] $(cat $1)" > $1
+fi
