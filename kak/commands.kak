@@ -74,5 +74,4 @@ def suspend-and-resume \
 	if [ ! -z "$post_resume_cmd" ]; then
 		echo "$post_resume_cmd"
 	fi
-
 }}
