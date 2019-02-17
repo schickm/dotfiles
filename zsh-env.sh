@@ -7,13 +7,12 @@ alias pg='p | grep -i'
 alias tre='tree -FCA'
 alias cpwd="pwd | tr -d '\n' | pbcopy"
 alias g='git'
-alias t='tig'
+alias t='tig status'
 alias dc='docker-compose'
 alias npm-exec='PATH=$(npm bin):$PATH'
 alias htop='sudo htop'
 alias pbcopy="perl -p -e 'chomp if eof' | pbcopy"
 alias atom='open -a Atom'
-alias tig='tig status'
 alias rr='ranger --choosefiles=/tmp/ranger-files'
 
 alias emulsion.me='ssh emulsion@emulsion.me'

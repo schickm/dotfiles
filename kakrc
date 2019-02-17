@@ -5,17 +5,18 @@ source ~/vc/dotfiles/kak/options.kak
 source ~/vc/dotfiles/kak/key-mapping.kak
 source ~/vc/dotfiles/kak/linting.kak
 source ~/vc/dotfiles/kak/formatting.kak
-source ~/vc/dotfiles/kak/tabs-vs-spaces.kak
 source ~/vc/dotfiles/kak/ui.kak
 source ~/vc/dotfiles/kak/editorconfig.kak
 source ~/vc/dotfiles/kak/ranger.kak
 source ~/vc/dotfiles/kak/modeline.kak
-source ~/vc/dotfiles/kak/auto-pairs.kak
 source ~/vc/dotfiles/kak/search.kak
 source ~/vc/dotfiles/kak/lsp.kak
 source ~/vc/dotfiles/kak/buffers.kak
 
-plug schickm/kakoune-ember
+plug "andreyorst/plug.kak" noload
+plug "schickm/kakoune-ember"
+plug "alexherbo2/auto-pairs.kak"
+source ~/vc/dotfiles/kak/auto-pairs-settings.kak
 
 evaluate-commands %sh{
     if [ -f .kakrc.local ]

@@ -19,14 +19,36 @@ def github-blame -override -docstring 'Open blame on github for current file and
     open "https://$repo_url/blame/$remote_branch_name/$kak_bufname#L$line_number"
 }}
 
+def tig-blame -override -docstring 'Open blame in tig for current file and line' %{
+    suspend-and-resume "tig blame +%val{cursor_line} %val{buffile}" 
+}
+
 def suspend-and-resume \
-	-override \
-	-params 1..2 \
-	-docstring 'suspend-and-resume <cli command> [<kak command after resume>]' \
-	%{ evaluate-commands %sh{
-  nohup sh -c "sleep 0.1; osascript -e 'tell application \"System Events\" to keystroke \"$1 &&fg\\n\" '" > /dev/null 2>&1 &
-  /bin/kill -SIGTSTP $kak_client_pid
-  if [ ! -z "$2" ]; then
-      echo "$2"
-  fi
+    -override \
+    -params 1..2 \
+    -docstring 'suspend-and-resume <cli command> [<kak command after resume>]' \
+    %{ evaluate-commands %sh{
+
+	cli_cmd="$1 && fg"
+	post_resume_cmd="$2"
+	platform=$(uname -s)
+	case $platform in
+		Darwin)
+			automate_cmd="sleep 0.01; osascript -e 'tell application \"System Events\" to keystroke \"$cli_cmd\\n\" '"
+			kill_cmd="/bin/kill"
+			break
+			;;
+		Linux)
+			automate_cmd="sleep 0.2; xdotool type '$cli_cmd'; xdotool key Return"
+			kill_cmd="/usr/bin/kill"
+			break
+		    ;;
+	esac
+
+	nohup sh -c "$automate_cmd"  > /dev/null 2>&1 &
+	$kill_cmd -SIGTSTP $kak_client_pid
+	if [ ! -z "$post_resume_cmd" ]; then
+		echo "$post_resume_cmd"
+	fi
+
 }}

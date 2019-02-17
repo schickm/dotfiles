@@ -24,18 +24,23 @@
 	excludesfile = ~/.gitignore_global
 [colors]
 	ui = true
-[difftool "kdiff3"]
-    trustExitCode = false
-[mergetool "kdiff3"]
-    trustExitCode = false
-    cmd = kdiff3 $BASE $LOCAL $REMOTE -o $MERGED
-[mergetool]
-    keepBackup = false
-[merge]
-	tool = kdiff3
-[diff]
-    tool = kdiff3
 
+[diff]
+        tool = meld
+[difftool]
+        prompt = false
+[difftool "meld"]
+        trustExitCode = true
+        cmd = open -W -a Meld --args \"$LOCAL\" \"$REMOTE\"
+	cmd = /Applications/Meld.app/Contents/MacOS/Meld \"$LOCAL\" \"$REMOTE\" 
+[merge]
+        tool = meld
+[mergetool]
+        prompt = false
+[mergetool "meld"]
+        trustExitCode = true
+        # cmd = open -W -a Meld --args --auto-merge \"$PWD/$LOCAL\" \"$PWD/$BASE\" \"$PWD/$REMOTE\" --output=\"$PWD/$MERGED\"
+	cmd = /Applications/Meld.app/Contents/MacOS/Meld --auto-merge \"$LOCAL\" \"$BASE\" \"$REMOTE\" --output=\"$MERGED\"
 [tig]
     line-graphics = utf-8
     refresh-mode = auto
