@@ -21,19 +21,25 @@ evaluate-commands %sh{
         lintcmd="$kak_javascript_lintcmd"
     fi
 
-    printf "
-        hook global WinSetOption filetype=javascript %%{
-            set buffer lintcmd '$lintcmd'
-            lint-enable
-            lint
+    hasformatter=$(npm list --parseable -g | grep eslint-formatter-kakoune)
+    if [ -z "$hasformatter" ]; then
+    	printf "echo -debug 'linting.kak - eslint-formatter-kakoune is not installed, linting will be disabled. Please install it via: npm -g eslint-formatter-kakoune'"
+	else
+	    printf "
+	        hook global WinSetOption filetype=javascript %%{
+	            set buffer lintcmd '$lintcmd'
+	            lint-enable
+	            lint
 
-            hook -group javascript-lint-hooks window InsertEnd .* lint
-        }
+	            hook -group javascript-lint-hooks window InsertEnd .* lint
+	        }
 
-        hook global WinSetOption filetype=(?!javascript).* %%{
-            remove-hooks window javascript-lint-hooks
-        }
-    "
+	        hook global WinSetOption filetype=(?!javascript).* %%{
+	            remove-hooks window javascript-lint-hooks
+	        }
+	    "
+	fi
+
 }
 
 
