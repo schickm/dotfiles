@@ -24,7 +24,8 @@ def tig-blame -override -docstring 'Open blame in tig for current file and line'
 }
 
 def for-each-line \
-	-docstring "for-each-line <command> <path to file>: run command with the value of each line in the file" \
+ 	-override \
+ 	-docstring "for-each-line <command> <path to file>: run command with the value of each line in the file" \
 	-params 2 \
 	%{ evaluate-commands %sh{
 
@@ -33,7 +34,7 @@ def for-each-line \
 	done < "$2"
 }}
 
-def toggle-ranger %{
+def toggle-ranger -override %{
 	suspend-and-resume \
 		"ranger --choosefiles=/tmp/ranger-files-%val{client_pid}" \
 		"for-each-line edit /tmp/ranger-files-%val{client_pid}"
@@ -41,6 +42,7 @@ def toggle-ranger %{
 
 def suspend-and-resume \
 	-params 1..2 \
+	-override \
 	-docstring 'suspend-and-resume <cli command> [<kak command after resume>]: backgrounds current kakoune client and runs specified cli command.  Upon exit of command the optional kak command is executed.' \
 	%{ evaluate-commands %sh{
 
