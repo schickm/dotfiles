@@ -52,3 +52,60 @@ def suspend-and-resume \
 	fi
 
 }}
+
+
+define-command iterm-terminal-window-with-shell \
+	-params 1 \
+	-override \
+	-docstring '
+iterm-terminal-window <command>: create a new terminal as an iterm window
+The command passed as argument will be executed in the new terminal with the default login shell'\
+%{
+    nop %sh{
+        osascript \
+        -e "tell application \"iTerm\"" \
+        -e "    create window with default profile" \
+        -e "	tell current window" \
+        -e "		tell current session" \
+        -e "			write text \"$1\"" \
+        -e "		end tell" \
+        -e "	end tell" \
+        -e "end tell" >/dev/null
+    }
+}
+
+define-command iterm-terminal-tab-with-shell \
+	-params 1 \
+	-override \
+	-docstring '
+iterm-terminal-tab <command>: create a new terminal as an iterm tab
+The command passed as argument will be executed in the new terminal with the default login shell'\
+%{
+    nop %sh{
+        osascript \
+        -e "tell application \"iTerm\"" \
+        -e "	tell current window" \
+        -e "    	create tab with default profile" \
+        -e "		tell current tab" \
+        -e "			tell current session" \
+        -e "				write text \"$1\"" \
+        -e "			end tell" \
+        -e "		end tell" \
+        -e "	end tell" \
+        -e "end tell" >/dev/null
+    }
+}
+
+define-command new-kak-window \
+	-override \
+	-docstring 'new-kak-window: launch a new window with kak connected to this session' \
+%{
+	iterm-terminal-window-with-shell "kak -c %val{session}"
+}
+
+define-command new-kak-tab \
+	-override \
+	-docstring 'new-kak-tab: launch a new tab with kak connected to this session' \
+%{
+	iterm-terminal-tab-with-shell "kak -c %val{session}"
+}
