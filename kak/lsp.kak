@@ -7,6 +7,7 @@ evaluate-commands %sh{
         echo "echo -debug %{Dependency unmet: typescript-language-server, please install it to use kak-lsp}"
     fi
 }
+
 eval %sh{kak-lsp --kakoune -s $kak_session}
 lsp-enable
 hook global WinSetOption filetype=javascript %{

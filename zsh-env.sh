@@ -1,8 +1,6 @@
 # add 'source dotfiles/bash_profile' to ~/.bash_profile
-export GOPATH="${HOME}/.go"
-export GOROOT="$(brew --prefix golang)/libexec"
 
-export PATH=$HOME/bin:${GOPATH}/bin:${GOROOT}/bin:$PATH
+export PATH=$HOME/bin:$PATH
 
 alias p='ls -GF'
 alias pg='p | grep -i'
@@ -45,3 +43,7 @@ gdf() {
 }
 
 eval "$(direnv hook zsh)"
+
+if command -v pyenv 1>/dev/null 2>&1; then
+    eval "$(pyenv init -)"
+fi
