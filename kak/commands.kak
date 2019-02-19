@@ -75,3 +75,25 @@ def suspend-and-resume \
 		echo "$post_resume_cmd"
 	fi
 }}
+
+declare-option -docstring 'shell command to run when running an npm command' \
+	str npmruncmd "npm run"
+
+define-command npm-run \
+	-params 1 \
+	-override \
+	-docstring %{npm-run <script>: Runs the specified script in the cwd's package.json} \
+	-shell-script-candidates %{
+		jq -c -r  ".scripts | keys | map(select(test(\"${1}\"))) | .[]" < package.json
+	} \
+	%{ evaluate-commands %sh{
+		output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-npm-run.XXXXXXXX)/fifo
+		mkfifo ${output}
+		( eval ${kak_opt_npmruncmd} "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
+
+		printf %s\\n "evaluate-commands -try-client '$kak_opt_toolsclient' %{
+			edit! -fifo ${output} -scroll *npm-run*
+			hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+		}"
+	} }
+
