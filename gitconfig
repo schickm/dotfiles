@@ -20,8 +20,8 @@
 	st = status --short
 	log = log --graph --decorate
 [core]
-    editor = kak -e 'execute-keys -with-hooks A'
 	excludesfile = ~/.gitignore_global
+	editor = "kak -e 'autowrap-enable; execute-keys -with-hooks A'"
 [colors]
 	ui = true
 
