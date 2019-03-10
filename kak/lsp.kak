@@ -13,3 +13,6 @@ lsp-enable
 hook global WinSetOption filetype=javascript %{
     lsp-enable-window
 }
+
+# turn on verbose logging for kak-lsp
+# nop %sh{ (kak-lsp -s $kak_session -vvv ) > /tmp/kak-lsp.log 2>&1 < /dev/null & }
