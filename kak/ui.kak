@@ -1,5 +1,5 @@
 add-highlighter global/ number-lines -hlcursor
-colorscheme solarized-dark
+colorscheme solarized-light
 
 # Show git gutter always
 hook global WinCreate .* %{
