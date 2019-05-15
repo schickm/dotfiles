@@ -3,4 +3,5 @@ abbrev_defs
 auto-save-list/
 ac-comphist.dat
 .DS_Store
+scripts/**/node_modules
 
