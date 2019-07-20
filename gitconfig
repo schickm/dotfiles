@@ -20,8 +20,9 @@
 	st = status --short
 	log = log --graph --decorate
 [core]
-	excludesfile = ~/.gitignore_global
 	editor = "kak -e 'autowrap-enable; execute-keys -with-hooks A'"
+	excludesfile = /Users/mattschick/.gitignore_global
+    pager = diff-so-fancy | less --tabs=4 -RFX
 [colors]
 	ui = true
 
@@ -35,12 +36,13 @@
 	cmd = /Applications/Meld.app/Contents/MacOS/Meld \"$LOCAL\" \"$REMOTE\" 
 [merge]
         tool = meld
+        # conflictstyle = diff3
 [mergetool]
         prompt = false
+	keepBackup = false
 [mergetool "meld"]
         trustExitCode = true
-        # cmd = open -W -a Meld --args --auto-merge \"$PWD/$LOCAL\" \"$PWD/$BASE\" \"$PWD/$REMOTE\" --output=\"$PWD/$MERGED\"
-	cmd = /Applications/Meld.app/Contents/MacOS/Meld --auto-merge \"$LOCAL\" \"$BASE\" \"$REMOTE\" --output=\"$MERGED\"
+	cmd = /Applications/Meld.app/Contents/MacOS/Meld \"$LOCAL\" \"$BASE\" \"$REMOTE\" --output=\"$MERGED\" --diff \"$BASE\" \"$LOCAL\" --diff \"$BASE\" \"$REMOTE\"
 [tig]
     line-graphics = utf-8
     refresh-mode = auto
