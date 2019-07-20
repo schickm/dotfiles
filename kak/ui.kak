@@ -14,6 +14,7 @@ hook global NormalIdle .* %{
 
 hook global WinSetOption filetype=markdown %{
     add-highlighter window/ wrap
+    autowrap-enable
 }
 
 hook global WinSetOption filetype=(?!markdown).* %{

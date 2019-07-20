@@ -28,4 +28,12 @@ evaluate-commands %sh{
 
 }
 
+hook global WinSetOption filetype=markdown %{
+	set buffer formatcmd 'cat ${format_file_in} | npx prettier --stdin --parser markdown --prose-wrap always > ${format_file_out}'
+    hook -group markdown-format-hooks window BufWritePre .* format
+}
+
+hook global WinSetOption filetype=(?!markdown).* %{
+    remove-hooks window markdown-format-hooks
+}
 
