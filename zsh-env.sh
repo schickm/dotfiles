@@ -1,6 +1,6 @@
 # add 'source dotfiles/bash_profile' to ~/.bash_profile
 
-export PATH=$HOME/bin:$PATH
+export PATH=$HOME/bin:$HOME/.cargo/bin:$PATH
 
 alias p='ls -GF'
 alias pg='p | grep -i'
