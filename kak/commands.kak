@@ -23,6 +23,20 @@ def tig-blame -override -docstring 'Open blame in tig for current file and line'
     suspend-and-resume "tig blame +%val{cursor_line} %val{buffile}" 
 }
 
+def jellyvision-stash-browse \
+	-override \
+	-docstring 'Open on JV Stash for current file and line' \
+	%{ evaluate-commands %sh{
+
+    local_branch_name=$(git name-rev --name-only HEAD)
+    remote_name=$(git config branch.$local_branch_name.remote || echo "origin")
+    remote_branch_name=$(git config branch.$local_branch_name.merge)
+    repo_url=$(git config remote.$remote_name.url)
+    repo_url=$(echo "$repo_url" | sed 's|^.*@||; s|:[[:digit:]]*/\([a-z]*\)/|/projects/\1/repos/|; s|\.git$||')
+    line_number=$(echo "$kak_selection_desc" | sed -n 's/^.*,\([[:digit:]]*\).*$/\1/p')
+    open "https://$repo_url/browse/$kak_bufname?at=$remote_branch_name#$line_number"
+}}
+
 def for-each-line \
  	-override \
  	-docstring "for-each-line <command> <path to file>: run command with the value of each line in the file" \
