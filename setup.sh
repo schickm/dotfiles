@@ -8,6 +8,9 @@ ln -s ~/vc/dotfiles/kakrc ~/.config/kak/kakrc
 ln -s ~/vc/dotfiles/ssh/config ~/.ssh/config
 ln -s ~/vc/dotfiles/tigrc ~/.tigrc
 
+mkdir -p ~/Library/Preferences/kak-lsp/
+ln -s ~/vc/dotfiles/kak-lsp.toml ~/Library/Preferences/kak-lsp/kak-lsp.toml
+
 brew install direnv zsh zsh-completions coreutils tig jq rust pup
 brew cask install amethyst
 
