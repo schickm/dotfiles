@@ -33,7 +33,7 @@ def jellyvision-stash-browse \
     remote_branch_name=$(git config branch.$local_branch_name.merge)
     repo_url=$(git config remote.$remote_name.url)
     repo_url=$(echo "$repo_url" | sed 's|^.*@||; s|:[[:digit:]]*/\([a-z]*\)/|/projects/\1/repos/|; s|\.git$||')
-    line_number=$(echo "$kak_selection_desc" | sed -n 's/^.*,\([[:digit:]]*\).*$/\1/p')
+    line_number=$(echo "$kak_selection_desc" | sed 's/^\([0-9]*\)\.[0-9]*,\([0-9]*\).*$/\1-\2/')
     open "https://$repo_url/browse/$kak_bufname?at=$remote_branch_name#$line_number"
 }}
 
