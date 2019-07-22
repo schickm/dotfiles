@@ -1,6 +1,5 @@
 # available vars for running linting
-# lint_file_in  - name of file that contains code to be linted
-# lint_file_out - destination for linted code
+# 
 # kak_buffile     - origional name of file that had the code to be linted
 #
 # The best way to deal with setting this is to use direnv
@@ -11,7 +10,7 @@
 # BEWARE - I am explicitly ignoring the exit code from eslint
 # once I'm on eslint 5, I can just ignore exit code 1 and allow errors for 2
 # but on eslint <5 it sends error code 1 for config errrors and lint errors
-# 	cat ${lint_file_in} | yarn -s eslint --config .eslintrc.js --format=node_modules/eslint-formatter-kakoune --stdin-filename ${kak_buffile} --output-file ${lint_file_out} --stdin || true
+# 	run() { cat "$1" | npx --quiet eslint --format=$(npm root -g)/eslint-formatter-kakoune --stdin-filename ${kak_buffile} --stdin; } && run
 
 evaluate-commands %sh{
     lintcmd='cat ${lint_file_in} | npx --quiet eslint --config .eslintrc.yml --format=$(npm root -g)/eslint-formatter-kakoune --stdin-filename ${kak_buffile} --output-file ${lint_file_out} --stdin || true'
