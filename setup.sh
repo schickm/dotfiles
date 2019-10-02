@@ -7,6 +7,7 @@ ln -s ~/vc/dotfiles/tmux.conf ~/.tmux.conf
 ln -s ~/vc/dotfiles/kakrc ~/.config/kak/kakrc
 ln -s ~/vc/dotfiles/ssh/config ~/.ssh/config
 ln -s ~/vc/dotfiles/tigrc ~/.tigrc
+ln -s ~/vc/dotfiles/kak-mgr.sh ~/bin/k
 
 mkdir -p ~/Library/Preferences/kak-lsp/
 ln -s ~/vc/dotfiles/kak-lsp.toml ~/Library/Preferences/kak-lsp/kak-lsp.toml
