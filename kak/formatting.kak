@@ -36,3 +36,11 @@ hook global WinSetOption filetype=(?!markdown).* %{
     remove-hooks window markdown-format-hooks
 }
 
+hook global WinSetOption filetype=rust %{
+	set window formatcmd 'rustfmt'
+	hook -group rust-format-hooks window BufWritePre .* format
+}
+
+hook global WinSetOption filetype=(?!rust).* %{
+    remove-hooks window rust-format-hooks
+}
