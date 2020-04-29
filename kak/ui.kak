@@ -1,15 +1,10 @@
 add-highlighter global/ number-lines -hlcursor
 colorscheme solarized-light
 
-# Show git gutter always
 hook global WinCreate .* %{
-    git show-diff
     add-highlighter window/ show-matching
-}
-
-# continously update git gutter
-hook global NormalIdle .* %{
-    git update-diff
+	# Show git gutter always when viewing file under version control
+	conditionally-enable-git-gutter
 }
 
 hook global WinSetOption filetype=markdown %{
