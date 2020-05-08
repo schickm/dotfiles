@@ -171,24 +171,16 @@ define-command new-kak-tab \
 	iterm-terminal-tab-with-shell "kak -c %val{session}"
 }
 
-# the kak logic behind conditionally-enable-git-gutter
-define-command enable-updating-git-gutter \
-	-hidden \
-	-override %{
-	git show-diff
-
-	hook buffer NormalIdle .* %{
-		git update-diff
-	}
-}
-
 define-command conditionally-enable-git-gutter \
 	-override \
 	-docstring '
 conditionally-enable-git-gutter: show git gutter if current buffer is actually under
 version control.' \
-%{ evaluate-commands %sh{
+%{
+	evaluate-commands %sh{
+	# This ensures that we only enable git diffing when our buffer
+	# has a file that's actually under version control
 	if git ls-files --error-unmatch $kak_buffile >/dev/null 2>&1 ; then
-		printf "enable-updating-git-gutter"
+		printf "git show-diff"
 	fi
 } }
