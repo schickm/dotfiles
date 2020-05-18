@@ -16,13 +16,13 @@ map global tig s ': suspend-and-resume "tig status"<ret>' -docstring 'show git s
 map global tig m ': suspend-and-resume "tig"<ret>' -docstring 'show main view (with tig)'
 
 # user mode
+map global user s ': surround<ret>' -docstring 'Enter surround mode'
 map global user w ': write<ret>' -docstring 'write current buffer'
 map global user W ': write-all<ret>' -docstring 'write all modified buffers'
 map global user t ': enter-user-mode tig<ret>' -docstring 'tig commands'
 map global user g ': grep<ret> gg' -docstring 'grep current selection'
 map global user l ': enter-user-mode lsp<ret>' -docstring 'lsp commands'
 map global user r ': toggle-ranger<ret>' -docstring 'select files in ranger'
-map global user s ': auto-pairs-surround<ret>' -docstring 'surround'
 
 # System clipboard handling
 # ─────────────────────────

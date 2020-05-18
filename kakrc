@@ -17,8 +17,16 @@ plug "andreyorst/plug.kak" noload
 
 plug "schickm/kakoune-ember"
 
-plug "alexherbo2/auto-pairs.kak"
-source ~/vc/dotfiles/kak/auto-pairs-settings.kak
+plug "alexherbo2/auto-pairs.kak" config %{
+    hook global WinSetOption filetype=(javascript|kak) %{
+    	auto-pairs-enable
+    }
+}
+
+plug "alexherbo2/surround.kak" config %{
+    set-option global surround_begin auto-pairs-disable
+    set-option global surround_end auto-pairs-enable
+}
 
 evaluate-commands %sh{
     if [ -f .kakrc.local ]
