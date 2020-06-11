@@ -1,8 +1,8 @@
 add-highlighter global/ number-lines -hlcursor
+add-highlighter global/ show-matching
 colorscheme solarized-light
 
 hook global WinCreate .* %{
-    add-highlighter window/ show-matching
 	# Show git gutter always when viewing file under version control
 	conditionally-enable-git-gutter
 }
