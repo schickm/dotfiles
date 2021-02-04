@@ -21,7 +21,6 @@ def enable-lint \
 	%{
 
     set-option window lintcmd %arg{1}
-    lint-enable
     lint
 
 	# Run linting when we exit insert mode
@@ -43,7 +42,7 @@ hook -once global WinSetOption filetype=javascript %{ evaluate-commands %sh{
 
     hasformatter=$(npm list --parseable -g | grep eslint-formatter-kakoune)
     if [ -z "$hasformatter" ]; then
-    	printf "echo -debug 'linting.kak - eslint-formatter-kakoune is not installed, linting will be disabled. Please install it via: npm -g eslint-formatter-kakoune'"
+    	printf "echo -debug 'linting.kak - eslint-formatter-kakoune is not installed, linting will be disabled. Please install it via: npm i -g eslint-formatter-kakoune'"
 	else
 	    printf "
 			enable-lint '$lintcmd' javascript-lint-hooks
