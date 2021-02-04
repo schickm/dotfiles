@@ -47,3 +47,8 @@ eval "$(direnv hook zsh)"
 if command -v pyenv 1>/dev/null 2>&1; then
     eval "$(pyenv init -)"
 fi
+
+# -X leaves file contents on the screen when less exits.
+# -F makes less quit if the entire output can be displayed on one screen.
+# -R displays ANSI color escape sequences in "raw" form.
+export LESS="-XFR"
