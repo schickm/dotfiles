@@ -42,7 +42,9 @@ gdf() {
     git log --graph --pretty=format:'%Cred%h%Creset %s' --abbrev-commit $1..$2
 }
 
-eval "$(direnv hook zsh)"
+if command -v direnv 1>/dev/null 2>&1; then
+    eval "$(direnv hook zsh)"
+fi
 
 if command -v pyenv 1>/dev/null 2>&1; then
     eval "$(pyenv init -)"
