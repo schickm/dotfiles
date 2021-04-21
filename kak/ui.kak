@@ -8,10 +8,10 @@ hook global WinCreate .* %{
 }
 
 hook global WinSetOption filetype=markdown %{
-    add-highlighter window/ wrap
-    autowrap-enable
+    add-highlighter window/wrap wrap -word
+
+	hook window WinSetOption filetype=(?!markdown).* %{
+	    remove-highlighter window/wrap
+	}
 }
 
-hook global WinSetOption filetype=(?!markdown).* %{
-    remove-highlighter window/wrap
-}
