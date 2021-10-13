@@ -2,19 +2,18 @@ Host mattschick.com
 	HostName mattschick.com
 	User schickm
 
-
-Host otsfm
-     HostName 66.146.207.67
-     User mschick
-
-Host dbretailops
-	HostName p1-galera.ex.retailops.com
+Host schickm.com
+	HostName schickm.com
 	User schickm
 
-Host workbench
-	HostName p0-workbench.ex.retailops.com
-	User schickm
+Host compy
+	HostName 192.168.1.64
+	User matt
 
-Host replica
-    HostName p0-replica-1.ex.retailops.com
-    User schickm
+Host odroid
+	HostName 192.168.1.65
+	User matt
+
+Host opalstack
+	HostName opal7.opalstacked.com
+	User schickm

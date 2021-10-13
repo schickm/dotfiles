@@ -55,7 +55,6 @@ map global kakoune t ': rename-client tools <semicolon> set global toolsclient t
 # user mode
 map global user f ': toggle-broot<ret>' -docstring 'select files in broot'
 map global user g ': enter-grep-mode<ret>' -docstring 'grep current selection or prompt'
-# map global user l ': enter-user-mode lsp<ret>' -docstring 'lsp commands'
 map global user k ': enter-user-mode kakoune<ret>' -docstring 'kakoune specific helpers'
 map global user l ': enter-user-mode local<ret>' -docstring 'local commands'
 map global user L ': enter-user-mode lint<ret>' -docstring 'lint commands'

@@ -12,51 +12,27 @@
 # but on eslint <5 it sends error code 1 for config errrors and lint errors
 # 	run() { cat "$1" | npx --quiet eslint --format=$(npm root -g)/eslint-formatter-kakoune --stdin-filename ${kak_buffile} --stdin; } && run
 
-
-# sets the lintcmd, runs lint right away, and sets up hooks to lint at appropriate times
-def enable-lint \
-	-hidden \
-	-override \
-	-params 2 \
-	%{
-
-    set-option window lintcmd %arg{1}
-    lint
-
-	# Run linting when we exit insert mode
-    hook -group %arg{2} window ModeChange pop:insert:.* lint
-    # ...and when we delete some code in normal mode
-    hook -group %arg{2} window NormalKey d lint
-
-}
-
 # working on getting the logic below to live in it's own hook.
-hook -once global WinSetOption filetype=javascript %{ evaluate-commands %sh{
+hook -once global WinSetOption filetype=(javascript|typescript) %{ evaluate-commands %sh{
+	if test "$kak_opt_deno_active" = "false"; then
 
-    lintcmd='cat ${lint_file_in} | npx --quiet eslint --config .eslintrc.yml --format=$(npm root -g)/eslint-formatter-kakoune --stdin-filename ${kak_buffile} --output-file ${lint_file_out} --stdin || true'
-    if [ -z "$kak_javascript_lintcmd" ]; then
-        printf "echo -debug 'linting.kak - environment var \"kak_javascript_lintcmd\" not defined, using stock command'"
-    else
-        lintcmd="$kak_javascript_lintcmd"
-    fi
+	    lintcmd='cat ${lint_file_in} | npx --quiet eslint --config .eslintrc.yml --format=$(npm root -g)/eslint-formatter-kakoune --stdin-filename ${kak_buffile} --output-file ${lint_file_out} --stdin || true'
+	    if [ -z "$kak_javascript_lintcmd" ]; then
+	        printf "echo -debug 'linting.kak - environment var \"kak_javascript_lintcmd\" not defined, using stock command'"
+	    else
+	        lintcmd="$kak_javascript_lintcmd"
+	    fi
 
-    hasformatter=$(npm list --parseable -g | grep eslint-formatter-kakoune)
-    if [ -z "$hasformatter" ]; then
-    	printf "echo -debug 'linting.kak - eslint-formatter-kakoune is not installed, linting will be disabled. Please install it via: npm i -g eslint-formatter-kakoune'"
-	else
 	    printf "
+	    echo -debug 'got lint cmd $lintcmd'
 			enable-lint '$lintcmd' javascript-lint-hooks
 
-	        hook global WinSetOption filetype=javascript %%{
-	            enable-javascript-lint '$lintcmd' javascript-lint-hooks
-	        }
-
-	        hook global WinSetOption filetype=(?!javascript).* %%{
-	            remove-hooks window javascript-lint-hooks
+	        hook global WinSetOption filetype=(javascript|typescript) %%{
+				enable-lint '$lintcmd' javascript-lint-hooks
+	            hook -once -always window WinSetOption filetype=.* %%{ remove-hooks window javascript-lint-hooks }
 	        }
 	    "
-	fi
-
+    fi
 } }
 
 hook global WinSetOption filetype=sh %{

@@ -54,6 +54,12 @@ def toggle-ranger -override %{
 		"for-each-line edit /tmp/ranger-files-%val{client_pid}"
 }
 
+def toggle-broot -override %{
+	suspend-and-resume \
+		"broot --out=/tmp/broot-files-%val{client_pid}" \
+		"for-each-line edit /tmp/broot-files-%val{client_pid}"
+}
+
 def suspend-and-resume \
 	-params 1..2 \
 	-override \
@@ -135,6 +141,30 @@ The command passed as argument will be executed in the new terminal with the def
     }
 }
 
+define-command launch-node-inspector \
+    -override \
+    -docstring 'launch-node-inspector: uses applescript to open Chrome and open the node debugging tools' \
+%{
+	nop %sh{
+		osascript \
+		-e "set debugUrl to \"chrome://inspect\"" \
+		-e "set js to \"document.getElementById('node-frontend').click();\"" \
+		-e "tell application \"Google Chrome\"" \
+		-e "	if windows = {} then" \
+		-e "		make new window" \
+		-e "		set URL of (active tab of window 1) to debugUrl" \
+		-e "	else" \
+		-e "		make new tab at the end of window 1 with properties {URL:debugUrl}" \
+		-e "	end if" \
+		-e "	delay 0.5" \
+		-e "	set lastWindow to front window" \
+		-e "	execute front window's active tab javascript js" \
+		-e "	tell lastWindow to close active tab" \
+		-e "  activate" \
+		-e "end tell"
+	 }
+}
+
 define-command iterm-terminal-tab-with-shell \
 	-params 1 \
 	-override \
@@ -178,9 +208,70 @@ conditionally-enable-git-gutter: show git gutter if current buffer is actually u
 version control.' \
 %{
 	evaluate-commands %sh{
-	# This ensures that we only enable git diffing when our buffer
-	# has a file that's actually under version control
-	if git ls-files --error-unmatch $kak_buffile >/dev/null 2>&1 ; then
-		printf "git show-diff"
-	fi
-} }
+		# This ensures that we only enable git diffing when our buffer
+		# has a file that's actually under version control
+		if git ls-files --error-unmatch $kak_buffile >/dev/null 2>&1 ; then
+			printf "
+				git show-diff
+				hook buffer BufWritePost .* %%{
+					git update-diff
+				}
+			"
+		else
+			printf "echo -debug \"conditionally-enable-git-gutter - skipping file $kak_buffile as it's not under version control\""
+		fi
+	}
+}
+
+define-command run-async-command \
+    -override \
+    -docstring 'run-async-command: runs command another buffer' \
+    -params 1 %{
+
+    evaluate-commands %sh{
+        output=$(mktemp -d -t kak-temp-XXXXXXXX)/fifo
+        mkfifo ${output}
+
+        ( eval $1 > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
+        echo "
+            evaluate-commands -try-client '$kak_opt_toolsclient' %{
+                edit! -fifo ${output} *cmd*
+                hook buffer BufClose .* %{
+                    nop %sh{
+                        rm -r $(dirname ${output})
+                    }
+                }
+            }
+        "
+    }
+}
+# sets the lintcmd, runs lint right away, and sets up hooks to lint at appropriate times
+def enable-lint \
+	-docstring 'enable-lint <lint cmd> <hook group> - sets up linting for given window' \
+	-override \
+	-params 2 \
+	%{
+
+	echo -debug "running lint cmd " %arg{1} 
+    set-option window lintcmd %arg{1}
+
+	# Run linting when we exit insert mode
+    hook -group %arg{2} window ModeChange pop:insert:.* lint
+    # ...and when we delete some code in normal mode
+    hook -group %arg{2} window NormalKey d lint
+    # and run lint for the first time.  Something was wrong with the context
+    # so I had to run it inside this normal idle hook
+	hook -group %arg{2} -once window NormalIdle .* lint
+}
+
+declare-option bool deno_active false
+
+define-command use-deno \
+	-override \
+	-docstring 'use-deno: sets up kak to treat all filetype=typescript as deno' \
+	-params 0 %{
+
+	set-option global deno_active true
+	set-option global lsp_toml_path '~/vc/dotfiles/kak-lsp-deno.toml' 
+}
+

@@ -9,12 +9,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.596.0",
     "cheerio": "^1.0.0-rc.3",
     "columnify": "^1.5.4",
+    "md5": "^2.2.1",
     "node-fetch": "^2.5.0",
     "word-wrap": "^1.2.3"
   },
   "devDependencies": {
-    "eslint": "^6.0.1"
+    "eslint": "^6.0.1",
+    "prettier": "^1.19.1"
   }
 }

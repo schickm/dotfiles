@@ -1,2 +1,3 @@
-# use editor config on load
-hook global BufCreate .* %{editorconfig-load}
+# use editor config on load for all windows except kak ones like *debug* or
+# *scratch*
+hook global WinCreate ^[^*]+$ %{editorconfig-load}

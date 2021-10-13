@@ -28,6 +28,6 @@ indent_style = tab
 
 
 # Matches the exact files either package.json or .travis.yml
-[{package.json,.travis.yml}]
+[{package.json,.travis.yml,Jenkinsfile}]
 indent_style = space
 indent_size = 2
