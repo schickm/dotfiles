@@ -17,14 +17,12 @@ plug "andreyorst/plug.kak" noload
 
 plug "schickm/kakoune-ember"
 
-
 plug "alexherbo2/auto-pairs.kak" config %{
     enable-auto-pairs
 }
 
+plug "alexherbo2/lib.kak" 
 plug "alexherbo2/surround.kak" 
-
-plug "occivink/kakoune-find"
 
 evaluate-commands %sh{
     if [ -f .kakrc.local ]
