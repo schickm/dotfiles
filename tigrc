@@ -1,4 +1,5 @@
 bind status + >git commit --amend
+bind status P !<git push --no-verify --force
 set tab-size = 4
 bind generic C >git commit
 bind generic	W	:toggle ignore-space	# Toggle ignoring whitespace in diffs

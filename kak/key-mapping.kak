@@ -9,19 +9,23 @@ hook global InsertChar j %{ try %{
   exec -with-hooks <esc>
 }}
 
-# tig mode
 declare-user-mode tig
 map global tig b ': tig-blame<ret>' -docstring 'show blame (with tig)'
 map global tig s ': suspend-and-resume "tig status"<ret>' -docstring 'show git status (with tig)'
 map global tig m ': suspend-and-resume "tig"<ret>' -docstring 'show main view (with tig)'
 map global tig + ': git-amend-current-buffer<ret>' -docstring 'append this files changes to most recent commit'
+map global tig P ': suspend-and-resume "git push -f --no-verify"<ret>'
 define-command -hidden -override git-amend-current-buffer %{
-    nop %sh {
-	git reset -- %val{buffile}
+    write
+    nop %sh{
+	git reset -- "$kak_buffile"
+	git add "$kak_buffile"
+	git commit --amend --no-edit 
     }
+    echo -markup "{Information}%val{bufname} amended to git commit:" %sh{ git log -n 1 --format=%s }
 }
 
-# lint mode
+
 declare-user-mode lint
 map global lint n ': lint-next-message<ret>: lint-show<ret>' -docstring 'next lint message'
 map global lint p ': lint-previous-message<ret>: lint-show<ret>' -docstring 'previous lint message'
@@ -30,17 +34,14 @@ hook global ModeChange push:[^:]*:next-key\[user.spell\] %{
     hook -once -always window NormalIdle .* spell-clear
 }
 
-# local mode
 declare-user-mode local
-
-# kak mode
 
 declare-user-mode kakoune
 map global kakoune l ': e .kakrc.local<ret>' -docstring 'edit .kakrc.local'
 map global kakoune s ': source %val{buffile}<ret>' -docstring 'source current buffer'
+map global kakoune e ': evaluate-commands %val{selection}<ret>' -docstring 'eval current selection'
 map global kakoune t ': rename-client tools <semicolon> set global toolsclient tools<ret>' -docstring 'mark current client as toolsclient'
 
-# user mode
 map global user f ': toggle-broot<ret>' -docstring 'select files in broot'
 map global user g ': enter-grep-mode<ret>' -docstring 'grep current selection or prompt'
 map global user k ': enter-user-mode kakoune<ret>' -docstring 'kakoune specific helpers'
