@@ -14,7 +14,7 @@ map global tig b ': tig-blame<ret>' -docstring 'show blame (with tig)'
 map global tig s ': suspend-and-resume "tig status"<ret>' -docstring 'show git status (with tig)'
 map global tig m ': suspend-and-resume "tig"<ret>' -docstring 'show main view (with tig)'
 map global tig + ': git-amend-current-buffer<ret>' -docstring 'append this files changes to most recent commit'
-map global tig P ': suspend-and-resume "git push -f --no-verify"<ret>'
+map global tig P ': suspend-and-resume "git push -f --no-verify"<ret>' -docstring 'force push (no verify)'
 define-command -hidden -override git-amend-current-buffer %{
     write
     nop %sh{

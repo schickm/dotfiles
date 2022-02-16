@@ -263,15 +263,3 @@ def enable-lint \
     # so I had to run it inside this normal idle hook
 	hook -group %arg{2} -once window NormalIdle .* lint
 }
-
-declare-option bool deno_active false
-
-define-command use-deno \
-	-override \
-	-docstring 'use-deno: sets up kak to treat all filetype=typescript as deno' \
-	-params 0 %{
-
-	set-option global deno_active true
-	set-option global lsp_toml_path '~/vc/dotfiles/kak-lsp-deno.toml' 
-}
-
