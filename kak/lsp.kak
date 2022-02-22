@@ -9,7 +9,7 @@ eval %sh{kak-lsp --kakoune -s $kak_session}
 
 hook global WinSetOption filetype=(typescript) %{
     # enable to setup debug logging of kak-lsp
-    set global lsp_cmd "kak-lsp -s %val{session} -vvv --log /tmp/kak-lsp.log --config kak-lsp.toml"
+    set global lsp_cmd "kak-lsp -s %val{session} --log /tmp/kak-lsp.log --config kak-lsp.toml"
     lsp-enable-window
     lsp-auto-hover-enable
 }
