@@ -12,6 +12,7 @@ source ~/vc/dotfiles/kak/modeline.kak
 source ~/vc/dotfiles/kak/search.kak
 source ~/vc/dotfiles/kak/lsp.kak
 source ~/vc/dotfiles/kak/buffers.kak
+source ~/vc/dotfiles/kak/npm.kak
 
 plug "andreyorst/plug.kak" noload
 
