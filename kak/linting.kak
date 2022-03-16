@@ -14,24 +14,19 @@
 
 # working on getting the logic below to live in it's own hook.
 hook -once global WinSetOption filetype=(javascript|typescript) %{ evaluate-commands %sh{
-	if test "$kak_opt_deno_active" = "false"; then
 
-	    lintcmd='cat ${lint_file_in} | npx --quiet eslint --config .eslintrc.yml --format=$(npm root -g)/eslint-formatter-kakoune --stdin-filename ${kak_buffile} --output-file ${lint_file_out} --stdin || true'
-	    if [ -z "$kak_javascript_lintcmd" ]; then
-	        printf "echo -debug 'linting.kak - environment var \"kak_javascript_lintcmd\" not defined, using stock command'"
-	    else
-	        lintcmd="$kak_javascript_lintcmd"
-	    fi
+    # lintcmd='cat ${lint_file_in} | npx --quiet eslint --config .eslintrc.yml --format=$(npm root -g)/eslint-formatter-kakoune --stdin-filename ${kak_buffile} --output-file ${lint_file_out} --stdin || true'
+    if [ "$kak_javascript_lintcmd" ]; then
+        lintcmd="$kak_javascript_lintcmd"
+        printf "
+        echo -debug 'got lint cmd $lintcmd'
+    		enable-lint '$lintcmd' javascript-lint-hooks
 
-	    printf "
-	    echo -debug 'got lint cmd $lintcmd'
-			enable-lint '$lintcmd' javascript-lint-hooks
-
-	        hook global WinSetOption filetype=(javascript|typescript) %%{
-				enable-lint '$lintcmd' javascript-lint-hooks
-	            hook -once -always window WinSetOption filetype=.* %%{ remove-hooks window javascript-lint-hooks }
-	        }
-	    "
+            hook global WinSetOption filetype=(javascript|typescript) %%{
+		enable-lint '$lintcmd' javascript-lint-hooks
+                hook -once -always window WinSetOption filetype=.* %%{ remove-hooks window javascript-lint-hooks }
+            }
+        "
     fi
 } }
 
