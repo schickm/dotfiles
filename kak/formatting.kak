@@ -33,14 +33,6 @@ hook global WinSetOption deno_active=false %{
 	remove-hooks window deno-hooks
 }
 
-hook global WinSetOption filetype=markdown %{
-	set buffer formatcmd 'cat ${format_file_in} | npx prettier --stdin --parser markdown --prose-wrap always > ${format_file_out}'
-    hook -group markdown-format-hooks window BufWritePre .* format
-}
-
-hook global WinSetOption filetype=(?!markdown).* %{
-    remove-hooks window markdown-format-hooks
-}
 
 hook global WinSetOption filetype=yaml %{
 	set buffer formatcmd 'npx --quiet prettier --parser=yaml --stdin-filepath=${kak_buffile} --stdin'

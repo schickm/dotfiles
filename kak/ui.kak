@@ -9,11 +9,3 @@ hook global WinCreate .* %{
 	conditionally-enable-git-gutter
 }
 
-hook global WinSetOption filetype=markdown %{
-    add-highlighter window/wrap wrap -word
-
-	hook window WinSetOption filetype=(?!markdown).* %{
-	    remove-highlighter window/wrap
-	}
-}
-

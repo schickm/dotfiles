@@ -13,6 +13,7 @@ source ~/vc/dotfiles/kak/search.kak
 source ~/vc/dotfiles/kak/lsp.kak
 source ~/vc/dotfiles/kak/buffers.kak
 source ~/vc/dotfiles/kak/npm.kak
+source ~/vc/dotfiles/kak/markdown.kak
 
 plug "andreyorst/plug.kak" noload
 
