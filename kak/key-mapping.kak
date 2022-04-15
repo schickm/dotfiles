@@ -35,7 +35,12 @@ hook global ModeChange push:[^:]*:next-key\[user.spell\] %{
     hook -once -always window NormalIdle .* spell-clear
 }
 
+# commands that are local to the directory being worked on
 declare-user-mode local
+
+# commands that are specific to the file being worked on
+declare-user-mode file
+map global user f ': enter-user-mode file<ret>' -docstring 'file specific commands'
 
 declare-user-mode kakoune
 map global kakoune l ': e .kakrc.local<ret>' -docstring 'edit .kakrc.local'
@@ -43,12 +48,12 @@ map global kakoune s ': source %val{buffile}<ret>' -docstring 'source current bu
 map global kakoune e ': evaluate-commands %val{selection}<ret>' -docstring 'eval current selection'
 map global kakoune t ': rename-client tools <semicolon> set global toolsclient tools<ret>' -docstring 'mark current client as toolsclient'
 
-map global user f ': toggle-broot<ret>' -docstring 'select files in broot'
+# map global user f ': toggle-broot<ret>' -docstring 'select files in broot'
 map global user g ': enter-grep-mode<ret>' -docstring 'grep current selection or prompt'
 map global user k ': enter-user-mode kakoune<ret>' -docstring 'kakoune specific helpers'
 map global user l ': enter-user-mode local<ret>' -docstring 'local commands'
 map global user L ': enter-user-mode lint<ret>' -docstring 'lint commands'
-map global user r ': toggle-ranger<ret>' -docstring 'select files in ranger'
+# map global user r ': toggle-ranger<ret>' -docstring 'select files in ranger'
 map global user s ': surround<ret>' -docstring 'Enter surround mode'
 map global user S ': suspend-and-resume "aspell check %val{buffile}"<ret>' -docstring 'spellcheck with aspell'
 map global user t ': enter-user-mode tig<ret>' -docstring 'tig commands'

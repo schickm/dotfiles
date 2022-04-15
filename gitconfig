@@ -29,7 +29,8 @@
 	ui = true
 
 [diff]
-        tool = meld
+	tool = meld
+	external = difft --background=light
 [difftool]
         prompt = false
 [difftool "meld"]
