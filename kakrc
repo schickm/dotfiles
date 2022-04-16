@@ -15,6 +15,7 @@ source ~/vc/dotfiles/kak/buffers.kak
 source ~/vc/dotfiles/kak/npm.kak
 source ~/vc/dotfiles/kak/markdown.kak
 source ~/vc/dotfiles/kak/latex.kak
+source ~/vc/dotfiles/kak/kak.kak
 
 plug "andreyorst/plug.kak" noload
 
@@ -24,8 +25,9 @@ plug "alexherbo2/auto-pairs.kak" config %{
     enable-auto-pairs
 }
 
-plug "alexherbo2/lib.kak" 
-plug "alexherbo2/surround.kak" 
+plug "alexherbo2/lib.kak"
+plug "alexherbo2/surround.kak"
+plug "https://gitlab.com/Screwtapello/kakoune-shellcheck"
 
 evaluate-commands %sh{
     if [ -f .kakrc.local ]

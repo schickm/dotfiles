@@ -1,5 +1,5 @@
 # available vars for running linting
-# 
+#
 # kak_buffile     - origional name of file that had the code to be linted
 #
 # The best way to deal with setting this is to use direnv
@@ -23,13 +23,9 @@ hook -once global WinSetOption filetype=(javascript|typescript) %{ evaluate-comm
     		enable-lint '$lintcmd' javascript-lint-hooks
 
             hook global WinSetOption filetype=(javascript|typescript) %%{
-		enable-lint '$lintcmd' javascript-lint-hooks
+				enable-lint '$lintcmd' javascript-lint-hooks
                 hook -once -always window WinSetOption filetype=.* %%{ remove-hooks window javascript-lint-hooks }
             }
         "
     fi
 } }
-
-hook global WinSetOption filetype=sh %{
-	enable-lint "shellcheck -fgcc -Cnever" shell-lint-hooks
-}

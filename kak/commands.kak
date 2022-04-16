@@ -20,7 +20,7 @@ def github-blame -override -docstring 'Open blame on github for current file and
 }}
 
 def tig-blame -override -docstring 'Open blame in tig for current file and line' %{
-    suspend-and-resume "tig blame +%val{cursor_line} %val{buffile}" 
+    suspend-and-resume "tig blame +%val{cursor_line} %val{buffile}"
 }
 
 def jellyvision-stash-browse \
@@ -225,18 +225,19 @@ version control.' \
 
 define-command run-async-command \
     -override \
-    -docstring 'run-async-command: runs command another buffer' \
-    -params 1 %{
+    -docstring 'run-async-command <command to run> [<name of buffer>]: runs command another buffer ' \
+    -params 1..2 %{
 
     evaluate-commands %sh{
         output=$(mktemp -d -t kak-temp-XXXXXXXX)/fifo
-        mkfifo ${output}
+        buffer="${2:-*cmd*}"
+        mkfifo "${output}"
 
         ( eval $1 > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
         echo "
             evaluate-commands -try-client '$kak_opt_toolsclient' %{
-                edit! -fifo ${output} *cmd*
-                hook buffer BufClose .* %{
+                edit! -scroll -fifo ${output} ${buffer}
+                hook buffer BufCloseFifo .* %{
                     nop %sh{
                         rm -r $(dirname ${output})
                     }
@@ -246,20 +247,29 @@ define-command run-async-command \
     }
 }
 # sets the lintcmd, runs lint right away, and sets up hooks to lint at appropriate times
-def enable-lint \
+define-command enable-lint \
 	-docstring 'enable-lint <lint cmd> <hook group> - sets up linting for given window' \
 	-override \
 	-params 2 \
 	%{
 
-	echo -debug "running lint cmd " %arg{1} 
+	echo -debug "running lint cmd " %arg{1}
     set-option window lintcmd %arg{1}
 
+	enable-lint-on-change %arg{2}
+}
+
+define-command enable-lint-on-change \
+	-override \
+	-params 1 \
+	-docstring 'enable-lint-on-change <hook group> - enables hooks that runs linting on exit of insert mode and after deletion' \
+	%{
+
 	# Run linting when we exit insert mode
-    hook -group %arg{2} window ModeChange pop:insert:.* lint
+    hook -group %arg{1} window ModeChange pop:insert:.* lint
     # ...and when we delete some code in normal mode
-    hook -group %arg{2} window NormalKey d lint
+    hook -group %arg{1} window NormalKey d lint
     # and run lint for the first time.  Something was wrong with the context
     # so I had to run it inside this normal idle hook
-	hook -group %arg{2} -once window NormalIdle .* lint
+	hook -group %arg{1} -once window NormalIdle .* lint
 }
