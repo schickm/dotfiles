@@ -16,12 +16,14 @@ map global tig m ': suspend-and-resume "tig"<ret>' -docstring 'show main view (w
 map global tig + ': git-amend-current-buffer<ret>' -docstring 'append this files changes to most recent commit'
 map global tig p ': suspend-and-resume "git push"<ret>' -docstring 'push'
 map global tig P ': suspend-and-resume "git push -f --no-verify"<ret>' -docstring 'force push (no verify)'
+map global tig w ': get-url-to-file<ret>' -docstring 'copy url to file to clipboard'
+
 define-command -hidden -override git-amend-current-buffer %{
     write
     nop %sh{
 	git reset -- "$kak_buffile"
 	git add "$kak_buffile"
-	git commit --amend --no-edit 
+	git commit --amend --no-edit
     }
     echo -markup "{Information}%val{bufname} amended to git commit:" %sh{ git log -n 1 --format=%s }
 }
