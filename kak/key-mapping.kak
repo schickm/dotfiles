@@ -11,6 +11,7 @@ hook global InsertChar j %{ try %{
 
 declare-user-mode tig
 map global tig b ': tig-blame<ret>' -docstring 'show blame (with tig)'
+map global tig B ': git-remote-blame<ret>' -docstring 'show blame in browser based on remote'
 map global tig s ': suspend-and-resume "tig status"<ret>' -docstring 'show git status (with tig)'
 map global tig m ': suspend-and-resume "tig"<ret>' -docstring 'show main view (with tig)'
 map global tig + ': git-amend-current-buffer<ret>' -docstring 'append this files changes to most recent commit'

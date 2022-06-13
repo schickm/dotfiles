@@ -24,7 +24,6 @@ EOF
 		else
 			echo "echo 'pdflatex failed'" > "$kak_command_fifo"
 		fi
-
     }
 }
 

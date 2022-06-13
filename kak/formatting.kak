@@ -1,13 +1,9 @@
-# Handy Vars for running formatting
-#
-# kak_buffile     - origional name of file that had the code to be formatted
-#
 # The best way to deal with setting this is to use direnv
 #
 # Examples for future implementations
 #
 # Javascript
-#    run() { cat "$1" | npx --quiet prettier --stdin-filepath ${kak_buffile} --stdin; } && run
+#    export kak_javascript_formatcmd='prettierd %%val{buffile}'
 
 evaluate-commands %sh{
     if [ -z "$kak_javascript_formatcmd" ]; then

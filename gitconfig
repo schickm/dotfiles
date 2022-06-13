@@ -24,19 +24,19 @@
 [core]
 	editor = "kak -e 'autowrap-enable; execute-keys -with-hooks A'"
 	excludesfile = /Users/mattschick/.gitignore_global
-    pager = diff-so-fancy | less --tabs=4 -RFX
+	pager = diff-so-fancy | less --tabs=4 -RFX
 [colors]
 	ui = true
 
 [diff]
 	tool = meld
-	external = difft --background=light
+	#external = difft --background=light
 [difftool]
         prompt = false
 [difftool "meld"]
         trustExitCode = true
         cmd = open -W -a Meld --args \"$LOCAL\" \"$REMOTE\"
-	cmd = meld \"$LOCAL\" \"$REMOTE\" 
+	cmd = meld \"$LOCAL\" \"$REMOTE\"
 [difftool "json-diff"]
 	cmd = json-diff \"$LOCAL\" \"$REMOTE\"
 [merge]
