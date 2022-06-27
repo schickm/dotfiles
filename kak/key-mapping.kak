@@ -40,10 +40,7 @@ hook global ModeChange push:[^:]*:next-key\[user.spell\] %{
 
 # commands that are local to the directory being worked on
 declare-user-mode local
-
-# commands that are specific to the file being worked on
-declare-user-mode file
-map global user f ': enter-user-mode file<ret>' -docstring 'file specific commands'
+map global user l ': enter-user-mode local<ret>' -docstring 'local commands'
 
 declare-user-mode kakoune
 map global kakoune l ': e .kakrc.local<ret>' -docstring 'edit .kakrc.local'
@@ -54,7 +51,6 @@ map global kakoune t ': rename-client tools <semicolon> set global toolsclient t
 # map global user f ': toggle-broot<ret>' -docstring 'select files in broot'
 map global user g ': enter-grep-mode<ret>' -docstring 'grep current selection or prompt'
 map global user k ': enter-user-mode kakoune<ret>' -docstring 'kakoune specific helpers'
-map global user l ': enter-user-mode local<ret>' -docstring 'local commands'
 map global user L ': enter-user-mode lint<ret>' -docstring 'lint commands'
 # map global user r ': toggle-ranger<ret>' -docstring 'select files in ranger'
 map global user s ': surround<ret>' -docstring 'Enter surround mode'

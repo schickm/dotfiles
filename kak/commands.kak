@@ -9,44 +9,9 @@ def kakrc -override -docstring "open kakrc in a less fastidious way" %{
     edit %sh{ echo ${XDG_CONFIG_HOME:-${HOME}/.config}/kak/kakrc }
 }
 
-def git-remote-blame -override -docstring 'Open blame on github for current file and line' %{ evaluate-commands %sh{
-    local_branch_name=$(git name-rev --name-only HEAD)
-    remote_name=$(git config branch.$local_branch_name.remote || echo "origin")
-    remote_branch_name=$(git config branch.$local_branch_name.merge | sed 's|refs/heads/||')
-    repo_url=$(git config remote.$remote_name.url)
-    repo_url=$(echo "$repo_url" | sed 's/^git@//; s/:/\//; s/\.git$//')
-    line_number=$(echo "$kak_selection_desc" | sed -n 's/^.*,\([[:digit:]]*\).*$/\1/p')
-    open "https://$repo_url/blame/$remote_branch_name/$kak_bufname#L$line_number"
-}}
-
 def tig-blame -override -docstring 'Open blame in tig for current file and line' %{
     suspend-and-resume "tig blame +%val{cursor_line} %val{buffile}"
 }
-
-def get-url-to-file \
-	-override \
-	-docstring 'Copies a url to the clipboard for current file and line' \
-	%{ evaluate-commands %sh{
-
-    status=$(git status --branch --porcelain=v2)
-
-    # first figure out the origin branch's remote
-    upstream=$(echo "$status" | grep -m 1 "^# branch.upstream " | cut -d " " -f 3)
-    remote_name=$(echo "$upstream" | cut -d '/' -f 1)
-    remote_branch=$(echo "$upstream" | cut -d '/' -f 2)
-    remote=$(git remote get-url "$remote_name")
-
-    case "$remote" in
-      git@gitlab.com*)
-        repo_url=$(echo "$remote" | sed 's|^git@gitlab.com:|https://gitlab.com/|; s|\.git$|/-/blob|')
-        line_number=$(echo "$kak_selection_desc" | sed 's/^\([0-9]*\)\.[0-9]*,\([0-9]*\).*$/\1-\2/')
-      	echo "$repo_url/$remote_branch/$kak_bufname#L$line_number" | pbcopy
-	    ;;
-      *)
-      	printf 'echo "%s not supported remote"' "$remote"
-      	;;
-    esac
-}}
 
 def for-each-line \
  	-override \
