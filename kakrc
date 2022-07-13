@@ -29,6 +29,7 @@ plug "alexherbo2/auto-pairs.kak" config %{
 plug "alexherbo2/lib.kak"
 plug "alexherbo2/surround.kak"
 plug "https://gitlab.com/Screwtapello/kakoune-shellcheck"
+plug "https://github.com/occivink/kakoune-find"
 
 evaluate-commands %sh{
     if [ -f .kakrc.local ]

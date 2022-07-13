@@ -42,5 +42,7 @@ define-command setup-gitlab-mode \
     	-docstring 'Copy file+line url to clipboard'
 
     map buffer gitlab p ": nop %%sh{ open %arg{1}/-/pipelines }<ret>" \
-    	-docstring 'Open pipelines'
+    	-docstring 'Pipelines'
+    map buffer gitlab m ": nop %%sh{ open %arg{1}/-/merge_requests }<ret>" \
+    	-docstring 'Merge Requests'
 }

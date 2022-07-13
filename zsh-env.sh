@@ -1,6 +1,8 @@
 # add 'source dotfiles/bash_profile' to ~/.bash_profile
 
 export PATH=$HOME/bin:$HOME/.cargo/bin:$PATH
+# used by highlight within ranger
+export HIGHLIGHT_STYLE='solarized-light'
 
 alias p='ls -GF'
 alias pg='p | grep -i'
