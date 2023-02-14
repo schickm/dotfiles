@@ -36,6 +36,10 @@ def toggle-broot -override %{
 		"for-each-line edit /tmp/broot-files-%val{client_pid}"
 }
 
+def redraw-screen -params 0 %{ nop %sh{
+	osascript -e 'tell application \"System Events\" to keystroke \"l\" using control down'
+} }
+
 def suspend-and-resume \
 	-params 1..2 \
 	-override \
@@ -70,6 +74,7 @@ def suspend-and-resume \
 
 	# Upon resume, run the kak command is specified
 	if [ ! -z "$post_resume_cmd" ]; then
+		echo "redraw-screen"
 		echo "$post_resume_cmd"
 	fi
 }}
