@@ -36,7 +36,10 @@ def toggle-broot -override %{
 		"for-each-line edit /tmp/broot-files-%val{client_pid}"
 }
 
-def redraw-screen -params 0 %{ nop %sh{
+def redraw-screen \
+	-params 0 \
+	-override \
+%{ nop %sh{
 	osascript -e 'tell application \"System Events\" to keystroke \"l\" using control down'
 } }
 
@@ -100,6 +103,18 @@ define-command npm-run \
 		}"
 	} }
 
+
+define-command open-url-in-safari \
+	-params 1 \
+	-override \
+	-docstring '
+open-url-in-safari <url>: opens up url in a new tab in the last focused safari window
+	' \
+%{
+	nop %sh{
+		osascript ~/vc/dotfiles/scripts/open-or-show-url.scpt "${1}"
+	}
+}
 
 
 define-command iterm-terminal-window-with-shell \

@@ -31,7 +31,7 @@ hook global WinSetOption deno_active=false %{
 
 
 hook global WinSetOption filetype=yaml %{
-	set buffer formatcmd 'npx --quiet prettier --parser=yaml --stdin-filepath=${kak_buffile} --stdin'
+	set buffer formatcmd 'prettierd --parser=yaml --stdin-filepath=${kak_buffile} --stdin'
 	# set buffer formatcmd 'cat ${format_file_in} | npx prettier --stdin --parser yaml > ${format_file_out}'
     hook -group yaml-format-hooks window BufWritePre .* format
 }

@@ -9,7 +9,7 @@ hook global BufOpenFile .* %{
 	    # first figure out the origin branch's remote
 	    upstream=$(echo "$status" | grep -m 1 "^# branch.upstream " | cut -d " " -f 3)
 	    remote_name=$(echo "$upstream" | cut -d '/' -f 1)
-	    remote_branch=$(echo "$upstream" | cut -d '/' -f 2)
+	    remote_branch=$(echo "$upstream" | cut -d '/' -f 2-)
 	    remote=$(git remote get-url "$remote_name")
 
 		printf 'echo -debug upstream %s\n' "$upstream"
@@ -20,6 +20,7 @@ hook global BufOpenFile .* %{
 	    case "$remote" in
 	      git@gitlab.com*)
 	        repo_url=$(echo "$remote" | sed 's|^git@gitlab.com:|https://gitlab.com/|; s|\.git$||')
+	        printf 'echo -debug repo_url %s\n' "$repo_url"
 			printf 'setup-gitlab-mode %s %s' "$repo_url" "$remote_branch"
 		    ;;
 	      *)
@@ -38,11 +39,11 @@ define-command setup-gitlab-mode \
 
 	map buffer user G ': enter-user-mode gitlab<ret>' -docstring 'Gitlab related commands'
 
-    map buffer gitlab u ": nop %%sh{ echo ""%arg{1}/-/blob/%arg{2}/%val{bufname}#L%val{cursor_line}"" | pbcopy }<ret>" \
+    map buffer gitlab u ": nop %%sh{ echo ""%arg{1}/-/blob/%arg{2}/${kak_bufname}#L${kak_cursor_line}"" | pbcopy }<ret>" \
     	-docstring 'Copy file+line url to clipboard'
 
-    map buffer gitlab p ": nop %%sh{ open %arg{1}/-/pipelines }<ret>" \
+    map buffer gitlab p ": open-url-in-safari ""%arg{1}/-/pipelines""<ret>" \
     	-docstring 'Pipelines'
-    map buffer gitlab m ": nop %%sh{ open %arg{1}/-/merge_requests }<ret>" \
+    map buffer gitlab m ": open-url-in-safari ""%arg{1}/-/merge_requests""<ret>" \
     	-docstring 'Merge Requests'
 }

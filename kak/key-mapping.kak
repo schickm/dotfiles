@@ -10,8 +10,10 @@ hook global InsertChar j %{ try %{
 }}
 
 declare-user-mode tig
+map global tig a ': suspend-and-resume "git add . && git commit"<ret>' -docstring 'commit all tracked files'
 map global tig b ': tig-blame<ret>' -docstring 'show blame (with tig)'
 map global tig B ': git-remote-blame<ret>' -docstring 'show blame in browser based on remote'
+map global tig c ': suspend-and-resume "git reset && git add %val{buffile} && git commit && git push"<ret>' -docstring 'commit current file and push'
 map global tig s ': suspend-and-resume "tig status"<ret>' -docstring 'show git status (with tig)'
 map global tig m ': suspend-and-resume "tig"<ret>' -docstring 'show main view (with tig)'
 map global tig + ': git-amend-current-buffer<ret>' -docstring 'append this files changes to most recent commit'
@@ -48,6 +50,7 @@ map global kakoune s ': source %val{buffile}<ret>' -docstring 'source current bu
 map global kakoune e ': evaluate-commands %val{selection}<ret>' -docstring 'eval current selection'
 map global kakoune k ': rename-client kaktreeclient <ret>' -docstring 'mark current client as kaktree client'
 map global kakoune t ': rename-client tools <semicolon> set global toolsclient tools<ret>' -docstring 'mark current client as toolsclient'
+map global kakoune d ': buffer *debug*<ret>' -docstring 'show debug buffer'
 
 # map global user f ': toggle-broot<ret>' -docstring 'select files in broot'
 map global user g ': enter-grep-mode<ret>' -docstring 'grep current selection or prompt'
