@@ -4,6 +4,7 @@
 [push]
 	default = current
 	followTags = true
+	autoSetupRemote = true
 [filter "media"]
 	required = true
 	clean = git media clean %f
@@ -19,6 +20,7 @@
 	cp = commit --patch
 	c = commit
 	st = status --short
+	sw = switch
 	log = log --graph --decorate
         lb = !git reflog show --pretty=format:'%gs ~ %gd' --date=relative | grep 'checkout:' | grep -oE '[^ ]+ ~ .*' | awk -F~ '!seen[$1]++' | head -n 10 | awk -F' ~ HEAD@{' '{printf(\"  \\033[33m%s: \\033[0m %s\\n\", substr($2, 1, length($2)-1), $1)}'
 [core]
@@ -61,3 +63,5 @@
 	smudge = git-lfs smudge -- %f
 [init]
 	defaultBranch = main
+[rebase]
+	autosquash = true
