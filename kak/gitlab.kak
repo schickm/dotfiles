@@ -37,8 +37,11 @@ define-command setup-gitlab-mode \
 	-docstring 'setup-gitlab-mode <repo url> <remote branch name>' \
 	-params 2 %{
 
-	map buffer user G ': enter-user-mode gitlab<ret>' -docstring 'Gitlab related commands'
+	map buffer tig g ': enter-user-mode gitlab<ret>' -docstring 'Gitlab related commands'
 
+    # The way to do multiline is like:
+    #  $kak_selection_desc | sed -e 's/,/-/' -e 's/\.[0-9]//g'
+	#  But the single line below would have to be converted to a function
     map buffer gitlab u ": nop %%sh{ echo ""%arg{1}/-/blob/%arg{2}/${kak_bufname}#L${kak_cursor_line}"" | pbcopy }<ret>" \
     	-docstring 'Copy file+line url to clipboard'
 
