@@ -1,0 +1,66 @@
+:: default  : yabai -m config active_window_border_color 0xff61afef ; update_mode.fish default
+:: focus  @ : yabai -m config active_window_border_color 0xff32f032 ; update_mode.fish focus
+:: swap   @ : yabai -m config active_window_border_color 0xffc678dd ; update_mode.fish swap
+:: warp   @ : yabai -m config active_window_border_color 0xffe5c07b ; update_mode.fish warp
+:: resize @ : yabai -m config active_window_border_color 0xff98c379 ; update_mode.fish resize
+
+# CTRL-SPACE is the global hotkey to toggle in/out of modal mode. Entry is
+# always to FOCUS mode. Getting out of any mode can also be done with ESCAPE.
+default                < ctrl-space ; focus    # Focus
+focus,swap,warp,resize < space      ; default  # Default
+focus,swap,warp,resize < f          ; focus    # Focus
+focus,swap,warp,resize < s          ; swap     # Swap
+focus,swap,warp,resize < w          ; warp     # Warp
+focus,swap,warp,resize < r          ; resize   # Resize
+
+
+# Change focus using standard vi directional keys. Enter changes focus to the
+# biggest window. You'll see this theme repeated over and over again. Since this
+# is such a common operation, no modifier keys are used.
+focus < k      : yabai -m window --focus north # north
+focus < j      : yabai -m window --focus south # south
+focus < l      : yabai -m window --focus east # east
+focus < h      : yabai -m window --focus west # west
+focus < return : yabai -m window --focus largest # largest
+focus < p      : yabai -m window --focus prev # prev
+focus < r      : yabai -m window --focus recent # recent
+focus < n      : yabai -m window --focus next # next
+focus < b      : yabai -m space --layout bsp # bsp
+focus < m      : yabai -m space --layout stack # stack
+focus < tab    : yabai -m display --focus recent # other display
+
+# Swap windows using standard vi directional keys.
+swap < k      : yabai -m window --swap north # north
+swap < j      : yabai -m window --swap south # south
+swap < l      : yabai -m window --swap east # east
+swap < h      : yabai -m window --swap west # west
+swap < return : yabai -m window --swap largest # largest
+swap < b      : yabai -m space --layout bsp # bsp
+swap < m      : yabai -m space --layout stack # stack
+swap < tab    : yabai -m window --display recent ; yabai -m display --focus recent # other display
+
+warp < k      : yabai -m window --warp north # north
+warp < j      : yabai -m window --warp south # south
+warp < l      : yabai -m window --warp east # east
+warp < h      : yabai -m window --warp west # west
+warp < return : yabai -m window --warp largest # largest
+
+# Increase size of window using standard vi directional keys.
+resize          < k                 : yabai -m window --resize top:0:-60   # top
+resize          < j                 : yabai -m window --resize bottom:0:60 # bottom
+resize          < l                 : yabai -m window --resize right:60:0  # right
+resize          < h                 : yabai -m window --resize left:-60:0  # left
+
+# Prefix the above with shift to decrease size of window using standard vi
+# directional keys.
+resize          < shift - k         : yabai -m window --resize top:0:60     # top
+resize          < shift - j         : yabai -m window --resize bottom:0:-60 # bottom
+resize          < shift - l         : yabai -m window --resize right:-60:0  # right
+resize          < shift - h         : yabai -m window --resize left:60:0    # left
+
+
+# All Modes
+focus,swap,warp,resize < x : yabai -m space --mirror x-axis # flip x-axis
+focus,swap,warp,resize < y : yabai -m space --mirror y-axis # flip y-axis
+focus,swap,warp,resize < i : yabai -m window --toggle split # split
+focus,swap,warp,resize < e : yabai -m space --balance       # equalize
