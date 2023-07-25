@@ -11,7 +11,7 @@ alias cpwd="pwd | tr -d '\n' | pbcopy"
 alias g='git'
 alias dr='docker'
 alias t='tig status'
-alias dc='docker-compose'
+alias dc='docker compose'
 alias npm-exec='PATH=$(npm bin):$PATH'
 alias htop='sudo htop'
 alias pbcopy="perl -p -e 'chomp if eof' | pbcopy"
