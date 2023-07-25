@@ -3,7 +3,7 @@
 set ALERTER_TITLE 'Gitlab Pipeline'
 
 function __send_alert -a message subtitle
-    push "$ALERTER_TITLE - $subtitle: $message"
+    push "$ALERTER_TITLE - $subtitle: $message" > /dev/null
     alerter -message "$message" -title $ALERTER_TITLE -subtitle $subtitle -actions 'Open Pipeline'
 end
 
