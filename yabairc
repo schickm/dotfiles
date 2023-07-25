@@ -7,5 +7,6 @@ yabai -m config window_gap 0
 yabai -m rule --add app="^System Settings|Stats|Tomato One|Appgate SDP|System Information|Calculator|licecap|Tunable|VLC$" manage=off
 yabai -m rule --add app="^Übersicht$" title="^Preferences$" manage=off
 yabai -m rule --add app="zoom.us" title="Zoom Meeting" display=2
+yabai -m rule --add app="Slack" display=2
 yabai -m rule --add app="Google Chrome" title="DevTools - Node.js - Matt" display=2
 yabai -m config external_bar main:0:20
