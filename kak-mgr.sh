@@ -1,15 +1,13 @@
-#!/bin/sh
+#!/bin/bash
 
-cleanup='s|/Users/mattschick/|| ; s|jellyvc/|| ; s/[^[:alnum:]-]/_/g'
-repo=$(git rev-parse --show-toplevel 2>/dev/null | sed "$cleanup" | tail -c 36)
-args=
+server_name=$(basename `PWD`)
+socket_file=$(kak -l | grep $server_name)
 
-if [ -n "$repo" ]; then
-    if kak -l | grep -wq "$repo"; then
-        args="-c $repo" # join session
-    else
-        args="-s $repo" # make session
-    fi
+if [[ $socket_file == "" ]]; then
+    # Create new kakoune daemon for current dir
+    setsid kak -d -s $server_name &
+    sleep 1
 fi
 
-exec kak $args $@ # launch editor
+# and run kakoune (with any arguments passed to the script)
+kak -c $server_name $@
