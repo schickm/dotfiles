@@ -54,12 +54,11 @@ map global kakoune m ': rename-client main <semicolon> set global jumpclient mai
 map global kakoune d ': buffer *debug*<ret>' -docstring 'show debug buffer'
 
 
-# map global user f ': toggle-broot<ret>' -docstring 'select files in broot'
+map global user b ': connect terminal broot<ret>' -docstring 'select files in broot'
 map global user g ': enter-user-mode -lock grep<ret>'
 map global user G ': enter-grep-mode<ret>' -docstring 'grep current selection or prompt'
 map global user k ': enter-user-mode kakoune<ret>' -docstring 'kakoune specific helpers'
 map global user L ': enter-user-mode lint<ret>' -docstring 'lint commands'
-map global user r ': toggle-ranger<ret>' -docstring 'select files in ranger'
 map global user s ': enter-surround-mode<ret>' -docstring 'Enter surround mode'
 map global user S ': suspend-and-resume "aspell check %val{buffile}"<ret>' -docstring 'spellcheck with aspell'
 map global user t ': enter-user-mode tig<ret>' -docstring 'tig commands'

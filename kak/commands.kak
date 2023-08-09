@@ -213,8 +213,8 @@ version control.' \
 					git update-diff
 				}
 			"
-		else
-			printf "echo -debug \"conditionally-enable-git-gutter - skipping file $kak_buffile as it's not under version control\""
+		#else
+		#	printf "echo -debug \"conditionally-enable-git-gutter - skipping file $kak_buffile as it's not under version control\""
 		fi
 	}
 }

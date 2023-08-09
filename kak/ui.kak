@@ -9,3 +9,5 @@ hook global WinCreate .* %{
 	conditionally-enable-git-gutter
 }
 
+require-module iterm
+alias global terminal iterm-terminal-window
