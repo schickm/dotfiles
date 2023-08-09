@@ -11,7 +11,7 @@ Host compy
 	User matt
 
 Host odroid
-	HostName 192.168.1.65
+	HostName talman.duckdns.org
 	User matt
 
 Host opalstack

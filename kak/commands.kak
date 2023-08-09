@@ -9,10 +9,6 @@ def kakrc -override -docstring "open kakrc in a less fastidious way" %{
     edit %sh{ echo ${XDG_CONFIG_HOME:-${HOME}/.config}/kak/kakrc }
 }
 
-def tig-blame -override -docstring 'Open blame in tig for current file and line' %{
-    suspend-and-resume "tig blame +%val{cursor_line} %val{buffile}"
-}
-
 def for-each-line \
  	-override \
  	-docstring "for-each-line <command> <path to file>: run command with the value of each line in the file" \
