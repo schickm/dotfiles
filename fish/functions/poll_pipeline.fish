@@ -7,19 +7,42 @@ function __send_alert -a message subtitle
     alerter -message "$message" -title $ALERTER_TITLE -subtitle $subtitle -actions 'Open Pipeline'
 end
 
+function __url_escape -a value
+    string escape --style=url $value | sed -r 's|/|%2F|g'
+end
+
+function __gapi -a path
+    set url "/projects/$GITLAB_PROJECT/$path"
+    glab api $url
+end
+
 function poll_pipeline -a optionalBranch
-    set BRANCH (git rev-parse --abbrev-ref HEAD)
-    set PROJECT "jellyvision%2Fcode%2Ftools%2Falex-builder"
+    set -g GITLAB_PROJECT (__url_escape "jellyvision/code/tools/alex-builder")
+
     if test $optionalBranch
         set BRANCH $optionalBranch
+    else
+        set BRANCH (git rev-parse --abbrev-ref HEAD)
+    end
+    set BRANCH_URL_ENCODED (__url_escape $BRANCH)
+
+    set MERGE_REQUESTS (__gapi "merge_requests?source_branch=$BRANCH")
+    echo "MERGE_REQUESTS $MERGE_REQUESTS"
+    # If there's a merged result pipeline
+    if test "$MERGE_REQUESTS" != "[]"
+        set BRANCH_IID (echo $MERGE_REQUESTS | jq ".[0].iid")
+        set GLAB_STATUS (__gapi "merge_requests/$BRANCH_IID")
+        set PIPELINE_ID (echo $GLAB_STATUS | jq -r '.head_pipeline.id')
+    # else there's no merge request, so just pull the latest pipeline off the branch
+    # (used for long running branch like 'main')
+    else
+	set PIPELINE_ID (__gapi "pipelines?ref=$BRANCH_URL_ENCODED&sort=desc" | jq '.[0].id')
     end
 
-    set BRANCH_IID (glab api "/projects/$PROJECT/merge_requests?source_branch=$BRANCH" | jq ".[0].iid")
-
     while true
-        set GLAB_STATUS (glab api "/projects/$PROJECT/merge_requests/$BRANCH_IID")
-        set PIPELINE_URL (echo $GLAB_STATUS | jq -r '.head_pipeline.web_url')
-        set PIPELINE_STATUS (echo $GLAB_STATUS | jq -r '.head_pipeline.status')
+        set PIPELINE_RESPONSE (__gapi "pipelines/$PIPELINE_ID")
+        set PIPELINE_URL (echo $PIPELINE_RESPONSE | jq -r '.web_url')
+        set PIPELINE_STATUS (echo $PIPELINE_RESPONSE | jq -r '.status')
         if test $PIPELINE_STATUS != 'running'
             set ALERTER_CLICK (__send_alert $PIPELINE_STATUS "$(basename $PWD) $BRANCH")
             if test $ALERTER_CLICK = 'Open Pipeline'
