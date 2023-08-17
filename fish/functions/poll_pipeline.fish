@@ -27,7 +27,6 @@ function poll_pipeline -a optionalBranch
     set BRANCH_URL_ENCODED (__url_escape $BRANCH)
 
     set MERGE_REQUESTS (__gapi "merge_requests?source_branch=$BRANCH")
-    echo "MERGE_REQUESTS $MERGE_REQUESTS"
     # If there's a merged result pipeline
     if test "$MERGE_REQUESTS" != "[]"
         set BRANCH_IID (echo $MERGE_REQUESTS | jq ".[0].iid")
