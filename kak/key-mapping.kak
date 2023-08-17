@@ -14,7 +14,7 @@ map global tig a ': suspend-and-resume "git add . && git commit"<ret>' -docstrin
 map global tig b ': suspend-and-resume "tig blame +%val{cursor_line} %val{buffile}"<ret>' -docstring 'show blame (with tig)'
 map global tig B ': git-remote-blame<ret>' -docstring 'show blame in browser based on remote'
 map global tig c ': suspend-and-resume "git reset && git add %val{buffile} && git commit && git push"<ret>' -docstring 'commit current file and push'
-map global tig f ': connect terminal git commit %val{buffile}<ret>' -docstring 'make commit with current file'
+map global tig f ': suspend-and-resume "git commit %val{buffile}"<ret>' -docstring 'make commit with current file'
 map global tig s ': suspend-and-resume "tig status"<ret>' -docstring 'show git status (with tig)'
 map global tig m ': suspend-and-resume "tig"<ret>' -docstring 'show main view (with tig)'
 map global tig + ': git-amend-current-buffer<ret>' -docstring 'append this files changes to most recent commit'
