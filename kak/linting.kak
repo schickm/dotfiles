@@ -29,3 +29,12 @@ hook -once global WinSetOption filetype=(javascript|typescript) %{ evaluate-comm
         "
     fi
 } }
+
+hook global WinSetOption filetype=yaml %{
+	set-option window lintcmd %{
+		run() {
+			yamllint -f parsable "$1" | sed 's/ \[\(.*\)\] / \1: /'
+		} && run }
+
+    hook window BufWritePost .* lint
+}
