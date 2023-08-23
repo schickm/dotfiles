@@ -10,6 +10,7 @@ hook global InsertChar j %{ try %{
 }}
 
 declare-user-mode tig
+
 map global tig a ': suspend-and-resume "git add . && git commit"<ret>' -docstring 'commit all tracked files'
 map global tig b ': suspend-and-resume "tig blame +%val{cursor_line} %val{buffile}"<ret>' -docstring 'show blame (with tig)'
 map global tig B ': git-remote-blame<ret>' -docstring 'show blame in browser based on remote'
