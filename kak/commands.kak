@@ -46,7 +46,7 @@ def suspend-and-resume \
 	%{ evaluate-commands %sh{
 
 	# Note we are adding '&& fg' which resumes the kakoune client process after the cli command exits
-	cli_cmd="$1 && fg"
+	cli_cmd="$1 && k"
 	post_resume_cmd="$2"
 
 	# automation is different platform to platform
@@ -54,12 +54,10 @@ def suspend-and-resume \
 	case $platform in
 		Darwin)
 			automate_cmd="sleep 0.01; osascript -e 'tell application \"System Events\" to keystroke \"$cli_cmd\" & return '"
-			kill_cmd="/bin/kill"
 			break
 			;;
 		Linux)
 			automate_cmd="sleep 0.2; xdotool type '$cli_cmd'; xdotool key Return"
-			kill_cmd="/usr/bin/kill"
 			break
 		    ;;
 	esac
@@ -67,7 +65,7 @@ def suspend-and-resume \
 	# Uses platforms automation to schedule the typing of our cli command
 	nohup sh -c "$automate_cmd"  > /dev/null 2>&1 &
 	# Send kakoune client to the background
-	$kill_cmd -SIGTSTP $kak_client_pid
+	echo "quit"
 
 	# ...At this point the kakoune client is paused until the " && fg " gets run in the $automate_cmd
 
@@ -215,9 +213,19 @@ version control.' \
 	}
 }
 
-define-command run-async-command \
+define-command async-command \
+	-override \
+	-docstring 'async-command <command to run>: runs command asyncronously and puts output in debug buffer' \
+	-params 1 %{
+
+	nop %sh{ {
+	  eval "$1"
+	} > /dev/null 2>&1 < /dev/null & }
+}
+
+define-command print-command-to-fifo \
     -override \
-    -docstring 'run-async-command <command to run> [<name of buffer>]: runs command another buffer ' \
+    -docstring 'print-command-to-fifo <command to run> [<name of buffer>]: runs command another buffer ' \
     -params 1..2 %{
 
     evaluate-commands %sh{
