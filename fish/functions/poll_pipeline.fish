@@ -1,10 +1,12 @@
 #!/usr/bin/env fish .
 
-set ALERTER_TITLE 'Gitlab Pipeline'
+set __ALERTER_TITLE 'Gitlab Pipeline'
+set __RUNNING_PIPELINE_STATUSES 'running' 'pending'
+
 
 function __send_alert -a message subtitle
-    push "$ALERTER_TITLE - $subtitle: $message" > /dev/null
-    alerter -message "$message" -title $ALERTER_TITLE -subtitle $subtitle -actions 'Open Pipeline'
+    push "$__ALERTER_TITLE - $subtitle: $message" > /dev/null
+    alerter -message "$message" -title $__ALERTER_TITLE -subtitle $subtitle -actions 'Open Pipeline'
 end
 
 function __url_escape -a value
@@ -42,7 +44,7 @@ function poll_pipeline -a optionalBranch
         set PIPELINE_RESPONSE (__gapi "pipelines/$PIPELINE_ID")
         set PIPELINE_URL (echo $PIPELINE_RESPONSE | jq -r '.web_url')
         set PIPELINE_STATUS (echo $PIPELINE_RESPONSE | jq -r '.status')
-        if test $PIPELINE_STATUS != 'running'
+        if not contains $PIPELINE_STATUS $__RUNNING_PIPELINE_STATUSES
             set ALERTER_CLICK (__send_alert $PIPELINE_STATUS "$(basename $PWD) $BRANCH")
             if test $ALERTER_CLICK = 'Open Pipeline'
                 open $PIPELINE_URL
