@@ -51,6 +51,6 @@ function poll_pipeline -a optionalBranch
             end
             break
         end
-        sleep 1
+        sleep 10
     end
 end
