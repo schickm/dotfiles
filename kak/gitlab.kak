@@ -47,6 +47,8 @@ define-command setup-gitlab-mode \
 
     map buffer gitlab p ": open-url-in-safari ""%arg{1}/-/pipelines""<ret>" \
     	-docstring 'Pipelines'
-    map buffer gitlab m ": open-url-in-safari ""%arg{1}/-/merge_requests""<ret>" \
+    map buffer gitlab m ": async-command ""glab mr view -w $(git branch --show-current)""<ret>" \
+    	-docstring 'Open this merge request'
+    map buffer gitlab M ": open-url-in-safari ""%arg{1}/-/merge_requests""<ret>" \
     	-docstring 'Merge Requests'
 }
