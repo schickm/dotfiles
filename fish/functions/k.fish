@@ -1,6 +1,9 @@
-
 function k
     set server_name (basename $PWD | sed 's/\.//g')
-    kcr create $server_name
-    kcr attach $server_name
+
+    if ! test (kak -l | grep $server_name)
+        kak -d -s $server_name & disown
+    end
+
+    kak -c $server_name $argv
 end

@@ -36,7 +36,3 @@ evaluate-commands %sh{
         printf "source .kakrc.local"
     fi
 }
-
-evaluate-commands %sh{
-    kcr init kakoune
-}

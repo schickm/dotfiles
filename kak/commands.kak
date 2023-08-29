@@ -46,7 +46,7 @@ def suspend-and-resume \
 	%{ evaluate-commands %sh{
 
 	# Note we are adding '&& fg' which resumes the kakoune client process after the cli command exits
-	cli_cmd="$1 && k"
+	cli_cmd="$1 && fg"
 	post_resume_cmd="$2"
 
 	# automation is different platform to platform
@@ -54,10 +54,12 @@ def suspend-and-resume \
 	case $platform in
 		Darwin)
 			automate_cmd="sleep 0.01; osascript -e 'tell application \"System Events\" to keystroke \"$cli_cmd\" & return '"
+			kill_cmd="/bin/kill"
 			break
 			;;
 		Linux)
 			automate_cmd="sleep 0.2; xdotool type '$cli_cmd'; xdotool key Return"
+			kill_cmd="/usr/bin/kill"
 			break
 		    ;;
 	esac
@@ -65,7 +67,7 @@ def suspend-and-resume \
 	# Uses platforms automation to schedule the typing of our cli command
 	nohup sh -c "$automate_cmd"  > /dev/null 2>&1 &
 	# Send kakoune client to the background
-	echo "quit"
+	$kill_cmd -SIGTSTP $kak_client_pid
 
 	# ...At this point the kakoune client is paused until the " && fg " gets run in the $automate_cmd
 
