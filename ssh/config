@@ -1,3 +1,6 @@
+Host talman.duckdns.org
+	AddressFamily inet
+
 Host mattschick.com
 	HostName mattschick.com
 	User schickm
@@ -12,6 +15,7 @@ Host compy
 
 Host odroid
 	HostName talman.duckdns.org
+	AddressFamily inet
 	User matt
 
 Host opalstack
