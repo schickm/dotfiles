@@ -5,3 +5,4 @@ bind generic C >git commit
 bind generic	W	:toggle ignore-space	# Toggle ignoring whitespace in diffs
 bind main = !git commit --fixup=%(commit)
 bind main R !git rebase --autosquash -i %(commit)
+bind main V !git revert %(commit)
