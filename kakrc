@@ -16,6 +16,7 @@ source ~/vc/dotfiles/kak/markdown.kak
 source ~/vc/dotfiles/kak/latex.kak
 source ~/vc/dotfiles/kak/kak.kak
 source ~/vc/dotfiles/kak/gitlab.kak
+source ~/vc/dotfiles/kak/make.kak
 
 plug "andreyorst/plug.kak" noload
 
