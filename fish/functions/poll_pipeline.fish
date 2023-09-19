@@ -40,6 +40,8 @@ function poll_pipeline -a optionalBranch
 	set PIPELINE_ID (__gapi "pipelines?ref=$BRANCH_URL_ENCODED&sort=desc" | jq '.[0].id')
     end
 
+    set LAST_STATUS ''
+
     while true
         set PIPELINE_RESPONSE (__gapi "pipelines/$PIPELINE_ID")
         set PIPELINE_URL (echo $PIPELINE_RESPONSE | jq -r '.web_url')
@@ -53,6 +55,18 @@ function poll_pipeline -a optionalBranch
             end
             break
         end
+
+        # echo out the status if it's changed
+        if test $PIPELINE_STATUS != $LAST_STATUS
+            printf "Status: %s" $PIPELINE_STATUS
+        end
+
+        set LAST_STATUS $PIPELINE_STATUS
+
+	# show a little activity
+        printf '.'
+
         sleep 10
+
     end
 end
