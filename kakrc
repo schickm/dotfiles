@@ -17,6 +17,7 @@ source ~/vc/dotfiles/kak/latex.kak
 source ~/vc/dotfiles/kak/kak.kak
 source ~/vc/dotfiles/kak/gitlab.kak
 source ~/vc/dotfiles/kak/make.kak
+source ~/vc/dotfiles/kak/plantuml.kak
 
 plug "andreyorst/plug.kak" noload
 
@@ -30,6 +31,7 @@ plug "alexherbo2/lib.kak"
 plug "alexherbo2/surround.kak"
 plug "https://gitlab.com/Screwtapello/kakoune-shellcheck"
 plug "https://github.com/occivink/kakoune-find"
+plug "https://bitbucket.org/KJ_Duncan/kakoune-plantuml.kak"
 
 evaluate-commands %sh{
     if [ -f .kakrc.local ]

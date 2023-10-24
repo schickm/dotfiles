@@ -80,7 +80,13 @@ verbs: [
     {
         invocation: transmission
         leave_broot: false
-        external: "scp {file} matt@192.168.1.65:/srv/transmission/watch/"
+        external: "scp {file} odroid:/srv/transmission/watch/"
+    }
+
+    {
+        invocation: misc_media
+        leave_broot: false
+        external: "scp {file} odroid:/srv/misc_media/"
     }
 
     # Here's an example of a shortcut bringing you to your home directory
@@ -99,7 +105,7 @@ verbs: [
 #     }
     {
         key: "alt-enter"
-        external: "kcr edit {file}"
+	external: "kak-edit $kak_client {file} $kak_session"
         leave_broot: true
     }
     {

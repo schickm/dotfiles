@@ -1,7 +1,7 @@
 #!/usr/bin/env fish .
 
 set __ALERTER_TITLE 'Gitlab Pipeline'
-set __RUNNING_PIPELINE_STATUSES 'running' 'pending' 'null'
+set __RUNNING_PIPELINE_STATUSES 'running' 'pending' 'null' 'created'
 
 
 function __send_alert -a message subtitle

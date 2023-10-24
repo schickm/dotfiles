@@ -19,8 +19,9 @@ focus,swap,warp,resize < r          ; resize   # Resize
 # is such a common operation, no modifier keys are used.
 focus < k      : yabai -m window --focus north # north
 focus < j      : yabai -m window --focus south # south
-focus < l      : yabai -m window --focus east # east
-focus < h      : yabai -m window --focus west # west
+# Utilize fallbacks to shift focus to other display (this only works with two displays)
+focus < l      : yabai -m window --focus east || yabai -m display --focus east # east
+focus < h      : yabai -m window --focus west || yabai -m display --focus west # west
 focus < return : yabai -m window --focus largest # largest
 focus < p      : yabai -m window --focus prev # prev
 focus < r      : yabai -m window --focus recent # recent
@@ -32,8 +33,8 @@ focus < tab    : yabai -m display --focus recent # other display
 # Swap windows using standard vi directional keys.
 swap < k      : yabai -m window --swap north # north
 swap < j      : yabai -m window --swap south # south
-swap < l      : yabai -m window --swap east # east
-swap < h      : yabai -m window --swap west # west
+swap < l      : yabai -m window --swap east || yabai -m window --display east ; yabai -m display --focus east # east
+swap < h      : yabai -m window --swap west || yabai -m window --display west ; yabai -m display --focus west # west
 swap < return : yabai -m window --swap largest # largest
 swap < b      : yabai -m space --layout bsp # bsp
 swap < m      : yabai -m space --layout stack # stack
@@ -46,17 +47,17 @@ warp < h      : yabai -m window --warp west # west
 warp < return : yabai -m window --warp largest # largest
 
 # Increase size of window using standard vi directional keys.
-resize          < k                 : yabai -m window --resize top:0:-60   # top
-resize          < j                 : yabai -m window --resize bottom:0:60 # bottom
-resize          < l                 : yabai -m window --resize right:60:0  # right
-resize          < h                 : yabai -m window --resize left:-60:0  # left
+resize          < k                 : yabai -m window --resize top:0:-200   # top
+resize          < j                 : yabai -m window --resize bottom:0:200 # bottom
+resize          < l                 : yabai -m window --resize right:200:0  # right
+resize          < h                 : yabai -m window --resize left:-200:0  # left
 
 # Prefix the above with shift to decrease size of window using standard vi
 # directional keys.
-resize          < shift - k         : yabai -m window --resize top:0:60     # top
-resize          < shift - j         : yabai -m window --resize bottom:0:-60 # bottom
-resize          < shift - l         : yabai -m window --resize right:-60:0  # right
-resize          < shift - h         : yabai -m window --resize left:60:0    # left
+resize          < shift - k         : yabai -m window --resize top:0:200     # top
+resize          < shift - j         : yabai -m window --resize bottom:0:-200 # bottom
+resize          < shift - l         : yabai -m window --resize right:-200:0  # right
+resize          < shift - h         : yabai -m window --resize left:200:0    # left
 
 
 # All Modes
