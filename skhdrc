@@ -33,8 +33,8 @@ focus < tab    : yabai -m display --focus recent # other display
 # Swap windows using standard vi directional keys.
 swap < k      : yabai -m window --swap north # north
 swap < j      : yabai -m window --swap south # south
-swap < l      : yabai -m window --swap east || yabai -m window --display east ; yabai -m display --focus east # east
-swap < h      : yabai -m window --swap west || yabai -m window --display west ; yabai -m display --focus west # west
+swap < l      : yabai -m window --swap east || begin: yabai -m window --display east ; yabai -m display --focus east; end # east
+swap < h      : yabai -m window --swap west || begin; yabai -m window --display west ; yabai -m display --focus west; end # west
 swap < return : yabai -m window --swap largest # largest
 swap < b      : yabai -m space --layout bsp # bsp
 swap < m      : yabai -m space --layout stack # stack

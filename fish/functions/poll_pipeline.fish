@@ -9,24 +9,20 @@ function __send_alert -a message subtitle
     alerter -message "$message" -title $__ALERTER_TITLE -subtitle $subtitle -actions 'Open Pipeline'
 end
 
-function __url_escape -a value
-    string escape --style=url $value | sed -r 's|/|%2F|g'
-end
-
 function __gapi -a path
     set url "/projects/$GITLAB_PROJECT/$path"
     glab api $url
 end
 
 function poll_pipeline -a optionalBranch
-    set -g GITLAB_PROJECT (__url_escape "jellyvision/code/tools/alex-builder")
+    set -g GITLAB_PROJECT (urlescape "jellyvision/code/tools/alex-builder")
 
     if test $optionalBranch
         set BRANCH $optionalBranch
     else
         set BRANCH (git rev-parse --abbrev-ref HEAD)
     end
-    set BRANCH_URL_ENCODED (__url_escape $BRANCH)
+    set BRANCH_URL_ENCODED (urlescape $BRANCH)
 
     set MERGE_REQUESTS (__gapi "merge_requests?source_branch=$BRANCH")
     # If there's a merged result pipeline
