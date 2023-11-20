@@ -52,3 +52,7 @@ hook global WinSetOption filetype=(?!rust).* %{
 hook global BufCreate .*\.kakrc\.local %{
     set buffer filetype kak
 }
+
+hook global BufCreate .*\.aws/config %{
+    set buffer filetype ini
+}
