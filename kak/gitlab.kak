@@ -42,6 +42,8 @@ define-command setup-gitlab-mode \
     # The way to do multiline is like:
     #  $kak_selection_desc | sed -e 's/,/-/' -e 's/\.[0-9]//g'
 	#  But the single line below would have to be converted to a function
+	map buffer gitlab b ": async-command ""glab repo view -w""<ret>" \
+		-docstring 'Open this branch'
     map buffer gitlab u ": nop %%sh{ echo ""%arg{1}/-/blob/%arg{2}/${kak_bufname}#L${kak_cursor_line}"" | pbcopy }<ret>" \
     	-docstring 'Copy file+line url to clipboard'
 
