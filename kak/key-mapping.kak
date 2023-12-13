@@ -9,6 +9,10 @@ hook global InsertChar j %{ try %{
   exec -with-hooks <esc>
 }}
 
+declare-user-mode file
+map global file o ': nop %sh{ open "$(dirname "$kak_buffile")" }<ret>' -docstring 'open current directory in Finder'
+map global file t ': iterm-terminal-window-with-shell "cd %sh{ dirname ""$kak_buffile"" }"<ret>' -docstring 'open current directory in Terminal'
+
 declare-user-mode tig
 
 map global tig a ': suspend-and-resume "git add . && git commit"<ret>' -docstring 'commit all tracked files'
@@ -56,11 +60,11 @@ map global kakoune d ': buffer *debug*<ret>' -docstring 'show debug buffer'
 
 
 map global user b ': suspend-and-resume "kak_client=%val{client} kak_session=%val{session} broot"<ret>' -docstring 'select files in broot'
+map global user f ': enter-user-mode -lock file<ret>' -docstring 'file commands'
 map global user g ': enter-user-mode -lock grep<ret>'
 map global user G ': enter-grep-mode<ret>' -docstring 'grep current selection or prompt'
 map global user k ': enter-user-mode kakoune<ret>' -docstring 'kakoune specific helpers'
 map global user L ': enter-user-mode lint<ret>' -docstring 'lint commands'
-map global user o ': nop %sh{ open "$(dirname "$kak_buffile")" }<ret>' -docstring 'open current directory'
 map global user s ': enter-surround-mode<ret>' -docstring 'Enter surround mode'
 map global user S ': suspend-and-resume "aspell check %val{buffile}"<ret>' -docstring 'spellcheck with aspell'
 map global user t ': enter-user-mode tig<ret>' -docstring 'tig commands'
