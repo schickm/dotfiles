@@ -1,8 +1,14 @@
 set __autoload $HOME/.config/kak/autoload
 
-function update_kak_plugins --description 'Installs/updates kakoune plugins'
+
+function update_kak_autoload --description 'Installs/updates kakoune plugins'
   mkdir -p $__autoload
 
+  update_repos
+  update_symlinks
+end
+
+function update_repos
   set plugin_repos  "https://github.com/alexherbo2/auto-pairs.kak.git"
 
   for repo in $plugin_repos
@@ -17,11 +23,15 @@ function update_kak_plugins --description 'Installs/updates kakoune plugins'
       popd
     end
   end
+end
 
-  set symlink_targets (
-    "$HOME/.config/kak/kakrc"
-    "$HOME/.config/kak/plugins.kak"
-  )
+function update_symlinks
+  set symlink_targets \
+    "$HOME/vc/kakoune/rc/detection" \
+    "$HOME/vc/kakoune/rc/filetype" \
+    "$HOME/vc/kakoune/rc/tools" \
+    "$HOME/vc/kakoune/rc/windowing" 
+  
 
   for target in $symlink_targets
     set link_name (basename $target)
@@ -30,5 +40,4 @@ function update_kak_plugins --description 'Installs/updates kakoune plugins'
       ln -s $target $link_path
     end
   end
-
 end
