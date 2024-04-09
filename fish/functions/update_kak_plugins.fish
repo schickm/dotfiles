@@ -5,7 +5,6 @@ function update_kak_plugins --description 'Installs/updates kakoune plugins'
 
   set plugin_repos  "https://github.com/alexherbo2/auto-pairs.kak.git"
 
-
   for repo in $plugin_repos
     echo "Updating $repo..."
     set plugin_dir (basename $repo .git)
@@ -16,6 +15,19 @@ function update_kak_plugins --description 'Installs/updates kakoune plugins'
       pushd $plugin_path
       git pull
       popd
+    end
+  end
+
+  set symlink_targets (
+    "$HOME/.config/kak/kakrc"
+    "$HOME/.config/kak/plugins.kak"
+  )
+
+  for target in $symlink_targets
+    set link_name (basename $target)
+    set link_path $__autoload/$link_name
+    if not test -e $link_path
+      ln -s $target $link_path
     end
   end
 
