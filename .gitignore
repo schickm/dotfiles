@@ -5,3 +5,4 @@ ac-comphist.dat
 .DS_Store
 scripts/**/node_modules
 
+.aider*

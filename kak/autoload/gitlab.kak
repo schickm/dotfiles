@@ -37,7 +37,7 @@ define-command setup-gitlab-mode \
 	-docstring 'setup-gitlab-mode <repo url> <remote branch name>' \
 	-params 2 %{
 
-	map buffer tig g ': enter-user-mode gitlab<ret>' -docstring 'Gitlab related commands'
+	map buffer git g ': enter-user-mode gitlab<ret>' -docstring 'Gitlab related commands'
 
     # The way to do multiline is like:
     #  $kak_selection_desc | sed -e 's/,/-/' -e 's/\.[0-9]//g'

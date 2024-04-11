@@ -22,3 +22,7 @@ Host odroid
 Host opalstack
 	HostName opal7.opalstacked.com
 	User schickm
+
+Host github.com
+	AddKeysToAgent yes
+	IdentityFile ~/.ssh/id_rsa

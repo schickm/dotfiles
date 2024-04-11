@@ -12,7 +12,7 @@ ln -s ~/vc/dotfiles/kak-mgr.sh ~/bin/k
 mkdir -p ~/Library/Preferences/kak-lsp/
 ln -s ~/vc/dotfiles/kak-lsp.toml ~/Library/Preferences/kak-lsp/kak-lsp.toml
 
-brew install direnv zsh zsh-completions coreutils tig jq rust pup nodenv diff-so-fancy editorconfig aspell
+brew install direnv zsh zsh-completions coreutils tig jq rust pup nodenv diff-so-fancy editorconfig aspell difftastic
 brew cask install amethyst
 
 git clone https://github.com/andreyorst/plug.kak.git ~/.config/kak/plugins/plug.kak

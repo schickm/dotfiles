@@ -5,6 +5,8 @@
 # Javascript
 #    export kak_javascript_formatcmd='prettierd %%val{buffile}'
 
+# TODO - this needs to be generalized currently javascript & html is just
+# duplicate code
 evaluate-commands %sh{
     if [ -z "$kak_javascript_formatcmd" ]; then
         printf "echo -debug 'formatting.kak - environment var \"kak_javascript_formatcmd\" not defined, javascript automatic formatting will be disabled'"
@@ -17,7 +19,20 @@ evaluate-commands %sh{
 	        }
 	    "
     fi
+}
 
+evaluate-commands %sh{
+    if [ -z "$kak_html_formatcmd" ]; then
+        printf "echo -debug 'formatting.kak - environment var \"kak_html_formatcmd\" not defined, html automatic formatting will be disabled'"
+    else
+	    printf "
+	        hook global WinSetOption filetype=html %%{
+	            set buffer formatcmd \"$kak_html_formatcmd\"
+	            hook -group html-format-hooks window BufWritePre .* format
+	            hook -once -always window WinSetOption filetype=.* %%{ remove-hooks window html-format-hooks }
+	        }
+	    "
+    fi
 }
 
 hook global WinSetOption deno_active=true %{

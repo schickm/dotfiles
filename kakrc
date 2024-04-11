@@ -1,37 +1,6 @@
-source "%val{config}/plugins/plug.kak/rc/plug.kak"
-
-source ~/vc/dotfiles/kak/commands.kak
-source ~/vc/dotfiles/kak/options.kak
-source ~/vc/dotfiles/kak/key-mapping.kak
-source ~/vc/dotfiles/kak/grep.kak
-source ~/vc/dotfiles/kak/linting.kak
-source ~/vc/dotfiles/kak/formatting.kak
-source ~/vc/dotfiles/kak/ui.kak
-source ~/vc/dotfiles/kak/editorconfig.kak
-source ~/vc/dotfiles/kak/modeline.kak
-source ~/vc/dotfiles/kak/search.kak
-source ~/vc/dotfiles/kak/lsp.kak
-source ~/vc/dotfiles/kak/npm.kak
-source ~/vc/dotfiles/kak/markdown.kak
-source ~/vc/dotfiles/kak/latex.kak
-source ~/vc/dotfiles/kak/kak.kak
-source ~/vc/dotfiles/kak/gitlab.kak
-source ~/vc/dotfiles/kak/make.kak
-source ~/vc/dotfiles/kak/plantuml.kak
-
-plug "andreyorst/plug.kak" noload
-
-plug "schickm/kakoune-ember"
-
-plug "alexherbo2/auto-pairs.kak" config %{
-    enable-auto-pairs
+hook -once global KakBegin .* %{
+   enable-auto-pairs
 }
-
-plug "alexherbo2/lib.kak"
-plug "alexherbo2/surround.kak"
-plug "https://gitlab.com/Screwtapello/kakoune-shellcheck"
-plug "https://github.com/occivink/kakoune-find"
-plug "https://bitbucket.org/KJ_Duncan/kakoune-plantuml.kak"
 
 evaluate-commands %sh{
     if [ -f .kakrc.local ]

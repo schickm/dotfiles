@@ -13,18 +13,19 @@ declare-user-mode file
 map global file o ': nop %sh{ open "$(dirname "$kak_buffile")" }<ret>' -docstring 'open current directory in Finder'
 map global file t ': iterm-terminal-window-with-shell "cd %sh{ dirname ""$kak_buffile"" }"<ret>' -docstring 'open current directory in Terminal'
 
-declare-user-mode tig
+declare-user-mode git
 
-map global tig a ': suspend-and-resume "git add . && git commit"<ret>' -docstring 'commit all tracked files'
-map global tig b ': suspend-and-resume "tig blame +%val{cursor_line} %val{buffile}"<ret>' -docstring 'show blame (with tig)'
-map global tig B ': git-remote-blame<ret>' -docstring 'show blame in browser based on remote'
-map global tig c ': suspend-and-resume "git reset && git add %val{buffile} && git commit && git push"<ret>' -docstring 'commit current file and push'
-map global tig f ': suspend-and-resume "git commit %val{buffile}"<ret>' -docstring 'make commit with current file'
-map global tig s ': suspend-and-resume "tig status"<ret>' -docstring 'show git status (with tig)'
-map global tig m ': suspend-and-resume "tig"<ret>' -docstring 'show main view (with tig)'
-map global tig + ': git-amend-current-buffer<ret>' -docstring 'append this files changes to most recent commit'
-map global tig p ': suspend-and-resume "git push"<ret>' -docstring 'push'
-map global tig P ': suspend-and-resume "git push -f --no-verify"<ret>' -docstring 'force push (no verify)'
+map global git a ': suspend-and-resume "git add . && git commit"<ret>' -docstring 'commit all tracked files'
+map global git b ': suspend-and-resume "tig blame +%val{cursor_line} %val{buffile}"<ret>' -docstring 'show blame (with tig)'
+map global git B ': git-remote-blame<ret>' -docstring 'show blame in browser based on remote'
+map global git c ': suspend-and-resume "git reset && git add %val{buffile} && git commit && git push"<ret>' -docstring 'commit current file and push'
+map global git f ': suspend-and-resume "git commit %val{buffile}"<ret>' -docstring 'make commit with current file'
+map global git s ': suspend-and-resume "tig status"<ret>' -docstring 'show git status (with tig)'
+map global git m ': suspend-and-resume "tig"<ret>' -docstring 'show main view (with tig)'
+map global git + ': git-amend-current-buffer<ret>' -docstring 'append this files changes to most recent commit'
+map global git p ': suspend-and-resume "git push"<ret>' -docstring 'push'
+map global git P ': suspend-and-resume "git push -f --no-verify"<ret>' -docstring 'force push (no verify)'
+map global git u ': suspend-and-resume "git pull"<ret>' -docstring 'pull'
 
 define-command -hidden -override git-amend-current-buffer %{
     write
@@ -53,7 +54,7 @@ declare-user-mode kakoune
 map global kakoune l ': e .kakrc.local<ret>' -docstring 'edit .kakrc.local'
 map global kakoune s ': source %val{buffile}<ret>' -docstring 'source current buffer'
 map global kakoune e ': evaluate-commands %val{selection}<ret>' -docstring 'eval current selection'
-map global kakoune k ': rename-client kaktreeclient <ret>' -docstring 'mark current client as kaktree client'
+map global kakoune k ': eval menu %sh{ kak -l | sed -E "s/(.*)/\1 %{terminal kak -c \1}/" | tr ''\n'' '' '' }<ret>' -docstring 'open other kak session in new terminal'
 map global kakoune t ': rename-client tools <semicolon> set global toolsclient tools<ret>' -docstring 'mark current client as toolsclient'
 map global kakoune m ': rename-client main <semicolon> set global jumpclient main<ret>' -docstring 'mark current client as main client'
 map global kakoune d ': buffer *debug*<ret>' -docstring 'show debug buffer'
@@ -65,9 +66,9 @@ map global user g ': enter-user-mode -lock grep<ret>'
 map global user G ': enter-grep-mode<ret>' -docstring 'grep current selection or prompt'
 map global user k ': enter-user-mode kakoune<ret>' -docstring 'kakoune specific helpers'
 map global user L ': enter-user-mode lint<ret>' -docstring 'lint commands'
-map global user s ': enter-surround-mode<ret>' -docstring 'Enter surround mode'
+map global user s ': surround<ret>' -docstring 'Enter surround mode'
 map global user S ': suspend-and-resume "aspell check %val{buffile}"<ret>' -docstring 'spellcheck with aspell'
-map global user t ': enter-user-mode tig<ret>' -docstring 'tig commands'
+map global user t ': enter-user-mode git<ret>' -docstring 'git commands'
 map global user w ': write<ret>' -docstring 'write current buffer'
 map global user W ': write-all<ret>' -docstring 'write all modified buffers'
 

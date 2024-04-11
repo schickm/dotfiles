@@ -1,9 +1,7 @@
 ##
 ## git-branch.kak by lenormf
-## Adapted from https://github.com/lenormf/kakoune-extra/blob/master/widgets/git-branch.kak
 ## Store the current git branch that contains the buffer
 ##
-
 evaluate-commands %sh{
     if ! command -v greadlink > /dev/null 2>&1; then
         echo "echo -debug %{Dependency unmet: greadlink, please install it to use git-branch.kak}"
@@ -20,3 +18,8 @@ hook global WinCreate .* %{
         fi
     } }
 }
+
+# show git branch in modeline
+# modeline_git_branch may or may not be set, that's why there's no spacing around it
+# If it is set, it will provide it's own spacing
+set global modelinefmt '%opt{modeline_git_branch}%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]'
