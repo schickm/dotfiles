@@ -8,5 +8,5 @@ hook -once global KakBegin .* %{
 	set global grepcmd 'git grep -n'
 	set global autoreload yes
 
-	set global ui_options ncurses_assistant=none
+	set global ui_options terminal_assistant=none terminal_info_max_width=100
 }
