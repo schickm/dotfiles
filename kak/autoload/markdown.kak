@@ -19,3 +19,7 @@ hook global WinSetOption filetype=markdown %{
 	    remove-highlighter window/wrap
 	}
 }
+
+define-command markdown-format-table -docstring "aligns columns for selected lines" -override %{
+	execute-keys -draft s\|<ret>&<ret>
+}
