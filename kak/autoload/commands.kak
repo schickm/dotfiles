@@ -275,3 +275,8 @@ define-command enable-lint-on-change \
     # so I had to run it inside this normal idle hook
 	hook -group %arg{1} -once window NormalIdle .* lint
 }
+
+define-command laptop-screen-mode -override -docstring 'Sets ui options that work well on small laptop screen' \
+	%{
+	set global lsp_hover_max_lines 10
+}
