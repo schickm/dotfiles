@@ -3,6 +3,7 @@
 :: swap   @ : update_mode.fish swap
 :: warp   @ : update_mode.fish warp
 :: resize @ : update_mode.fish resize
+:: toggle @ : update_mode.fish toggle
 
 # CTRL-SPACE is the global hotkey to toggle in/out of modal mode. Entry is
 # always to FOCUS mode. Getting out of any mode can also be done with ESCAPE.
@@ -10,11 +11,12 @@ default                < ctrl-space ; focus    # Focus
 # default 	       < f4       : yabai -m window --focus prev
 # default 	       < 0x83       : yabai -m window --focus next
 
-focus,swap,warp,resize < space      ; default  # Default
-focus,swap,warp,resize < f          ; focus    # Focus
-focus,swap,warp,resize < s          ; swap     # Swap
-focus,swap,warp,resize < w          ; warp     # Warp
-focus,swap,warp,resize < r          ; resize   # Resize
+focus,swap,warp,resize,toggle < space      ; default  # Default
+focus,swap,warp,resize,toggle < f          ; focus    # Focus
+focus,swap,warp,resize,toggle < s          ; swap     # Swap
+focus,swap,warp,resize,toggle < w          ; warp     # Warp
+focus,swap,warp,resize,toggle < r          ; resize   # Resize
+focus,swap,warp,resize,toggle < t          ; toggle   # Toggle
 
 
 # Change focus using standard vi directional keys. Enter changes focus to the
@@ -62,9 +64,13 @@ resize          < shift - j         : yabai -m window --resize bottom:0:-200 # b
 resize          < shift - l         : yabai -m window --resize right:-200:0  # right
 resize          < shift - h         : yabai -m window --resize left:200:0    # left
 
+# Toggle various props on current window
+toggle          < f                 : yabai -m window --toggle float   # float
+toggle          < u                 : yabai -m window --toggle native-fullscreen   # native fullscreen
+toggle          < i                 : yabai -m window --toggle split   # split
 
 # All Modes
-focus,swap,warp,resize < x : yabai -m space --mirror x-axis # flip x-axis
-focus,swap,warp,resize < y : yabai -m space --mirror y-axis # flip y-axis
-focus,swap,warp,resize < i : yabai -m window --toggle split # split
-focus,swap,warp,resize < e : yabai -m space --balance       # equalize
+focus,swap,warp,resize,toggle < x : yabai -m space --mirror x-axis # flip x-axis
+focus,swap,warp,resize,toggle < y : yabai -m space --mirror y-axis # flip y-axis
+focus,swap,warp,resize,toggle < i : yabai -m window --toggle split # split
+focus,swap,warp,resize,toggle < e : yabai -m space --balance       # equalize
