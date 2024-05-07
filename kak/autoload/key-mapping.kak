@@ -25,6 +25,7 @@ map global git m ': suspend-and-resume "tig"<ret>' -docstring 'show main view (w
 map global git + ': git-amend-current-buffer<ret>' -docstring 'append this files changes to most recent commit'
 map global git p ': suspend-and-resume "git push"<ret>' -docstring 'push'
 map global git P ': suspend-and-resume "git push -f --no-verify"<ret>' -docstring 'force push (no verify)'
+map global git t ': nop %sh{ open "https://jellyvisionlab.atlassian.net/browse/$(sh ~/vc/dotfiles/extract-jira-ticket.sh)" }<ret>' -docstring 'open Jira ticket (from branch name)'
 map global git u ': suspend-and-resume "git pull"<ret>' -docstring 'pull'
 
 define-command -hidden -override git-amend-current-buffer %{
