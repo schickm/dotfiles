@@ -65,9 +65,8 @@ resize          < shift - l         : yabai -m window --resize right:-200:0  # r
 resize          < shift - h         : yabai -m window --resize left:200:0    # left
 
 # Toggle various props on current window
-toggle          < f                 : yabai -m window --toggle float   # float
+toggle          < o                 : yabai -m window --toggle float   # float
 toggle          < u                 : yabai -m window --toggle native-fullscreen   # native fullscreen
-toggle          < i                 : yabai -m window --toggle split   # split
 
 # All Modes
 focus,swap,warp,resize,toggle < x : yabai -m space --mirror x-axis # flip x-axis
