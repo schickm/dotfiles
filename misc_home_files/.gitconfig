@@ -1,0 +1,83 @@
+[user]
+	email = schickm@gmail.com
+	name = Matt Schick
+; Details on how this works:
+; https://gist.github.com/Icaruk/f024a18093dc28ec1588cfb90efc32f7
+[includeIf "gitdir:~/workvc/"]
+        path = ~/workvc/.gitconfig-work
+[push]
+	default = current
+	followTags = true
+	autoSetupRemote = true
+[filter "media"]
+	required = true
+	clean = git media clean %f
+	smudge = git media smudge %f
+[filter "hawser"]
+	clean = git hawser clean %f
+	smudge = git hawser smudge %f
+	required = true
+[alias]
+	cam = commit -am
+	cm = commit -m
+	co = checkout
+	cp = cherry-pick
+	pl = pull
+	ph = ph
+	c = commit
+	st = status --short
+	sw = switch
+	log = log --graph --decorate
+	branchname = rev-parse --abbrev-ref HEAD
+        lb = !git reflog show --pretty=format:'%gs ~ %gd' --date=relative | grep 'checkout:' | grep -oE '[^ ]+ ~ .*' | awk -F~ '!seen[$1]++' | head -n 10 | awk -F' ~ HEAD@{' '{printf(\"  \\033[33m%s: \\033[0m %s\\n\", substr($2, 1, length($2)-1), $1)}'
+[core]
+	editor = "kak -e 'autowrap-enable; execute-keys -with-hooks A'"
+	excludesfile = /Users/mattschick/.gitignore_global
+	pager = diff-so-fancy | less --tabs=4 -RFX
+[colors]
+	ui = true
+
+# [diff]
+#         tool = difftastic
+# 	external = difft
+[difftool]
+        prompt = false
+
+[difftool "difftastic"]
+        cmd = difft "$LOCAL" "$REMOTE"
+
+[pager]
+        difftool = true
+[difftool "meld"]
+        trustExitCode = true
+        cmd = open -W -a Meld --args \"$LOCAL\" \"$REMOTE\"
+	# cmd = meld \"$LOCAL\" \"$REMOTE\"
+[difftool "json-diff"]
+	cmd = json-diff \"$LOCAL\" \"$REMOTE\"
+[merge]
+        tool = meld
+[mergetool]
+        prompt = false
+	keepBackup = false
+[mergetool "meld"]
+        trustExitCode = true
+	hideResolved = false
+	cmd = meld \"$LOCAL\" \"$BASE\" \"$REMOTE\" --output=\"$MERGED\" --diff \"$BASE\" \"$LOCAL\" --diff \"$BASE\" \"$REMOTE\"
+[mergetool "bc"]
+	hideResolved = true
+        trustExitCode = true
+[tig]
+    line-graphics = utf-8
+    refresh-mode = auto
+    mouse = true
+[rerere]
+	enabled = true
+[filter "lfs"]
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+[init]
+	defaultBranch = main
+[rebase]
+	autosquash = true
