@@ -1,0 +1,29 @@
+#!/bin/sh
+
+yabai -m config window_placement first_child
+yabai -m config layout bsp
+yabai -m config window_gap 4
+yabai -m config right_padding 4
+yabai -m config left_padding 4
+yabai -m config top_padding 4
+yabai -m config bottom_padding 4
+yabai -m config mouse_follows_focus off
+
+yabai -m rule --add app="^System Settings|Stats|Tomato One|Appgate SDP|System Information|Calculator|licecap|Tunable|VLC$" manage=off
+yabai -m rule --add app="^Übersicht$" title="^Preferences$" manage=off
+yabai -m rule --add app="zoom.us" title="Zoom Meeting" display=2
+yabai -m rule --add app="zoom.us" title="Zoom" display=2
+yabai -m rule --add app="Slack" display=2
+yabai -m rule --add app="Google Chrome" title="DevTools - Matt" display=2
+yabai -m rule --add app="Capo" space=4 
+yabai -m config external_bar main:24:0
+
+# start out with default mode active_color (light blue)
+borders active_color=0xff61afef inactive_color=0x00494d64 width=8 &
+
+yabai -m signal --add event=display_resized action="sh ~/bin/handle-display-changed.sh"
+
+# Ensure another window is focused after closing one
+yabai -m signal --add event=window_destroyed action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
+yabai -m signal --add event=application_terminated action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
+

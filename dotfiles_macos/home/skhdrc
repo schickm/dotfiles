@@ -1,0 +1,88 @@
+:: default  : ~/bin/update_mode.sh default 61afef
+:: focus  @ : ~/bin/update_mode.sh focus 32f032
+:: swap   @ : ~/bin/update_mode.sh swap c678dd
+:: warp   @ : ~/bin/update_mode.sh warp ffa500
+:: resize @ : ~/bin/update_mode.sh resize 98c379
+:: toggle @ : ~/bin/update_mode.sh toggle ff9c9c
+
+# CTRL-SPACE is the global hotkey to toggle in/out of modal mode. Entry is
+# always to FOCUS mode. Getting out of any mode can also be done with ESCAPE.
+default                < ctrl-space ; focus    # Focus
+# default 	       < f4       : yabai -m window --focus prev
+# default 	       < 0x83       : yabai -m window --focus next
+
+focus,swap,warp,resize,toggle < space      ; default  # Default
+focus,swap,warp,resize,toggle < f          ; focus    # Focus
+focus,swap,warp,resize,toggle < s          ; swap     # Swap
+focus,swap,warp,resize,toggle < w          ; warp     # Warp
+focus,swap,warp,resize,toggle < r          ; resize   # Resize
+focus,swap,warp,resize,toggle < t          ; toggle   # Toggle
+
+
+# Change focus using standard vi directional keys. Enter changes focus to the
+# biggest window. You'll see this theme repeated over and over again. Since this
+# is such a common operation, no modifier keys are used.
+focus < k      : yabai -m window --focus north # north
+focus < j      : yabai -m window --focus south # south
+# Utilize fallbacks to shift focus to other display (this only works with two displays)
+focus < l      : yabai -m window --focus east || yabai -m display --focus east # east
+focus < h      : yabai -m window --focus west || yabai -m display --focus west # west
+focus < return : yabai -m window --focus largest # largest
+focus < p      : yabai -m window --focus stack.prev # prev
+focus < n      : yabai -m window --focus stack.next # next
+focus < b      : yabai -m space --layout bsp # bsp
+focus < m      : yabai -m space --layout stack # stack
+focus < tab    : yabai -m display --focus recent # other display
+
+# Swap windows using standard vi directional keys.
+swap < k      : yabai -m window --swap north # north
+swap < j      : yabai -m window --swap south # south
+swap < l      : yabai -m window --swap east # east
+swap < h      : yabai -m window --swap west # west
+swap < return : yabai -m window --swap largest # largest
+swap < p      : yabai -m window --swap stack.prev # prev
+swap < b      : yabai -m space --layout bsp # bsp
+swap < m      : yabai -m space --layout stack # stack
+swap < tab    : yabai -m window --display recent ; yabai -m display --focus recent # other display
+
+warp < k      : yabai -m window --warp north # north
+warp < j      : yabai -m window --warp south # south
+warp < l      : yabai -m window --warp east # east
+warp < h      : yabai -m window --warp west # west
+warp < return : yabai -m window --warp largest # largest
+
+# Increase size of window using standard vi directional keys.
+resize          < k                 : yabai -m window --resize top:0:-100   # grow top
+resize          < ralt - k                 : yabai -m window --resize top:0:-200   # grow top (more)
+resize          < j                 : yabai -m window --resize bottom:0:100 # grow bottom
+resize          < ralt - j                 : yabai -m window --resize bottom:0:200 # grow bottom (more)
+resize          < l                 : yabai -m window --resize right:100:0  # grow right
+resize          < ralt - l                 : yabai -m window --resize right:200:0  # grow right (more)
+resize          < h                 : yabai -m window --resize left:-100:0  # grow left
+resize          < ralt - h                 : yabai -m window --resize left:-200:0  # grow left (more)
+
+# Prefix the above with shift to decrease size of window using standard vi
+# directional keys.
+resize          < shift - k         : yabai -m window --resize top:0:100     # shrink top
+resize          < shift + ralt - k         : yabai -m window --resize top:0:200     # shrink top (more)
+resize          < shift - j         : yabai -m window --resize bottom:0:-100 # shrink bottom
+resize          < shift + ralt - j         : yabai -m window --resize bottom:0:-200 # shrink bottom (more)
+resize          < shift - l         : yabai -m window --resize right:-100:0  # shrink right
+resize          < shift + ralt - l         : yabai -m window --resize right:-200:0  # shrink right (more)
+resize          < shift - h         : yabai -m window --resize left:100:0    # shrink left
+resize          < shift + ralt - h         : yabai -m window --resize left:200:0    # shrink left (more)
+
+# Toggle various props on current window
+toggle          < o                 : yabai -m window --toggle float   # float
+toggle          < u                 : yabai -m window --toggle native-fullscreen   # native fullscreen
+
+# All Modes
+focus,swap,warp,resize,toggle < x : yabai -m space --mirror x-axis # flip x-axis
+focus,swap,warp,resize,toggle < y : yabai -m space --mirror y-axis # flip y-axis
+focus,swap,warp,resize,toggle < i : yabai -m window --toggle split # split
+focus,swap,warp,resize,toggle < e : yabai -m space --balance       # equalize
+focus,swap,warp,resize,toggle < z : yabai -m window --toggle zoom-fullscreen   # zoom fullscreen
+focus,swap,warp,resize,toggle < c : yabai -m window --close # close
+focus,swap,warp,resize,toggle < shift - m : yabai -m window --minimize # minimize
+focus,swap,warp,resize,toggle < shift - r : yabai --restart-service # restart yabai
+focus,swap,warp,resize,toggle < q : osascript -e "tell application \"Finder\" to set p to item 1 of (get file of (processes whose frontmost = true)) as text" -e "tell application p to quit" # quit
