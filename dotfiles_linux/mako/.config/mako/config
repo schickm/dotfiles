@@ -1,0 +1,4 @@
+# Enable icons (should be default, but let's be explicit)
+icons=1
+max-icon-size=64
+icon-path=/usr/share/icons/Papirus
