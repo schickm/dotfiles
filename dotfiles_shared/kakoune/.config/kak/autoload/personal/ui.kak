@@ -17,8 +17,8 @@ hook global WinCreate .* %{
 }
 
 hook -once global KakBegin .* %{
-	require-module iterm
-	alias global terminal iterm-terminal-window
+	# require-module iterm
+	# alias global terminal iterm-terminal-window
 	set global git_diff_add_char "+"
 	set global git_diff_mod_char "~"
 }
