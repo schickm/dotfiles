@@ -2,3 +2,9 @@
 import = [
     "~/.config/alacritty/themes/themes/solarized_light.toml"
 ]
+
+[scrolling]
+multiplier = 7
+
+[window]
+padding = { x = 5, y = 5 }
