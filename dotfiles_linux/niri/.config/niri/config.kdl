@@ -48,7 +48,7 @@ input {
     mouse {
         // off
         natural-scroll
-        accel-speed -0.8
+        accel-speed -1
 	scroll-factor horizontal=1 vertical=1.5
         // accel-profile "flat"
         // scroll-method "no-scroll"
@@ -108,6 +108,9 @@ input {
     // If the position is unset or results in an overlap, the output is instead placed
     // automatically.
     position x=1280 y=0
+
+    // Default window width for laptop display
+    default-column-width { proportion 0.5; }
 }
 
 // Settings that influence how windows are positioned and sized.
@@ -142,7 +145,7 @@ layout {
     // preset-window-heights { }
 
     // You can change the default width of the new windows.
-    default-column-width { proportion 0.5; }
+    default-column-width { proportion 0.33333; }
     // If you leave the brackets empty, the windows themselves will decide their initial width.
     // default-column-width {}
 
