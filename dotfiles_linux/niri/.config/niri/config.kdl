@@ -48,7 +48,7 @@ input {
     mouse {
         // off
         natural-scroll
-        accel-speed -1
+        accel-speed -0.5
 	scroll-factor horizontal=1 vertical=1.5
         // accel-profile "flat"
         // scroll-method "no-scroll"
@@ -111,6 +111,10 @@ input {
 
     // Default window width for laptop display
     default-column-width { proportion 0.5; }
+}
+
+output "eDP-1" {
+    // scale 2
 }
 
 // Settings that influence how windows are positioned and sized.
@@ -198,6 +202,13 @@ layout {
         // inactive-gradient from="#505050" to="#808080" angle=45 relative-to="workspace-view"
     }
 
+    tab-indicator {
+        width 4
+        gap 5
+	place-within-column
+	// length total-proportion=1.0
+    }
+
     // You can also add a border. It's similar to the focus ring, but always visible.
     border {
         // The settings are the same as for the focus ring.
@@ -283,7 +294,7 @@ layout {
 
 hotkey-overlay {
     // Uncomment this line to disable the "Important Hotkeys" pop-up at startup.
-    // skip-at-startup
+    skip-at-startup
 }
 
 // Uncomment this line to ask the clients to omit their client-side decorations if possible.
@@ -332,6 +343,15 @@ window-rule {
     // - host Firefox (app-id is "firefox")
     // - Flatpak Firefox (app-id is "org.mozilla.firefox")
     match app-id=r#"firefox$"# title="^Picture-in-Picture$"
+    open-floating true
+}
+
+// Open the Chrome picture-in-picture as floating by default.
+window-rule {
+    // This app-id regular expression will work for both:
+    match app-id=r#"^google-chrome$"#
+    // Regular tabbed chrome windows always have this suffix so ignore
+    exclude title=" - Google Chrome"
     open-floating true
 }
 
@@ -589,7 +609,7 @@ binds {
     // Toggle tabbed column display mode.
     // Windows in this column will appear as vertical tabs,
     // rather than stacked on top of each other.
-    Mod+W { toggle-column-tabbed-display; }
+    Mod+W hotkey-overlay-title="Toggle Column as tabbed" { toggle-column-tabbed-display; }
 
     // Actions to switch layouts.
     // Note: if you uncomment these, make sure you do NOT have
@@ -601,7 +621,7 @@ binds {
 
     Print { screenshot; }
     Ctrl+Print { screenshot-screen; }
-    Alt+Print { screenshot-window; }
+    Mod+Shift+Alt+P { screenshot-window; }
 
     // Applications such as remote-desktop clients and software KVM switches may
     // request that niri stops processing the keyboard shortcuts defined here
