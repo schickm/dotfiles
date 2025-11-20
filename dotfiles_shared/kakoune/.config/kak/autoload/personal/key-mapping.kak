@@ -80,7 +80,7 @@ map global user W ': write-all<ret>' -docstring 'write all modified buffers'
 
 evaluate-commands %sh{
     case $(uname) in
-        Linux) copy="xclip -i"; paste="xclip -o" ;;
+        Linux) copy="wl-copy"; paste="wl-paste" ;;
         Darwin)  copy="pbcopy"; paste="pbpaste" ;;
     esac
 
