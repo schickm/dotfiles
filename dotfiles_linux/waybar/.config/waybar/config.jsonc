@@ -196,7 +196,7 @@
 		}
     },
     "custom/uair": {
-        "format": "{icon} {}",
+        "format": "{icon} {text}",
         "format-icons": [
             "○○○○○○○○○●",
             "○○○○○○○○●●",
