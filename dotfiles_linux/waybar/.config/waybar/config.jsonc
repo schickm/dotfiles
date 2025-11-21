@@ -16,6 +16,7 @@
     "modules-right": [
         "mpd",
         "idle_inhibitor",
+	"custom/uair",
         "pulseaudio",
         "network",
         "power-profiles-daemon",
@@ -193,5 +194,27 @@
 			"suspend": "systemctl suspend",
 			"hibernate": "systemctl hibernate"
 		}
+    },
+    "custom/uair": {
+        "format": "{icon} {}",
+        "format-icons": [
+            "○○○○○○○○○●",
+            "○○○○○○○○●●",
+            "○○○○○○●●●●",
+            "○○○○○●●●●●",
+            "○○○○●●●●●●",
+            "○○○●●●●●●●",
+            "○○●●●●●●●●",
+            "○●●●●●●●●●",
+            "●●●●●●●●●●"
+        ],
+        "tooltip": false,
+        "return-type": "json",
+        "interval": 5,
+        "on-click": "uairctl toggle",
+        "on-click-middle": "uairctl prev",
+        "on-click-right": "uairctl next",
+        "exec-if": "which uairctl",
+        "exec": "uairctl fetch '{\"text\":\"{name} {time} {percent}%\",\"class\":\"{state}\",\"percentage\":{percent}}'"
     }
 }

@@ -4,7 +4,7 @@ import = [
 ]
 
 [scrolling]
-multiplier = 7
+multiplier = 11
 
 [window]
 padding = { x = 5, y = 5 }
