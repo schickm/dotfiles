@@ -1,3 +1,5 @@
+# taken from
+# https://www.thenegation.com/posts/pomodoro-waybar-uair/
 [defaults]
 format = "{time}\n"
 paused_state_text = "paused"

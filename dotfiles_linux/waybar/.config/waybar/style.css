@@ -309,6 +309,10 @@ label:focus {
     background-color: #0069d4;
 }
 
+#custom-uair {
+    background-color: #2d3436;
+}
+
 #custom-uair.resumed {
   color: #f87171;
 }
