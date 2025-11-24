@@ -5,8 +5,8 @@ hook global InsertChar j %{ try %{
 }}
 
 declare-user-mode file
-map global file b ': nop %sh{ echo "$kak_bufname" | pbcopy }<ret>' -docstring 'Copy current buffer name to clipboard'
-map global file f ': nop %sh{ echo "$kak_buffile" | pbcopy }<ret>' -docstring 'Copy full file path of buffer to clipboard'
+map global file b ': nop %sh{ echo "$kak_bufname" | wl-copy }<ret>' -docstring 'Copy current buffer name to clipboard'
+map global file f ': nop %sh{ echo "$kak_buffile" | wl-copy }<ret>' -docstring 'Copy full file path of buffer to clipboard'
 map global file c ': terminal claude "I want to ask you a few questions about @%val{buffile}"<ret>' -docstring 'open claude for current file'
 map global file n ': terminal nnn-for-kak.sh %val{session} %val{client} %val{buffile}<ret>' -docstring 'launch nnn for current buffer''s directory'
 map global file N ': terminal nnn-for-kak.sh %val{session} %val{client}<ret>' -docstring 'launch nnn in CWD'
