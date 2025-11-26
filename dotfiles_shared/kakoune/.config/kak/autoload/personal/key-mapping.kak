@@ -5,8 +5,8 @@ hook global InsertChar j %{ try %{
 }}
 
 declare-user-mode file
-map global file b ': nop %sh{ echo "$kak_bufname" | wl-copy }<ret>' -docstring 'Copy current buffer name to clipboard'
-map global file f ': nop %sh{ echo "$kak_buffile" | wl-copy }<ret>' -docstring 'Copy full file path of buffer to clipboard'
+map global file b ': nop %sh{ echo "$kak_bufname" | wl-copy 2>/dev/null }<ret>' -docstring 'Copy current buffer name to clipboard'
+map global file f ': nop %sh{ echo "$kak_buffile" | wl-copy 2>/dev/null }<ret>' -docstring 'Copy full file path of buffer to clipboard'
 map global file c ': terminal claude "I want to ask you a few questions about @%val{buffile}"<ret>' -docstring 'open claude for current file'
 map global file n ': terminal nnn-for-kak.sh %val{session} %val{client} %val{buffile}<ret>' -docstring 'launch nnn for current buffer''s directory'
 map global file N ': terminal nnn-for-kak.sh %val{session} %val{client}<ret>' -docstring 'launch nnn in CWD'
@@ -80,12 +80,12 @@ map global user W ': write-all<ret>' -docstring 'write all modified buffers'
 
 evaluate-commands %sh{
     case $(uname) in
-        Linux) copy="wl-copy"; paste="wl-paste" ;;
+        Linux) copy="wl-copy 2>/dev/null"; paste="wl-paste" ;;
         Darwin)  copy="pbcopy"; paste="pbpaste" ;;
     esac
 
     printf "map global user -docstring 'paste (after) from clipboard' p '<a-!>%s<ret>'\n" "$paste"
     printf "map global user -docstring 'paste (before) from clipboard' P '!%s<ret>'\n" "$paste"
-    printf "map global user -docstring 'yank to clipboard' y '<a-|>%s<ret>:echo -markup %%{{Information}copied selection to X11 clipboard}<ret>'\n" "$copy"
+    printf "map global user -docstring 'yank to clipboard' y '<a-|>%s<ret>:echo -markup %%{{Information}copied selection to clipboard}<ret>'\n" "$copy"
     printf "map global user -docstring 'replace from clipboard' R '|%s<ret>'\n" "$paste"
 }

@@ -1,4 +1,4 @@
-# 
+#
 # My own Github related helpers
 #
 
@@ -40,7 +40,7 @@ define-command github-blame-url-for-selection \
 		merge_base=$(git merge-base "$branch" "$remote_branch")
 		# The kak instance may have been launched in a subdirectory of the git repo (this happens
 		# frequently with monorepos).  This ensures that we use the full relative path for the git
-		# repo itself 
+		# repo itself
 		repo_file_path=$(git ls-files --full-name "$kak_bufname")
 		lines=$(echo "$kak_selection_desc" | sed -e 's/\([0-9]*\)\.[0-9]*/L\1/g' -e 's/,/-/')
 		url="$repo_url/blob/$merge_base/$repo_file_path#$lines"
@@ -50,20 +50,20 @@ define-command github-blame-url-for-selection \
 				open "$url"
 		      	;;
 			copy)
-				echo "$url" | pbcopy
+				echo "$url" | wl-copy 2>/dev/null
 				;;
 			*)
 				echo "Invalid option"
 				exit 1
 				;;
 		esac
-	 } 
+	 }
 }
 
 # Wrapped in try so that entire file can be re-sourced without throwing an error
 # due to there already being a usermode named github
-try %{ declare-user-mode github } 
- 
+try %{ declare-user-mode github }
+
 define-command setup-github-mode \
 	-override \
 	-docstring 'setup-github-mode <repo url> <remote branch name>' %{
