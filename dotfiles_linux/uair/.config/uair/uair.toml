@@ -1,16 +1,13 @@
 # taken from
 # https://www.thenegation.com/posts/pomodoro-waybar-uair/
+# "man 5 uair" for config options
+
+loop_on_end = true
+
 [defaults]
 format = "{time}\n"
 paused_state_text = "paused"
 resumed_state_text = "resumed"
-
-[[sessions]]
-id = "quick"
-name = "Quick"
-duration = "15m"
-time_format = "%M:%S"
-command = "notify-send 'Quick Done!'"
 
 [[sessions]]
 id = "work"
