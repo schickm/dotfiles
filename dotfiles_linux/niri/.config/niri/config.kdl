@@ -391,6 +391,7 @@ binds {
 
     // Show 1Password prompt
     Mod+Shift+Backslash hotkey-overlay-title="1Password Quick Access" { spawn "1password" "--quick-access"; }
+    Mod+Shift+Alt+P hotkey-overlay-title="Flameshot" { spawn "flameshot" "gui"; }
 
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+T hotkey-overlay-title="Open a Terminal: alacritty" { spawn "alacritty"; }
@@ -624,7 +625,6 @@ binds {
 
     Print { screenshot; }
     Ctrl+Print { screenshot-screen; }
-    Mod+Shift+Alt+P hotkey-overlay-title="Screenshot Window" { screenshot-window; }
 
     // Applications such as remote-desktop clients and software KVM switches may
     // request that niri stops processing the keyboard shortcuts defined here
