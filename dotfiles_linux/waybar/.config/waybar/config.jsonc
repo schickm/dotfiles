@@ -16,6 +16,7 @@
     "modules-right": [
         "mpd",
         "idle_inhibitor",
+        "systemd-failed-units",
 	"custom/uair",
         "pulseaudio",
         "network",
@@ -80,6 +81,13 @@
             "activated": "",
             "deactivated": ""
         }
+    },
+    "systemd-failed-units": {
+	"hide-on-ok": false,
+	"format": "✗ {nr_failed}",
+	"format-ok": "✓",
+	"system": true,
+	"user": true,
     },
     "tray": {
         // "icon-size": 21,
