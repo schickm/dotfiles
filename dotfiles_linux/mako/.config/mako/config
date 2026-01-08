@@ -2,3 +2,5 @@
 icons=1
 max-icon-size=64
 icon-path=/usr/share/icons/Papirus
+on-button-right=exec makoctl menu -n "$id" -- fuzzel --dmenu --anchor=top-right
+
