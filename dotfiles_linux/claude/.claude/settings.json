@@ -36,6 +36,17 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/bin/claude-stop-hook.sh"
+          }
+        ]
+      }
     ]
   }
 }

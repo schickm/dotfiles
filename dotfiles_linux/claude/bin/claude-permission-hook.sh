@@ -7,6 +7,7 @@ INPUT=$(cat)
 
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // "Unknown"')
 TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input // {}')
+SUGGESTION=$(echo "$INPUT" | jq -c '.permission_suggestions[0] // empty')
 
 # Format display based on tool type
 case "$TOOL_NAME" in
@@ -21,11 +22,15 @@ case "$TOOL_NAME" in
         ;;
 esac
 
+# Build notification actions
+ACTIONS=(--action="allow=Allow once" --action="deny=Deny")
+if [[ -n "$SUGGESTION" ]]; then
+    ACTIONS=(--action="allow=Allow once" --action="always=Allow always" --action="deny=Deny")
+fi
+
 # Send notification with actions, wait for response
-# Right-click notification to select via fuzzel (mako config)
 ACTION=$(notify-send --app-name="Claude Code" \
-    --action="allow=Allow" \
-    --action="deny=Deny" \
+    "${ACTIONS[@]}" \
     --wait \
     "Permission: $TOOL_NAME" "$DISPLAY")
 
@@ -33,6 +38,9 @@ ACTION=$(notify-send --app-name="Claude Code" \
 case "$ACTION" in
     allow)
         jq -n '{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow"}}}'
+        ;;
+    always)
+        jq -n --argjson rule "$SUGGESTION" '{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow","ruleToAdd":$rule}}}'
         ;;
     deny)
         jq -n '{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"deny"}}}'
