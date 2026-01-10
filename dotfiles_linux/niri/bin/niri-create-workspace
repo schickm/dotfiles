@@ -1,0 +1,27 @@
+#!/bin/bash
+set -e
+
+name="$1"
+
+if [[ -z "$name" ]]; then
+    echo "Usage: $(basename "$0") <workspace-name>"
+    exit 1
+fi
+
+# Get workspace info
+workspaces=$(niri msg --json workspaces)
+
+# Get current workspace index
+current_idx=$(echo "$workspaces" | jq '[.[] | select(.is_focused)] | .[0].idx')
+
+# Get the last workspace index (niri keeps an empty one at the bottom)
+last_idx=$(echo "$workspaces" | jq 'map(.idx) | max')
+
+# Name the empty workspace at the bottom
+niri msg action set-workspace-name "$name" --workspace "$last_idx"
+
+# Move it to right below the current workspace
+niri msg action move-workspace-to-index "$((current_idx + 1))" --reference "$name"
+
+# Focus it
+niri msg action focus-workspace "$name"

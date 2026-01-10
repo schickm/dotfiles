@@ -1,0 +1,57 @@
+#!/bin/bash
+set -e
+
+workspace_name="$1"
+profile="$2"
+
+if [[ -z "$workspace_name" || -z "$profile" ]]; then
+    echo "Usage: $(basename "$0") <workspace-name> <profile>"
+    exit 1
+fi
+
+config_file="$HOME/.config/niri-workspaces/${profile}.json"
+
+if [[ ! -f "$config_file" ]]; then
+    echo "Profile not found: $config_file"
+    exit 1
+fi
+
+# Create the workspace
+niri-create-workspace "$workspace_name"
+
+# Read config
+config=$(cat "$config_file")
+
+# Get default cwd (if any)
+default_cwd=$(echo "$config" | jq -r '.cwd // empty')
+
+# Get number of windows
+num_windows=$(echo "$config" | jq '.windows | length')
+
+# Launch each window
+for ((i = 0; i < num_windows; i++)); do
+    window=$(echo "$config" | jq ".windows[$i]")
+
+    command=$(echo "$window" | jq -r '.command')
+    window_cwd=$(echo "$window" | jq -r '.cwd // empty')
+
+    # Use window cwd if set, otherwise default cwd
+    cwd="${window_cwd:-$default_cwd}"
+
+    # Build environment variables as space-separated KEY=VALUE pairs for env command
+    env_args=$(echo "$window" | jq -r '.env // {} | to_entries | map("\(.key)=\(.value)") | join(" ")')
+
+    # Launch the window
+    (
+        if [[ -n "$cwd" ]]; then
+            cd "$cwd" || exit 1
+        fi
+
+        if [[ -n "$env_args" ]]; then
+            # shellcheck disable=SC2086 # Word splitting intentional for env args
+            nohup env $env_args bash -c "$command" > /dev/null 2>&1 &
+        else
+            nohup bash -c "$command" > /dev/null 2>&1 &
+        fi
+    )
+done
