@@ -1,11 +1,34 @@
 #!/bin/bash
 set -e
 
-workspace_name="$1"
-profile="$2"
+# Example profile JSON (~/.config/niri-workspaces/<profile>.json):
+#
+# {
+#   "cwd": "/home/user/projects/myapp",    # Default working directory for all windows (optional)
+#   "windows": [
+#     {
+#       "command": "alacritty -e nvim"     # Command to run (required)
+#     },
+#     {
+#       "command": "google-chrome-stable --new-window https://localhost:3000",
+#       "cwd": "/other/path"               # Override cwd for this window (optional)
+#     },
+#     {
+#       "command": "alacritty -e npm run dev",
+#       "env": {                            # Environment variables (optional)
+#         "NODE_ENV": "development",
+#         "DEBUG": "true"
+#       }
+#     }
+#   ]
+# }
+
+profile="$1"
+workspace_name="$2"
+cwd_override="$3"
 
 if [[ -z "$workspace_name" || -z "$profile" ]]; then
-    echo "Usage: $(basename "$0") <workspace-name> <profile>"
+    echo "Usage: $(basename "$0") <profile> <workspace-name> [cwd]"
     exit 1
 fi
 
@@ -22,8 +45,12 @@ niri-create-workspace "$workspace_name"
 # Read config
 config=$(cat "$config_file")
 
-# Get default cwd (if any)
-default_cwd=$(echo "$config" | jq -r '.cwd // empty')
+# Get default cwd: CLI arg takes priority, then config file
+if [[ -n "$cwd_override" ]]; then
+    default_cwd="$cwd_override"
+else
+    default_cwd=$(echo "$config" | jq -r '.cwd // empty')
+fi
 
 # Get number of windows
 num_windows=$(echo "$config" | jq '.windows | length')
