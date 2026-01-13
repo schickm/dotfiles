@@ -1,0 +1,6 @@
+#!/bin/bash
+# Usage: alacritty-run <command>
+# Launches alacritty with fish, runs command in foreground with job control
+
+cmd="$*"
+alacritty -e expect -c "spawn fish; send \"$cmd\r\"; interact"
