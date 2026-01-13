@@ -88,6 +88,7 @@
 	"format-ok": "✓",
 	"system": true,
 	"user": true,
+	"on-click": "pkill -SIGRTMIN+1 waybar"
     },
     "tray": {
         // "icon-size": 21,
