@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+# Removes names from empty named workspaces
+
+workspaces=$(niri msg --json workspaces)
+
+# Find named workspaces with no windows and unset their names
+echo "$workspaces" | jq -r '.[] | select(.name != null and .active_window_id == null) | .name' | while read -r name; do
+    echo "Removing name from empty workspace: $name"
+    niri msg action unset-workspace-name "$name"
+done
