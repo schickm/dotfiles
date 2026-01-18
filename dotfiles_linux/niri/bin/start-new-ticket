@@ -1,0 +1,65 @@
+#!/bin/bash
+set -e
+
+# Run a command with a notification that dismisses when done
+with_notification() {
+    local title="$1"
+    local body="$2"
+    shift 2
+
+    local notif_id=$(notify-send -p "$title" "$body")
+    "$@"
+    local exit_code=$?
+    makoctl dismiss -n "$notif_id" >/dev/null
+    return $exit_code
+}
+
+# Prompt for GitHub issue URL
+url=$(echo "" | fuzzel --dmenu --prompt "GitHub issue URL: ")
+[[ -z "$url" ]] && exit 0
+
+# Extract issue number from URL (last number in the path)
+issue_num=$(echo "$url" | grep -oE '[0-9]+$')
+[[ -z "$issue_num" ]] && notify-send -u critical "Start Ticket Failed" "Could not extract issue number from URL" && exit 1
+
+# Use Claude to generate a short descriptive name (for workspace)
+claude_settings='{"permissions":{"allow":["Bash(gh:*)"]}}'
+claude_prompt="Given this GitHub issue URL: $url
+
+Use the GitHub CLI (gh) to fetch the issue details - do not try to load from the public URL.
+
+Generate a short descriptive name. Requirements:
+- Maximum 25 characters
+- Use kebab-case (lowercase with hyphens)
+- Be descriptive but concise
+- Do NOT include the issue number
+- Output ONLY the name, nothing else"
+
+workspace_name=$(with_notification "Starting ticket..." "Generating workspace name..." \
+    claude -p --setting-sources "" --settings "$claude_settings" "$claude_prompt")
+
+# Validate workspace name isn't empty
+[[ -z "${workspace_name//[[:space:]]/}" ]] && notify-send -u critical "Start Ticket Failed" "Could not generate workspace name" && exit 1
+
+# Create branch name by appending issue number
+branch="${workspace_name}-${issue_num}"
+
+# Create niri workspace with the descriptive name (no issue number)
+niri-create-workspace "$workspace_name"
+
+# CD into master worktree and create new worktree with wt-add
+cd ~/workvc/rwgps-ui/master
+with_notification "Setting up worktree..." "$branch" fish -c "wt-add ../$branch"
+
+# Launch dev environment in the new worktree
+worktree_dir=~/workvc/rwgps-ui/$branch
+cd "$worktree_dir"
+
+# Set up .env.local with unique port
+cp "$worktree_dir/.env.local.example" "$worktree_dir/.env.local"
+sed -i "s/^VITE_PORT=.*/VITE_PORT=$issue_num/" "$worktree_dir/.env.local"
+
+nohup alacritty-run 'yarn dev' &
+nohup env DISABLE_INSTALLATION_CHECKS=1 DISABLE_AUTOUPDATER=1 alacritty-run claude --chrome &
+nohup alacritty-run k &
+nohup google-chrome-stable --new-window https://localhost:3000 "$url" &

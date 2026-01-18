@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=Start New Ticket
+Exec=start-new-ticket
+Type=Application
+Terminal=false
