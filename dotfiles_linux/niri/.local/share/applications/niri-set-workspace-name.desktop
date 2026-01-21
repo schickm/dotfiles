@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=Set Workspace Name
+Exec=sh -c 'name=$(fuzzel --dmenu --prompt="Workspace name: ") && [ -n "$name" ] && niri-set-workspace-name "$name"'
+Type=Application
+Terminal=false

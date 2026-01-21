@@ -3,7 +3,9 @@
     "allow": [
       "WebFetch",
       "WebSearch",
-      "Bash(gh:*)"
+      "Bash(gh:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)"
     ]
   },
   "alwaysThinkingEnabled": true,

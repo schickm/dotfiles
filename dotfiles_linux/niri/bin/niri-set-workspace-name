@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+name="$1"
+
+if [[ -z "$name" ]]; then
+    echo "Usage: $(basename "$0") <workspace-name>"
+    exit 1
+fi
+
+# Set the workspace name (applies to focused workspace by default)
+niri msg action set-workspace-name "$name"
