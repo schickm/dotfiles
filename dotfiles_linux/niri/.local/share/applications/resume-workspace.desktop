@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=Start New Ticket
-Exec=start-new-ticket
+Name=Resume Workspace
+Exec=resume-workspace
 Type=Application
 Terminal=false
 Keywords=rwgps;worktree;

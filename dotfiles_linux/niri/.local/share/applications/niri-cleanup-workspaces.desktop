@@ -3,3 +3,4 @@ Name=Cleanup Empty Workspaces
 Exec=niri-cleanup-workspaces
 Type=Application
 Terminal=false
+Keywords=worktree;
