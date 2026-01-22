@@ -1,12 +1,6 @@
 {
   "permissions": {
-    "allow": [
-      "WebFetch",
-      "WebSearch",
-      "Bash(gh:*)",
-      "Bash(ls:*)",
-      "Bash(grep:*)"
-    ]
+    "allow": ["WebFetch", "WebSearch", "Bash(ls:*)", "Bash(grep:*)"]
   },
   "alwaysThinkingEnabled": true,
   "enabledPlugins": {

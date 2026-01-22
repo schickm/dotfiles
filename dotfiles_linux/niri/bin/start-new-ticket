@@ -59,7 +59,7 @@ cd "$worktree_dir"
 cp "$worktree_dir/.env.local.example" "$worktree_dir/.env.local"
 sed -i "s/^VITE_PORT=.*/VITE_PORT=$issue_num/" "$worktree_dir/.env.local"
 
-nohup alacritty-run 'yarn dev' &
-nohup env DISABLE_INSTALLATION_CHECKS=1 DISABLE_AUTOUPDATER=1 alacritty-run claude --chrome &
-nohup alacritty-run k &
 nohup google-chrome-stable --new-window https://localhost:3000 "$url" &
+nohup alacritty-run k &
+nohup env DISABLE_INSTALLATION_CHECKS=1 DISABLE_AUTOUPDATER=1 alacritty-run claude --chrome &
+nohup alacritty-run 'yarn dev' &
