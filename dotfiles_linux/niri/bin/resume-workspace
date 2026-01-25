@@ -5,17 +5,14 @@ worktree_base=~/workvc/rwgps-ui
 
 # Check if called with arguments (from start-new-ticket) or interactively
 if [[ -n "$1" ]]; then
-    # Called with arguments: workspace_name, issue_num, issue_url
+    # Called with arguments: workspace_name, issue_url
     selected="$1"
-    issue_num="$2"
-    issue_url="$3"
-    is_new_workspace=true
+    issue_url="$2"
 else
     # Interactive mode: prompt user to select a workspace
     worktrees=$(ls -1 "$worktree_base")
     selected=$(echo "$worktrees" | fuzzel --dmenu --prompt "Resume workspace: ")
     [[ -z "$selected" ]] && exit 0
-    is_new_workspace=false
 fi
 
 worktree_dir="$worktree_base/$selected"
@@ -25,20 +22,11 @@ cd "$worktree_dir"
 niri-create-workspace "$selected"
 
 
-if [[ "$is_new_workspace" == "true" ]]; then
-    # Set up .env.local with unique port for new workspace
-    cp "$worktree_dir/.env.local.example" "$worktree_dir/.env.local"
-    sed -i "s/^VITE_PORT=.*/VITE_PORT=$issue_num/" "$worktree_dir/.env.local"
-else
-    # Extract port from existing .env.local for resumed workspace
-    issue_num=$(grep -oP '^VITE_PORT=\K\d+' "$worktree_dir/.env.local" 2>/dev/null || echo "")
-fi
+# Extract port from existing .env.local for resumed workspace
+vite_port=$(grep -oP '^VITE_PORT=\K\d+' "$worktree_dir/.env.local" 2>/dev/null || echo "")
 
-# Build hotlink URL if we have an issue number
-if [[ -n "$issue_num" ]]; then
-    hotlink_url="https://ridewithgps.com?hot=v:${issue_num}"
-else
-    hotlink_url=""
+if [[ -n "$vite_port" ]]; then
+    hotlink_url="https://ridewithgps.com?hot=v:${vite_port}"
 fi
 
 # Launch Chrome with hotlink (and issue_url if provided)

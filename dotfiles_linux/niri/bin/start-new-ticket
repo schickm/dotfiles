@@ -36,7 +36,7 @@ Generate a short descriptive name. Requirements:
 - Output ONLY the name, nothing else"
 
 workspace_name=$(with_notification "Starting ticket..." "Generating workspace name..." \
-    claude -p --setting-sources "" --settings "$claude_settings" "$claude_prompt")
+    claude -p --model haiku --setting-sources "" --settings "$claude_settings" "$claude_prompt")
 
 # Validate workspace name isn't empty
 [[ -z "${workspace_name//[[:space:]]/}" ]] && notify-send -u critical "Start Ticket Failed" "Could not generate workspace name" && exit 1
@@ -44,12 +44,13 @@ workspace_name=$(with_notification "Starting ticket..." "Generating workspace na
 # Create branch name by appending issue number
 branch="${workspace_name}-${issue_num}"
 
-# Create niri workspace with the descriptive name (no issue number)
-niri-create-workspace "$workspace_name"
-
 # CD into master worktree and create new worktree with wt-add
 cd ~/workvc/rwgps-ui/master
 with_notification "Setting up worktree..." "$branch" fish -c "wt-add ../$branch"
 
+# Prompt to launch workspace
+launch=$(echo -e "Yes\nNo" | fuzzel --dmenu --prompt "Launch workspace? ")
+[[ "$launch" != "Yes" ]] && exit 0
+
 # Launch dev environment via resume-workspace
-resume-workspace "$branch" "$issue_num" "$issue_url"
+resume-workspace "$branch" "$issue_url"
