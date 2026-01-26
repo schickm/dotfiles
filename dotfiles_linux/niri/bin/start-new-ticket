@@ -46,7 +46,15 @@ branch="${workspace_name}-${issue_num}"
 
 # CD into master worktree and create new worktree with wt-add
 cd ~/workvc/rwgps-ui/master
-with_notification "Setting up worktree..." "$branch" fish -c "wt-add ../$branch"
+with_notification "Setting up worktree..." "$branch" fish -c "wt-add ../$branch" \
+    || { notify-send -u critical "Start Ticket Failed" "Failed to create worktree: $branch"; exit 1; }
+
+# Write CLAUDE.local.md with ticket context
+cat > ~/workvc/rwgps-ui/$branch/CLAUDE.local.md << EOF
+This worktree's purpose is to implement the following GitHub ticket:
+
+$issue_url
+EOF
 
 # Prompt to launch workspace
 action=$(notify-send --wait --action="yes=Yes" --action="no=No" "Workspace Ready" "Launch workspace $branch?")
