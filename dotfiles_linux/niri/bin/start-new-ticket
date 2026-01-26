@@ -49,8 +49,8 @@ cd ~/workvc/rwgps-ui/master
 with_notification "Setting up worktree..." "$branch" fish -c "wt-add ../$branch"
 
 # Prompt to launch workspace
-launch=$(echo -e "Yes\nNo" | fuzzel --dmenu --prompt "Launch workspace? ")
-[[ "$launch" != "Yes" ]] && exit 0
+action=$(notify-send --wait --action="yes=Yes" --action="no=No" "Workspace Ready" "Launch workspace $branch?")
+[[ "$action" != "yes" ]] && exit 0
 
 # Launch dev environment via resume-workspace
 resume-workspace "$branch" "$issue_url"

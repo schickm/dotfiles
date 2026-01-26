@@ -5,7 +5,12 @@
       "WebSearch",
       "Bash(ls:*)",
       "Bash(grep:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr diff:*)",
       "Bash(git config --local -l)"
+    ],
+    "additionalDirectories": [
+			"~/workvc/rwgps-ui/"
     ]
   },
   "hooks": {
