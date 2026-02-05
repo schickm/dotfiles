@@ -57,7 +57,7 @@ def suspend-and-resume \
 			kill_cmd="/bin/kill"
 			;;
 		Linux)
-			automate_cmd="sleep 0.00; wtype '$cli_cmd'; wtype -k Return"
+			automate_cmd="sleep 0.01; wtype '$cli_cmd'; wtype -k Return"
 			kill_cmd="/usr/bin/kill"
 		    ;;
 	esac
