@@ -32,17 +32,12 @@ if [[ -f "$WATCHDOG_PID_FILE" ]]; then
     rm -f "$WATCHDOG_PID_FILE"
 fi
 
-# Start watchdog in background
-(
+# Start watchdog fully detached (new session, no inherited fds)
+setsid bash -c "
     trap 'exit 0' TERM
-    sleep "$INACTIVITY_TIMEOUT"
-    # Send Ctrl+Z to this specific Kitty window
-    kitty @ send-text --match "id:${KITTY_WINDOW_ID}" $'\x1a'
-) &
-
-# Save watchdog PID for this window
-echo $! > "$WATCHDOG_PID_FILE"
-
-disown
+    echo \$\$ > '$WATCHDOG_PID_FILE'
+    sleep $INACTIVITY_TIMEOUT
+    kitty @ send-text --match 'id:${KITTY_WINDOW_ID}' \$'\x1a'
+" </dev/null >/dev/null 2>&1 &
 
 exit 0
