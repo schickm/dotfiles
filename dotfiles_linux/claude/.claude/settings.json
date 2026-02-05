@@ -3,39 +3,21 @@
     "allow": [
       "WebFetch",
       "WebSearch",
-      "Bash(ls:*)",
-      "Bash(grep:*)",
-      "Bash(gh pr view:*)",
-      "Bash(gh pr diff:*)",
-      "Bash(git config --local -l)"
+      "mcp__figma__get_design_context",
+      "mcp__figma__get_screenshot",
+      "mcp__slack__conversations_replies",
+      "mcp__slack__conversations_search_messages",
+      "mcp__slack__conversations_history",
+      "Bash(npm test:*)",
+      "Bash(git commit:*)",
+      "Bash(gh pr create:*)",
+      "mcp__chrome__list_pages"
     ],
-    "additionalDirectories": [
-			"~/workvc/rwgps-ui/"
-    ]
+    "additionalDirectories": ["~/workvc/rwgps-ui/"]
   },
   "hooks": {
-    "PreCompact": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bd prime"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bd prime"
-          }
-        ]
-      }
-    ],
+    "PreCompact": [],
+    "SessionStart": [],
     "PermissionRequest": [
       {
         "matcher": "",
@@ -60,7 +42,12 @@
     ]
   },
   "enabledPlugins": {
-    "typescript-lsp@claude-plugins-official": true
+    "typescript-lsp@claude-plugins-official": true,
+    "workspace-manager-status@workspace-manager": false
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
   },
   "alwaysThinkingEnabled": true
 }
