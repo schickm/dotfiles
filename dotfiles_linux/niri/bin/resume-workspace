@@ -39,7 +39,7 @@ else
     echo "Skipping Chrome launch: no URLs to open"
 fi
 
-# Launch alacritty windows
-nohup alacritty-run k &>/dev/null &
-nohup env DISABLE_INSTALLATION_CHECKS=1 DISABLE_AUTOUPDATER=1 alacritty-run claude --chrome &>/dev/null &
-nohup alacritty-run 'yarn dev' &>/dev/null &
+# Launch kitty windows
+nohup kitty-run 'yarn dev' &>/dev/null &
+nohup env DISABLE_INSTALLATION_CHECKS=1 DISABLE_AUTOUPDATER=1 kitty-run claude --chrome &>/dev/null &
+nohup kitty-run k &>/dev/null &

@@ -1,0 +1,10 @@
+#!/bin/bash
+# Usage: kitty-run <command>
+# Launches kitty with fish and sends the command to run interactively
+
+socket="/tmp/kitty-$$.sock"
+cmd="$*"
+
+kitty --listen-on "unix:$socket" fish &
+sleep 0.3
+kitty @ --to "unix:$socket" send-text "$cmd\n"
