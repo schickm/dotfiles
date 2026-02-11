@@ -3,6 +3,19 @@ set -e
 
 worktree_base=~/workvc/rwgps-ui
 
+# Run a command with a notification that dismisses when done
+with_notification() {
+    local title="$1"
+    local body="$2"
+    shift 2
+
+    local notif_id=$(notify-send -p "$title" "$body")
+    "$@"
+    local exit_code=$?
+    makoctl dismiss -n "$notif_id" >/dev/null
+    return $exit_code
+}
+
 # Check if called with arguments (from start-new-ticket) or interactively
 if [[ -n "$1" ]]; then
     # Called with arguments: workspace_name, issue_url
@@ -18,6 +31,10 @@ fi
 worktree_dir="$worktree_base/$selected"
 cd "$worktree_dir"
 
+# Look up the PR for the current branch
+pr_url=$(with_notification "Resuming workspace..." "Looking up pull request..." \
+    gh pr view --json url -q .url 2>/dev/null || true)
+
 # Create niri workspace with the descriptive name (no issue number)
 niri-create-workspace "$selected"
 
@@ -29,10 +46,12 @@ if [[ -n "$vite_port" ]]; then
     hotlink_url="https://ridewithgps.com?hot=v:${vite_port}"
 fi
 
-# Launch Chrome with hotlink (and issue_url if provided)
+
+# Launch Chrome with hotlink, issue_url, and PR if available
 chrome_urls=()
 [[ -n "$hotlink_url" ]] && chrome_urls+=("$hotlink_url")
 [[ -n "$issue_url" ]] && chrome_urls+=("$issue_url")
+[[ -n "$pr_url" ]] && chrome_urls+=("$pr_url")
 if [[ ${#chrome_urls[@]} -gt 0 ]]; then
     nohup google-chrome-stable --new-window "${chrome_urls[@]}" &>/dev/null &
 else

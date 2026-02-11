@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=Bemoji
+Exec=bemoji -t
+Type=Application
+Terminal=false
