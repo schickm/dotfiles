@@ -23,7 +23,7 @@ if [[ -n "$1" ]]; then
     issue_url="$2"
 else
     # Interactive mode: prompt user to select a workspace
-    worktrees=$(ls -1 "$worktree_base")
+    worktrees=$(ls -1d "$worktree_base"/*/ | xargs -n1 basename)
     selected=$(echo "$worktrees" | fuzzel --dmenu --prompt "Resume workspace: ")
     [[ -z "$selected" ]] && exit 0
 fi
