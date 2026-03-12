@@ -4,8 +4,9 @@ hook global InsertChar j %{ try %{
   exec -with-hooks <esc>
 }}
 
-declare-user-mode file
+try %{ declare-user-mode file }
 map global file b ': nop %sh{ echo "$kak_bufname" | wl-copy 2>/dev/null }<ret>' -docstring 'Copy current buffer name to clipboard'
+map global file l ': copy-buffer-line-ref<ret>' -docstring 'Copy buffer:line(s) to clipboard'
 map global file f ': nop %sh{ echo "$kak_buffile" | wl-copy 2>/dev/null }<ret>' -docstring 'Copy full file path of buffer to clipboard'
 map global file c ': terminal claude "I want to ask you a few questions about @%val{buffile}"<ret>' -docstring 'open claude for current file'
 map global file n ': terminal nnn-for-kak.sh %val{session} %val{client} %val{buffile}<ret>' -docstring 'launch nnn for current buffer''s directory'
@@ -14,7 +15,7 @@ map global file o ': nop %sh{ open "$(dirname "$kak_buffile")" }<ret>' -docstrin
 map global file t ': iterm-terminal-window-with-shell "cd %sh{ dirname ""$kak_buffile"" }"<ret>' -docstring 'open current directory in Terminal'
 
 
-declare-user-mode git
+try %{ declare-user-mode git }
 
 map global git a ': suspend-and-resume "git add . && git commit"<ret>' -docstring 'commit all tracked files'
 map global git b ': suspend-and-resume "tig blame +%val{cursor_line} %val{buffile}"<ret>' -docstring 'show blame (with tig)'
@@ -30,6 +31,24 @@ map global git P ': suspend-and-resume "git push -f --no-verify"<ret>' -docstrin
 map global git t ': nop %sh{ open "https://jira.grubhub.com/browse/$(extract-jira-ticket.sh)" }<ret>' -docstring 'open Jira ticket (from branch name)'
 map global git u ': suspend-and-resume "git pull"<ret>' -docstring 'pull'
 
+define-command -hidden -override copy-buffer-line-ref %{
+    nop %sh{
+        desc="$kak_selection_desc"
+        # selection_desc format: anchor_line.anchor_col,cursor_line.cursor_col
+        anchor_line="${desc%%.*}"
+        cursor_part="${desc#*,}"
+        cursor_line="${cursor_part%%.*}"
+
+        if [ "$anchor_line" -eq "$cursor_line" ]; then
+            printf "%s:%s" "$kak_bufname" "$anchor_line"
+        elif [ "$anchor_line" -le "$cursor_line" ]; then
+            printf "%s:%s-%s" "$kak_bufname" "$anchor_line" "$cursor_line"
+        else
+            printf "%s:%s-%s" "$kak_bufname" "$cursor_line" "$anchor_line"
+        fi | wl-copy 2>/dev/null
+    }
+}
+
 define-command -hidden -override git-amend-current-buffer %{
     write
     nop %sh{
@@ -40,7 +59,7 @@ define-command -hidden -override git-amend-current-buffer %{
     echo -markup "{Information}%val{bufname} amended to git commit:" %sh{ git log -n 1 --format=%s }
 }
 
-declare-user-mode lint
+try %{ declare-user-mode lint }
 map global lint n ': lint-next-message<ret>: lint-show<ret>' -docstring 'next lint message'
 map global lint p ': lint-previous-message<ret>: lint-show<ret>' -docstring 'previous lint message'
 
@@ -49,10 +68,10 @@ hook global ModeChange push:[^:]*:next-key\[user.spell\] %{
 }
 
 # commands that are local to the directory being worked on
-declare-user-mode local
+try %{ declare-user-mode local }
 map global user l ': enter-user-mode local<ret>' -docstring 'local commands'
 
-declare-user-mode kakoune
+try %{ declare-user-mode kakoune }
 map global kakoune l ': e .kakrc.local<ret>' -docstring 'edit .kakrc.local'
 map global kakoune s ': source %val{buffile}<ret>' -docstring 'source current buffer'
 map global kakoune e ': evaluate-commands %val{selection}<ret>' -docstring 'eval current selection'

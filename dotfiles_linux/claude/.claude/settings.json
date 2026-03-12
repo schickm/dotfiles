@@ -11,9 +11,14 @@
       "Bash(npm test:*)",
       "Bash(git commit:*)",
       "Bash(gh pr create:*)",
-      "mcp__chrome__list_pages"
+      "Bash(ls:*)",
+      "mcp__chrome__list_pages",
+      "mcp__chrome-dev-tools__*"
     ],
-    "additionalDirectories": ["~/workvc/rwgps-ui/"]
+    "additionalDirectories": [
+      "~/workvc/rwgps-ui/",
+      "/tmp"
+    ]
   },
   "hooks": {
     "PreCompact": [],
@@ -53,5 +58,6 @@
     "enabled": true,
     "autoAllowBashIfSandboxed": true
   },
-  "alwaysThinkingEnabled": true
+  "alwaysThinkingEnabled": true,
+  "skipDangerousModePermissionPrompt": true
 }
