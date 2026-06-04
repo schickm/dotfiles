@@ -1,0 +1,69 @@
+#!/usr/bin/env fish
+
+# kitty `open_url_with` handler.
+#
+# Goal: when a URL is clicked from a terminal sitting inside a provisioned
+# ~/workvc worktree, open it in that workspace's dedicated Chrome profile (the
+# same one claude-chrome/the chrome-devtools MCP use); otherwise fall back to
+# the system default browser (xdg-open) — kitty's normal behavior.
+#
+# Why we don't just use our own $PWD: kitty only sets the handler's cwd for
+# OSC-8 hyperlinks that carry one. `gh ride status` (and most tools) print
+# PLAIN-TEXT urls, which kitty auto-detects with no associated cwd, so it runs
+# us with kitty's own cwd (e.g. $HOME) — not the clicked window's. Instead we
+# ask kitty, via remote control, for the focused window's cwd. This requires
+# `allow_remote_control yes` + `listen_on` in kitty.conf.
+#
+# Policy (A2 — conservative): only route to a workspace profile if that
+# workspace's profile dir ALREADY exists. We never seed one here; provisioning
+# stays solely with claude-chrome, so a stray click can't conjure a fresh
+# Chrome instance.
+
+set -l url $argv[1]
+test -n "$url"; or exit 0
+
+# --- resolve the focused window's cwd via kitty remote control ---------------
+# kitty injects KITTY_LISTEN_ON into our env when remote control is on; prefer
+# it. Fall back to scanning known sockets (only the OS-focused instance reports
+# a focused window, so the first non-empty answer is the right one).
+function __focused_window_cwd
+    set -l socks
+    set -q KITTY_LISTEN_ON; and set socks $socks $KITTY_LISTEN_ON
+    for f in /tmp/kitty-*
+        test -S $f; and set socks $socks "unix:$f"
+    end
+    for s in $socks
+        set -l cwd (timeout 1 kitten @ --to $s ls 2>/dev/null \
+            | jq -r '[.[]?.tabs[]?.windows[]? | select(.is_focused==true) | .cwd] | (.[0] // empty)' 2>/dev/null)
+        if test -n "$cwd"
+            echo $cwd
+            return 0
+        end
+    end
+    return 1
+end
+
+set -l cwd (__focused_window_cwd)
+test -n "$cwd"; or set cwd $PWD   # last-ditch fallback
+
+# --- route -------------------------------------------------------------------
+# worktree root of that cwd (empty if not in git)
+set -l root (git -C $cwd rev-parse --show-toplevel 2>/dev/null)
+
+# Only worktrees under ~/workvc (matches resume-workspace's convention, and is
+# the same path string claude-chrome was launched with, so the derived profile
+# key is identical).
+if test -n "$root"; and string match -q -- "$HOME/workvc/*" $root
+    set -l profile (claude-cdp-info $root)[1]
+    if test -d $profile
+        # Provisioned workspace → open in its dedicated Chrome. If that Chrome is
+        # already running this forwards the URL into it as a new tab; otherwise
+        # claude-chrome launches it (without re-seeding, since the dir exists).
+        claude-chrome $root $url
+        exit 0
+    end
+end
+
+# Not a provisioned workspace → default browser (mirrors kitty's stock
+# `open_url_with default`).
+xdg-open $url
