@@ -43,10 +43,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/bin/claude-stop-hook.sh"
-          },
-          {
-            "type": "command",
             "command": "~/bin/claude-inactivity-watchdog.sh"
           }
         ]
@@ -64,5 +60,7 @@
   "alwaysThinkingEnabled": true,
   "skipDangerousModePermissionPrompt": true,
   "theme": "light",
-  "preferredNotifChannel": "notifications_disabled"
+  "preferredNotifChannel": "kitty",
+  "inputNeededNotifEnabled": false,
+  "agentPushNotifEnabled": false
 }
