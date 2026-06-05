@@ -16,11 +16,7 @@ notify-send -i ~/.claude/skills/notify/assets/claude-icon.png "Title" "Message"
 Requires credentials in `~/.claude/skills/notify/config`. See `config.example` for format.
 
 ```bash
-source ~/.claude/skills/notify/config && curl -s -X POST https://api.pushover.net/1/messages.json \
-  -d "token=$PUSHOVER_TOKEN" \
-  -d "user=$PUSHOVER_USER" \
-  -d "title=Title" \
-  -d "message=Message"
+~/.claude/skills/notify/push.sh "Title" "Message"
 ```
 
-If config is empty, prompt user to fill in credentials from https://pushover.net.
+If config is empty or missing, prompt user to fill in credentials from https://pushover.net.

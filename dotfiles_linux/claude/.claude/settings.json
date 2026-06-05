@@ -13,7 +13,10 @@
       "Bash(gh pr create:*)",
       "Bash(ls:*)",
       "mcp__chrome__list_pages",
-      "mcp__chrome-dev-tools__*"
+      "mcp__chrome-dev-tools__*",
+      "Skill(notify)",
+      "Skill(qa-notes)",
+      "Bash(~/.claude/skills/notify/push.sh:*)"
     ],
     "additionalDirectories": [
       "~/workvc/rwgps-ui/",
@@ -59,5 +62,7 @@
     "autoAllowBashIfSandboxed": true
   },
   "alwaysThinkingEnabled": true,
-  "skipDangerousModePermissionPrompt": true
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "light",
+  "preferredNotifChannel": "notifications_disabled"
 }
