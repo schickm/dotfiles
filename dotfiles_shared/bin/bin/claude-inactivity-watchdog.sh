@@ -32,11 +32,17 @@ if [[ -f "$WATCHDOG_PID_FILE" ]]; then
     rm -f "$WATCHDOG_PID_FILE"
 fi
 
-# Start watchdog fully detached (new session, no inherited fds)
+# Start watchdog fully detached (new session, no inherited fds).
+# After the inactivity period, only background Claude once its Kitty window is
+# NOT focused by the compositor; if it still has focus, wait another full
+# interval and re-check (so we never yank the window while it's being looked at).
 setsid bash -c "
     trap 'exit 0' TERM
     echo \$\$ > '$WATCHDOG_PID_FILE'
     sleep $INACTIVITY_TIMEOUT
+    while \"\$HOME/bin/claude-window-focused.sh\"; do
+        sleep $INACTIVITY_TIMEOUT
+    done
     kitty @ send-text --match 'id:${KITTY_WINDOW_ID}' \$'\x1a'
 " </dev/null >/dev/null 2>&1 &
 

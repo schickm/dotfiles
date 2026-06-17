@@ -10,14 +10,7 @@ set -euo pipefail
 INPUT=$(cat)
 
 # --- Skip if Claude's Kitty window currently has keyboard focus ---
-if command -v kitty >/dev/null 2>&1; then
-    SELF_FOCUSED=$(kitty @ ls 2>/dev/null | jq -r '
-        [ .[] | select(.is_focused == true)
-              | .tabs[] | select(.is_active == true)
-              | .windows[] | select(.is_active == true and .is_self == true)
-              | .id ] | first // empty' 2>/dev/null || true)
-    [[ -n "$SELF_FOCUSED" ]] && exit 0
-fi
+[[ -x "$HOME/bin/claude-window-focused.sh" ]] && "$HOME/bin/claude-window-focused.sh" && exit 0
 
 TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.transcript_path // ""')
 
