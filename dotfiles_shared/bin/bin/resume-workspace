@@ -62,6 +62,6 @@ else
 fi
 
 # Launch kitty windows
-nohup kitty-run 'yarn dev' &>/dev/null &
-nohup env DISABLE_INSTALLATION_CHECKS=1 DISABLE_AUTOUPDATER=1 kitty-run claude &>/dev/null &
+nohup kitty-run 'pnpm dev' &>/dev/null &
+nohup env DISABLE_INSTALLATION_CHECKS=1 DISABLE_AUTOUPDATER=1 kitty-run claude --dangerously-skip-permissions &>/dev/null &
 nohup kitty-run k &>/dev/null &
