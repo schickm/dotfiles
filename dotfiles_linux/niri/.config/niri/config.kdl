@@ -121,6 +121,12 @@ output "eDP-1" {
     // scale 2
 }
 
+output "GIGA-BYTE TECHNOLOGY CO., LTD. GS34WQC 0x2B000460" {
+    // Gigabyte GS34WQC — 100 Hz, matched by monitor identity (any port).
+    // No VRR over HDMI on this Intel GPU; use DisplayPort for FreeSync.
+    mode "3440x1440@99.982"
+}
+
 // Settings that influence how windows are positioned and sized.
 // Find more information on the wiki:
 // https://yalter.github.io/niri/Configuration:-Layout
