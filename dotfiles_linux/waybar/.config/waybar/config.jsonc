@@ -19,6 +19,7 @@
         "systemd-failed-units",
 	"custom/uair",
         "pulseaudio",
+        "battery",
         "network",
         "power-profiles-daemon",
         "cpu",
@@ -26,7 +27,6 @@
         "temperature",
         "backlight",
         "keyboard-state",
-        "battery",
         "clock",
         "tray",
         "custom/power"
