@@ -5,8 +5,6 @@
 # Javascript
 #    export kak_javascript_formatcmd='prettierd %%val{buffile}'
 
-# TODO - this needs to be generalized currently javascript & html is just
-# duplicate code
 define-command setup-javascript-autoformatting \
 	-docstring 'setup-javascript-autoformatting: installed prettierd if necessary and autoformats on save' \
 	-override %{
@@ -29,32 +27,47 @@ define-command setup-javascript-autoformatting \
 	}
 }
 
+# Define formatters entirely via the environment (e.g. in a direnv .envrc):
+#
+#   export kak_formatter_javascript='javascript|typescript|json prettierd %val{buffile}'
+#   export kak_formatter_html='html prettierd %val{buffile}'
+#
+# Convention: kak_formatter_<anything> = "<filetype-regex> <command...>"
+#   - first whitespace-delimited token = filetype regex used in the hook
+#   - everything after the first space  = the formatcmd
+#
+# Adding a formatter for a new filetype needs no edit here, just a new env var.
 evaluate-commands %sh{
-    if [ -z "$kak_javascript_formatcmd" ]; then
-        printf "echo -debug 'formatting.kak - javascript automatic formatting will be disabled, environment var \"kak_javascript_formatcmd\" not defined'"
-    else
-	    printf "
-	        hook global WinSetOption filetype=(javascript|typescript|json) %%{
-	            set buffer formatcmd \"$kak_javascript_formatcmd\"
-	            hook -group javascript-format-hooks window BufWritePre .* format
-	            hook -once -always window WinSetOption filetype=.* %%{ remove-hooks window javascript-format-hooks }
-	        }
-	    "
-    fi
-}
+    formatters=$(env | grep '^kak_formatter_')
 
-evaluate-commands %sh{
-    if [ -z "$kak_html_formatcmd" ]; then
-        printf "echo -debug 'formatting.kak - html automatic formatting will be disabled, environment var \"kak_html_formatcmd\" not defined'"
-    else
-	    printf "
-	        hook global WinSetOption filetype=html %%{
-	            set buffer formatcmd \"$kak_html_formatcmd\"
-	            hook -group html-format-hooks window BufWritePre .* format
-	            hook -once -always window WinSetOption filetype=.* %%{ remove-hooks window html-format-hooks }
-	        }
-	    "
+    if [ -z "$formatters" ]; then
+        printf "echo -debug %s\n" "'formatting.kak - no kak_formatter_* env vars set, automatic formatting disabled'"
+        exit 0
     fi
+
+    printf '%s\n' "$formatters" | while IFS='=' read -r name value; do
+        filetypes="${value%% *}"   # first token
+        formatcmd="${value#* }"    # remainder
+
+        # skip malformed entries (no space => no command part)
+        if [ "$filetypes" = "$value" ]; then
+            printf "echo -debug %s\n" "'formatting.kak - ignoring $name, expected \"<filetype-regex> <command>\"'"
+            continue
+        fi
+
+        # Kakoune hook group names allow only [a-zA-Z0-9-]; the var name has
+        # underscores, so sanitize it (kak_formatter_my_lang -> my-lang-format-hooks).
+        group="$(printf '%s' "${name#kak_formatter_}" | tr -c 'a-zA-Z0-9' '-')-format-hooks"
+
+        printf "echo -debug %s\n" "'formatting.kak - registered formatter for filetype=($filetypes): $formatcmd'"
+        printf '%s' "
+            hook global WinSetOption filetype=($filetypes) %{
+                set buffer formatcmd \"$formatcmd\"
+                hook -group $group window BufWritePre .* format
+                hook -once -always window WinSetOption filetype=.* %{ remove-hooks window $group }
+            }
+        "
+    done
 }
 
 hook global WinSetOption deno_active=true %{
