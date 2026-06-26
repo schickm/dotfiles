@@ -23,6 +23,7 @@
       "/tmp"
     ]
   },
+  "model": "opus[1m]",
   "hooks": {
     "PreCompact": [],
     "SessionStart": [],
@@ -58,7 +59,7 @@
     "workspace-manager-status@workspace-manager": false
   },
   "sandbox": {
-    "enabled": true,
+    "enabled": false,
     "autoAllowBashIfSandboxed": true
   },
   "alwaysThinkingEnabled": true,
@@ -66,5 +67,6 @@
   "theme": "light",
   "preferredNotifChannel": "notifications_disabled",
   "inputNeededNotifEnabled": false,
-  "agentPushNotifEnabled": false
+  "agentPushNotifEnabled": false,
+  "tui": "fullscreen"
 }
