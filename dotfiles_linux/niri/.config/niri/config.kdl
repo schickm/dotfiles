@@ -9,6 +9,9 @@
 
 workspace "personal"
 workspace "rwgps"
+// Off-screen holding workspace for the "hide floating windows" toggle
+// (niri-toggle-hide-floating.sh).
+workspace "scratch"
 
 input {
     keyboard {
@@ -365,6 +368,16 @@ window-rule {
     open-floating true
 }
 
+// Hide floating windows from screen sharing.
+// Floating windows render as a solid block in PipeWire screencasts
+// (screen shares) but stay fully visible on the actual screen.
+// "screencast" leaves them visible to niri's own screenshot tools;
+// use "screen-capture" instead to also hide them from screenshots.
+window-rule {
+    match is-floating=true
+    block-out-from "screencast"
+}
+
 // Example: block out two password managers from screen capture.
 // (This example rule is commented out with a "/-" in front.)
 /-window-rule {
@@ -402,6 +415,8 @@ binds {
     // Show 1Password prompt
     Mod+Shift+Backslash hotkey-overlay-title="1Password Quick Access" { spawn "1password" "--quick-access"; }
     Mod+Shift+Alt+P hotkey-overlay-title="Flameshot" { spawn "flameshot" "gui"; }
+    // Toggle: hide all floating windows to the "scratch" workspace, then restore them.
+    Mod+Shift+Alt+H hotkey-overlay-title="Hide/show floating windows" { spawn "niri-toggle-hide-floating.sh"; }
 
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+T hotkey-overlay-title="Open a Terminal: kitty" { spawn "kitty"; }
