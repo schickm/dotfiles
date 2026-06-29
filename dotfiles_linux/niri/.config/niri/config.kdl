@@ -415,6 +415,8 @@ binds {
     // Show 1Password prompt
     Mod+Shift+Backslash hotkey-overlay-title="1Password Quick Access" { spawn "1password" "--quick-access"; }
     Mod+Shift+Alt+P hotkey-overlay-title="Flameshot" { spawn "flameshot" "gui"; }
+    // Toggle: start/stop a gpu-screen-recorder screen recording (prompts for a name on stop, then opens it).
+    Mod+Shift+Alt+R hotkey-overlay-title="Toggle screen recording" { spawn "gpu-screen-recorder-toggle.sh"; }
     // Toggle: hide all floating windows to the "scratch" workspace, then restore them.
     Mod+Shift+Alt+H hotkey-overlay-title="Hide/show floating windows" { spawn "niri-toggle-hide-floating.sh"; }
 
