@@ -22,8 +22,23 @@ if [[ -n "$1" ]]; then
     selected="$1"
     issue_url="$2"
 else
-    # Interactive mode: prompt user to select a workspace
-    worktrees=$(ls -1d "$worktree_base"/*/ | xargs -n1 basename)
+    # Interactive mode: prompt user to select a workspace, sorted by how
+    # recently anything inside each worktree changed (most recent first).
+    # Heavy/churny dirs are pruned so the mtime scan is fast AND reflects
+    # actual code work: node_modules/dist/build are bulky, .git is constant
+    # bookkeeping, and .claude-chrome (the per-worktree browser profile)
+    # rewrites cache files on every page load, which would otherwise float
+    # whichever workspace you last browsed in to the top.
+    worktrees=$(
+        for dir in "$worktree_base"/*/; do
+            ts=$(find "$dir" \( -name node_modules -o -name .git \
+                    -o -name .claude-chrome -o -name dist -o -name build \
+                    -o -name .next -o -name .vite -o -name coverage \
+                    -o -name .cache \) -prune -o \
+                -type f -printf '%T@\n' 2>/dev/null | sort -nr | head -1)
+            printf '%s\t%s\n' "${ts:-0}" "$(basename "$dir")"
+        done | sort -rn | cut -f2-
+    )
     selected=$(echo "$worktrees" | fuzzel --dmenu --prompt "Resume workspace: ")
     [[ -z "$selected" ]] && exit 0
 fi

@@ -12,8 +12,7 @@
       "Bash(git commit:*)",
       "Bash(gh pr create:*)",
       "Bash(ls:*)",
-      "mcp__chrome__list_pages",
-      "mcp__chrome-dev-tools__*",
+      "mcp__chrome-devtools__*",
       "Skill(notify)",
       "Skill(qa-notes)",
       "Bash(~/.claude/skills/notify/push.sh:*)"
@@ -34,6 +33,17 @@
           {
             "type": "command",
             "command": "~/bin/claude-permission-hook.sh"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/bin/claude-disarm-watchdog.sh"
           }
         ]
       }
@@ -63,10 +73,10 @@
     "autoAllowBashIfSandboxed": true
   },
   "alwaysThinkingEnabled": true,
+  "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "theme": "light",
   "preferredNotifChannel": "notifications_disabled",
   "inputNeededNotifEnabled": false,
-  "agentPushNotifEnabled": false,
-  "tui": "fullscreen"
+  "agentPushNotifEnabled": false
 }
