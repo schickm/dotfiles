@@ -1,49 +1,48 @@
 #!/bin/bash
 set -e
 
-worktree_base=~/workvc/rwgps-ui
-
-# Run a command with a notification that dismisses when done
-with_notification() {
-    local title="$1"
-    local body="$2"
-    shift 2
-
-    local notif_id=$(notify-send -p "$title" "$body")
-    "$@"
-    local exit_code=$?
-    makoctl dismiss -n "$notif_id" >/dev/null
-    return $exit_code
-}
+source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
 
 # Check if called with arguments (from start-new-ticket) or interactively
 if [[ -n "$1" ]]; then
-    # Called with arguments: workspace_name, issue_url
+    # Called with arguments: <repo>/<worktree>, issue_url
     selected="$1"
     issue_url="$2"
 else
-    # Interactive mode: prompt user to select a workspace, sorted by how
-    # recently anything inside each worktree changed (most recent first).
-    # Heavy/churny dirs are pruned so the mtime scan is fast AND reflects
-    # actual code work: node_modules/dist/build are bulky, .git is constant
-    # bookkeeping, and .claude-chrome (the per-worktree browser profile)
-    # rewrites cache files on every page load, which would otherwise float
-    # whichever workspace you last browsed in to the top.
+    # Interactive mode: prompt user to select a workspace across all
+    # containers, sorted by how recently anything inside each worktree
+    # changed (most recent first). Heavy/churny dirs are pruned so the mtime
+    # scan is fast AND reflects actual code work: node_modules/dist/build are
+    # bulky, .git is constant bookkeeping, and .claude-chrome (the
+    # per-worktree browser profile) rewrites cache files on every page load,
+    # which would otherwise float whichever workspace you last browsed in to
+    # the top.
     worktrees=$(
-        for dir in "$worktree_base"/*/; do
-            ts=$(find "$dir" \( -name node_modules -o -name .git \
-                    -o -name .claude-chrome -o -name dist -o -name build \
-                    -o -name .next -o -name .vite -o -name coverage \
-                    -o -name .cache \) -prune -o \
-                -type f -printf '%T@\n' 2>/dev/null | sort -nr | head -1)
-            printf '%s\t%s\n' "${ts:-0}" "$(basename "$dir")"
+        for container in $(workspace_containers); do
+            repo=$(basename "$container")
+            for dir in "$container"/*/; do
+                [[ -e "$dir/.git" ]] || continue
+                ts=$(find "$dir" \( -name node_modules -o -name .git \
+                        -o -name .claude-chrome -o -name dist -o -name build \
+                        -o -name .next -o -name .vite -o -name coverage \
+                        -o -name .cache \) -prune -o \
+                    -type f -printf '%T@\n' 2>/dev/null | sort -nr | head -1)
+                printf '%s\t%s/%s\n' "${ts:-0}" "$repo" "$(basename "$dir")"
+            done
         done | sort -rn | cut -f2-
     )
     selected=$(echo "$worktrees" | fuzzel --dmenu --prompt "Resume workspace: ")
     [[ -z "$selected" ]] && exit 0
 fi
 
-worktree_dir="$worktree_base/$selected"
+repo="${selected%%/*}"
+worktree="${selected#*/}"
+container="$WORKVC_BASE/$repo"
+worktree_dir="$container/$worktree"
+
+[[ -d "$worktree_dir" ]] || { notify-send -u critical "Resume Workspace Failed" "No such worktree: $selected"; exit 1; }
+
+load_workspacerc "$container"
 cd "$worktree_dir"
 
 # Look up the PR for the current branch
@@ -51,23 +50,21 @@ pr_url=$(with_notification "Resuming workspace..." "Looking up pull request..." 
     gh pr view --json url -q .url 2>/dev/null || true)
 
 # Create niri workspace with the descriptive name (no issue number)
-niri-create-workspace "$selected"
+niri-create-workspace "$worktree"
 
-
-# Extract port from existing .env.local for resumed workspace
-vite_port=$(grep -oP '^VITE_PORT=\K\d+' "$worktree_dir/.env.local" 2>/dev/null || echo "")
-
-if [[ -n "$vite_port" ]]; then
-    hotlink_url="https://ridewithgps.com?hot=v:${vite_port}"
-fi
-
+# Refresh waybar's per-repo workspace colors (a new worktree has no rule yet)
+waybar-workspace-colors || true
 
 # Launch this workspace's Chrome via claude-chrome: its own profile (seeded from
 # the template) on a per-project remote-debugging port, so the chrome-devtools
-# MCP can later attach to this exact instance. Opens hotlink/issue/PR if present.
-# Always launch (even with no URLs) so the browser is up for the MCP to attach.
+# MCP can later attach to this exact instance. Opens the repo's own URLs (from
+# the .workspacerc workspace_urls hook, e.g. a dev-server hotlink) plus
+# issue/PR if present. Always launch (even with no URLs) so the browser is up
+# for the MCP to attach.
 chrome_urls=()
-[[ -n "$hotlink_url" ]] && chrome_urls+=("$hotlink_url")
+while IFS= read -r url; do
+    [[ -n "$url" ]] && chrome_urls+=("$url")
+done < <(workspace_urls "$worktree_dir")
 [[ -n "$issue_url" ]] && chrome_urls+=("$issue_url")
 [[ -n "$pr_url" ]] && chrome_urls+=("$pr_url")
 if [[ ${#chrome_urls[@]} -gt 0 ]]; then
@@ -76,7 +73,5 @@ else
     nohup fish -c 'claude-chrome $argv' "$worktree_dir" &>/dev/null &
 fi
 
-# Launch kitty windows
-nohup kitty-run 'pnpm dev' &>/dev/null &
-nohup env DISABLE_INSTALLATION_CHECKS=1 DISABLE_AUTOUPDATER=1 kitty-run claude --dangerously-skip-permissions &>/dev/null &
-nohup kitty-run k &>/dev/null &
+# Launch terminal windows (per-repo recipe from .workspacerc, or the default)
+workspace_launch "$worktree_dir"

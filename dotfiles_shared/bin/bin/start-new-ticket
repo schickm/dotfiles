@@ -1,18 +1,7 @@
 #!/bin/bash
 set -e
 
-# Run a command with a notification that dismisses when done
-with_notification() {
-    local title="$1"
-    local body="$2"
-    shift 2
-
-    local notif_id=$(notify-send -p "$title" "$body")
-    "$@"
-    local exit_code=$?
-    makoctl dismiss -n "$notif_id" >/dev/null
-    return $exit_code
-}
+source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
 
 # Prompt for GitHub issue URL
 issue_url=$(echo "" | fuzzel --dmenu --prompt "GitHub issue URL: ")
@@ -21,6 +10,21 @@ issue_url=$(echo "" | fuzzel --dmenu --prompt "GitHub issue URL: ")
 # Extract issue number from URL (last number in the path)
 issue_num=$(echo "$issue_url" | grep -oE '[0-9]+$')
 [[ -z "$issue_num" ]] && notify-send -u critical "Start Ticket Failed" "Could not extract issue number from URL" && exit 1
+
+# Pick the workspace container: infer it from the URL's org/repo slug by
+# matching each container's origin remote; fall back to a picker.
+container=""
+if [[ "$issue_url" =~ github\.com[:/]([^/]+/[^/?#]+) ]]; then
+    container=$(container_for_github_slug "${BASH_REMATCH[1]}") || container=""
+fi
+if [[ -z "$container" ]]; then
+    repo=$(workspace_containers | xargs -rn1 basename | fuzzel --dmenu --prompt "Repository: ")
+    [[ -z "$repo" ]] && exit 0
+    container="$WORKVC_BASE/$repo"
+fi
+
+load_workspacerc "$container"
+[[ -z "$MAIN_WORKTREE" ]] && notify-send -u critical "Start Ticket Failed" "No main worktree found in $container" && exit 1
 
 # Use Claude to generate a short descriptive name (for workspace)
 claude_settings='{"permissions":{"allow":["Bash(gh:*)"]}}'
@@ -44,13 +48,16 @@ workspace_name=$(with_notification "Starting ticket..." "Generating workspace na
 # Create branch name by appending issue number
 branch="${workspace_name}-${issue_num}"
 
-# CD into master worktree and create new worktree with wt-add
-cd ~/workvc/rwgps-ui/master
+# CD into the main worktree and create the new worktree with wt-add
+cd "$container/$MAIN_WORKTREE"
 with_notification "Setting up worktree..." "$branch" fish -c "wt-add ../$branch" \
     || { notify-send -u critical "Start Ticket Failed" "Failed to create worktree: $branch"; exit 1; }
 
-# Write CLAUDE.local.md with ticket context
-cat > ~/workvc/rwgps-ui/$branch/CLAUDE.local.md << EOF
+# Write CLAUDE.local.md with ticket context. Remove any symlink first
+# (.wt-addrc may seed one pointing at the container's shared file — writing
+# through it would clobber that shared file for every worktree).
+rm -f "$container/$branch/CLAUDE.local.md"
+cat > "$container/$branch/CLAUDE.local.md" << EOF
 This worktree's purpose is to implement the following GitHub ticket:
 
 $issue_url
@@ -61,4 +68,4 @@ action=$(notify-send --wait --action="yes=Yes" --action="no=No" "Workspace Ready
 [[ "$action" != "yes" ]] && exit 0
 
 # Launch dev environment via resume-workspace
-resume-workspace "$branch" "$issue_url"
+resume-workspace "$(basename "$container")/$branch" "$issue_url"
