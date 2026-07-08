@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Sort Workspaces
+Exec=niri-sort-workspaces
+Type=Application
+Terminal=false
+Keywords=worktree;repo;group;

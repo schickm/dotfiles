@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
+
 name="$1"
 
 if [[ -z "$name" ]]; then
@@ -20,8 +22,23 @@ last_idx=$(echo "$workspaces" | jq 'map(.idx) | max')
 # Name the empty workspace at the bottom
 niri msg action set-workspace-name "$name" --workspace "$last_idx"
 
-# Move it to right below the current workspace
-niri msg action move-workspace-to-index "$((current_idx + 1))" --reference "$name"
+# If the name maps to a repo that already has workspaces on this output,
+# gather it into that group (it joins at the end, the group stays put).
+# Whether that happened can't be read off the index — a group ending at the
+# bottom of the strip leaves it at last_idx — so check whether the workspace
+# above it is a group sibling. If not, it's a singleton: place it right
+# below the current workspace as before.
+niri-sort-workspaces || true
+ws=$(niri msg --json workspaces)
+new_idx=$(jq -r --arg n "$name" '.[] | select(.name == $n) | .idx' <<<"$ws")
+output=$(jq -r --arg n "$name" '.[] | select(.name == $n) | .output' <<<"$ws")
+above=$(jq -r --arg o "$output" --argjson i "$new_idx" \
+    '.[] | select(.output == $o and .idx == $i - 1) | .name // ""' <<<"$ws")
+mine=$(container_for_worktree "$name" || true)
+theirs=$(container_for_worktree "$above" || true)
+if [[ -z "$mine" || "$mine" != "$theirs" ]]; then
+    niri msg action move-workspace-to-index "$((current_idx + 1))" --reference "$name"
+fi
 
 # Focus it
 niri msg action focus-workspace "$name"

@@ -1,0 +1,104 @@
+#!/bin/bash
+# Gather niri workspaces into contiguous per-repo groups.
+#
+# Workspace names are worktree dir names (resume-workspace passes them to
+# niri-create-workspace), so scanning the workspace containers on disk maps
+# each workspace to its repo — same trick as waybar-workspace-colors.
+#
+# This is a stable gather, not a full sort, so manual ordering survives:
+#   - each group keeps the position of its topmost member (the anchor)
+#   - members keep their current relative order within the group
+#   - unmapped workspaces (hand-named ones like "personal", the empty
+#     unnamed tail) are singleton groups that stay where they are
+# Reorder freely within a group; move a group's topmost workspace to
+# reposition the whole group. Only strays get pulled back up to their group,
+# which also makes the script idempotent.
+#
+# Runs from niri-create-workspace and via fuzzel (desktop entry).
+#
+# Usage: niri-sort-workspaces [-n]
+#   -n  dry-run: print the moves without performing them
+set -e
+
+source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
+
+dry_run=0
+[[ "$1" == "-n" ]] && dry_run=1
+
+# Map worktree dir name -> container. Main-worktree names collide across
+# repos AND with hand-named workspaces, so skip them (mirrors
+# waybar-workspace-colors); any other name found in two containers is
+# ambiguous and left alone rather than gathered to whichever repo wins.
+declare -A repo_of
+for container in $(workspace_containers); do
+    for dir in "$container"/*/; do
+        dir="${dir%/}"
+        [[ -e "$dir/.git" ]] || continue
+        name=$(basename "$dir")
+        case "$name" in master|main|trunk) continue ;; esac
+        if [[ -n "${repo_of[$name]:-}" && "${repo_of[$name]}" != "$container" ]]; then
+            repo_of[$name]="__ambiguous__"
+        else
+            repo_of[$name]="$container"
+        fi
+    done
+done
+
+workspaces=$(niri msg --json workspaces)
+
+# Workspace order is per-output; gather each output independently.
+for output in $(jq -r '[.[].output // empty] | unique | .[]' <<<"$workspaces"); do
+    mapfile -t cur_ids < <(jq -r --arg o "$output" \
+        '[.[] | select(.output == $o)] | sort_by(.idx) | .[].id' <<<"$workspaces")
+    mapfile -t cur_names < <(jq -r --arg o "$output" \
+        '[.[] | select(.output == $o)] | sort_by(.idx) | .[].name // ""' <<<"$workspaces")
+
+    # Bucket ids by group, groups ordered by first appearance.
+    declare -A name_of=() members=()
+    group_order=()
+    for k in "${!cur_ids[@]}"; do
+        id="${cur_ids[k]}"
+        name="${cur_names[k]}"
+        name_of[$id]="$name"
+        if [[ -n "$name" && -n "${repo_of[$name]:-}" \
+              && "${repo_of[$name]}" != "__ambiguous__" ]]; then
+            group="${repo_of[$name]}"
+        else
+            group="solo:$id"
+        fi
+        if [[ -z "${members[$group]:-}" ]]; then
+            group_order+=("$group")
+            members[$group]="$id"
+        else
+            members[$group]+=" $id"
+        fi
+    done
+
+    target=()
+    for group in "${group_order[@]}"; do
+        for id in ${members[$group]}; do
+            target+=("$id")
+        done
+    done
+
+    # Walk the target order, pulling each out-of-place workspace up to
+    # position i. Only strays (named group members) ever move; singletons
+    # just get shifted down passively, so referencing by name is always
+    # possible. Mirror each move locally (a move-to-index is remove+insert)
+    # instead of re-querying niri.
+    for ((i = 0; i < ${#target[@]}; i++)); do
+        [[ "${cur_ids[i]}" == "${target[i]}" ]] && continue
+        name="${name_of[${target[i]}]}"
+        [[ -n "$name" ]] || continue
+        if ((dry_run)); then
+            echo "would move '$name' to index $((i + 1)) on $output"
+        else
+            niri msg action move-workspace-to-index "$((i + 1))" --reference "$name"
+        fi
+        rest=()
+        for id in "${cur_ids[@]}"; do
+            [[ "$id" == "${target[i]}" ]] || rest+=("$id")
+        done
+        cur_ids=("${rest[@]:0:i}" "${target[i]}" "${rest[@]:i}")
+    done
+done

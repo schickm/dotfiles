@@ -60,6 +60,21 @@ detect_main_worktree() {
     return 1
 }
 
+# Print the container a worktree dir name belongs to. Fails for main-worktree
+# names (they collide across repos and with hand-named niri workspaces) and
+# for names present in more than one container.
+container_for_worktree() {
+    local target="$1" container found=""
+    [[ -n "$target" ]] || return 1
+    case "$target" in master|main|trunk) return 1 ;; esac
+    for container in $(workspace_containers); do
+        [[ -e "$container/$target/.git" ]] || continue
+        [[ -n "$found" ]] && return 1
+        found="$container"
+    done
+    [[ -n "$found" ]] && echo "$found"
+}
+
 # Find the container whose origin remote matches a GitHub "org/repo" slug.
 container_for_github_slug() {
     local slug="$1" container main remote
