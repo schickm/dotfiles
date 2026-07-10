@@ -22,7 +22,9 @@
 #   permission-start -> attention  permission prompt displayed (called from
 #                       claude-permission-hook.sh, not settings.json)
 #   permission-end   -> busy       prompt answered via the notification
-#   subagent-stop    -> busy, bg_count--  (main loop resumes with the result)
+#   subagent-stop    -> busy, bg_count--  (main loop resumes with the result;
+#                       ignored when the session has no claim — Claude fires
+#                       SubagentStop for internal helpers even while idle)
 #   stop             -> clear, unless bg_count > 0 (background agents still
 #                       running -> stay busy until they report in)
 #   session-end      -> clear
@@ -250,6 +252,16 @@ cmd_hook() {
             exit 0
             ;;
     esac
+
+    # Claude Code fires SubagentStop for internal helpers (title generation
+    # etc.) even while a session sits idle. With no claim on file there is no
+    # turn in flight and no Stop coming to clear anything — creating a claim
+    # here would leave a stale dot. The legit resume-after-background-agents
+    # case always has a claim (stop keeps it while bg_count > 0).
+    if [[ "$event" == "subagent-stop" && ! -f "$file" ]]; then
+        log "$key: subagent-stop ignored (no active claim — internal subagent)"
+        exit 0
+    fi
 
     # Fast path for steady-state no-ops (the bulk of pre-/post-tool events):
     # no lock, no render, no log. Transitions fall through to the slow path,
