@@ -1,0 +1,55 @@
+#!/bin/bash
+set -euo pipefail
+
+# Usage: niri-spawn-on-workspace <workspace-name> <command> [args...]
+#
+# Launches the command detached in its own kernel session (setsid) and, for
+# the next NIRI_SPAWN_WATCH_SECONDS (default 45), moves any window opened by
+# that session onto the named workspace — closing the race where a slow app
+# (Chrome, ...) maps its window after you've already switched workspaces.
+#
+# Windows are matched by session id: setsid stamps the launch's whole process
+# tree with a fresh SID that survives wrapper scripts exiting and children
+# reparenting (unlike parent-pid chains). Single-instance apps that hand a
+# window off to an already-running process (e.g. plain google-chrome joining
+# an existing instance) escape the session and can't be matched.
+#
+# Moves use --focus false, so if you've switched away your focus stays put.
+# Returns immediately; the watcher runs in the background.
+
+watch_seconds="${NIRI_SPAWN_WATCH_SECONDS:-45}"
+
+ws="${1:-}"
+shift || true
+if [[ -z "$ws" || $# -eq 0 ]]; then
+    echo "Usage: $(basename "$0") <workspace-name> <command> [args...]" >&2
+    exit 1
+fi
+
+# Spawn detached. The session leader's pid IS the new SID, so have it echo
+# $$ before detaching stdio and backgrounding the real command (the command
+# survives bash -c exiting; it just reparents, keeping the SID).
+sid=$(setsid bash -c 'echo "$$"; exec 0</dev/null 1>/dev/null 2>&1; "$@" &' _ "$@")
+
+# Watcher. The event stream's initial replay delivers every existing window
+# via WindowsChanged, so windows mapped between the spawn above and the
+# stream connecting are still seen — no sweep, no race. Later windows arrive
+# as WindowOpenedOrChanged (which also fires on title changes, hence the
+# claimed set: move each window once, then leave it alone so a manual
+# re-place by the user sticks).
+(
+    declare -A claimed
+    timeout "$watch_seconds" niri msg --json event-stream 2>/dev/null |
+        jq --unbuffered -r '
+            (.WindowsChanged.windows // empty | .[]),
+            (.WindowOpenedOrChanged.window // empty)
+            | select(.pid != null) | "\(.id)\t\(.pid)"' |
+        while IFS=$'\t' read -r id pid; do
+            [[ -n "${claimed[$id]:-}" ]] && continue
+            [[ "$(ps -o sess= -p "$pid" 2>/dev/null || echo -1)" -eq "$sid" ]] || continue
+            claimed[$id]=1
+            niri msg action move-window-to-workspace \
+                --window-id "$id" --focus false "$ws" 2>/dev/null || true
+        done
+) </dev/null &>/dev/null &
+disown

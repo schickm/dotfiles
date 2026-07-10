@@ -3,6 +3,38 @@ set -e
 
 source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
 
+# Internal mode: the whole app-launch phase, re-executed by the main flow
+# under niri-spawn-on-workspace so that Chrome, the terminals, and anything a
+# .workspacerc workspace_launch spawns share one fresh session — the watcher
+# then routes their windows to the workspace even if focus has moved on.
+# Args: <repo>/<worktree> [chrome-urls...]
+if [[ "${1:-}" == "--spawn-apps" ]]; then
+    shift
+    selected="$1"
+    shift
+    repo="${selected%%/*}"
+    worktree="${selected#*/}"
+    container="$WORKVC_BASE/$repo"
+    worktree_dir="$container/$worktree"
+
+    load_workspacerc "$container"
+    cd "$worktree_dir"
+
+    # Launch this workspace's Chrome via claude-chrome: its own profile
+    # (seeded from the template) on a per-project remote-debugging port, so
+    # the chrome-devtools MCP can later attach to this exact instance. Always
+    # launch (even with no URLs) so the browser is up for the MCP to attach.
+    if [[ $# -gt 0 ]]; then
+        nohup fish -c 'claude-chrome $argv' "$worktree_dir" --new-window "$@" &>/dev/null &
+    else
+        nohup fish -c 'claude-chrome $argv' "$worktree_dir" &>/dev/null &
+    fi
+
+    # Launch terminal windows (per-repo recipe from .workspacerc, or the default)
+    workspace_launch "$worktree_dir"
+    exit 0
+fi
+
 # Check if called with arguments (from start-new-ticket) or interactively
 if [[ -n "$1" ]]; then
     # Called with arguments: <repo>/<worktree>, issue_url
@@ -55,23 +87,16 @@ niri-create-workspace "$worktree"
 # Refresh waybar's per-repo workspace colors (a new worktree has no rule yet)
 waybar-workspace-colors || true
 
-# Launch this workspace's Chrome via claude-chrome: its own profile (seeded from
-# the template) on a per-project remote-debugging port, so the chrome-devtools
-# MCP can later attach to this exact instance. Opens the repo's own URLs (from
-# the .workspacerc workspace_urls hook, e.g. a dev-server hotlink) plus
-# issue/PR if present. Always launch (even with no URLs) so the browser is up
-# for the MCP to attach.
+# Chrome opens the repo's own URLs (from the .workspacerc workspace_urls
+# hook, e.g. a dev-server hotlink) plus issue/PR if present.
 chrome_urls=()
 while IFS= read -r url; do
     [[ -n "$url" ]] && chrome_urls+=("$url")
 done < <(workspace_urls "$worktree_dir")
 [[ -n "$issue_url" ]] && chrome_urls+=("$issue_url")
 [[ -n "$pr_url" ]] && chrome_urls+=("$pr_url")
-if [[ ${#chrome_urls[@]} -gt 0 ]]; then
-    nohup fish -c 'claude-chrome $argv' "$worktree_dir" --new-window "${chrome_urls[@]}" &>/dev/null &
-else
-    nohup fish -c 'claude-chrome $argv' "$worktree_dir" &>/dev/null &
-fi
 
-# Launch terminal windows (per-repo recipe from .workspacerc, or the default)
-workspace_launch "$worktree_dir"
+# Launch everything (Chrome + terminals) via --spawn-apps under
+# niri-spawn-on-workspace: apps map their windows asynchronously, so late
+# arrivals get moved onto this workspace instead of wherever focus is now.
+niri-spawn-on-workspace "$worktree" "$0" --spawn-apps "$selected" "${chrome_urls[@]}"

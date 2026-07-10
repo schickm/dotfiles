@@ -20,6 +20,15 @@
 #                           workspace's Chrome, e.g. a dev-server hotlink
 #   workspace_launch <dir>  launch the workspace's terminal windows
 #                           (default: claude + editor)
+#
+# workspace_launch (and the Chrome spawn) run inside a fresh kernel session
+# under niri-spawn-on-workspace: every window the launch's process tree opens
+# is moved onto the workspace even if focus has moved elsewhere by the time
+# the app gets around to mapping it. Recipes can keep plain `nohup ... &`
+# spawns — no wrapping needed. The exception is single-instance apps that
+# hand off to an already-running process (e.g. plain google-chrome joining an
+# existing instance): those windows belong to the old session and won't be
+# routed.
 
 WORKVC_BASE="${WORKVC_BASE:-$HOME/workvc}"
 

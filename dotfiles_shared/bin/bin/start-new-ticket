@@ -63,6 +63,8 @@ cat >"$container/$branch/CLAUDE.local.md" <<EOF
 This worktree's purpose is to implement the following GitHub ticket:
 
 $issue_url
+
+Be sure to use the Chrome MCP for anything that would benefit from in-browser testing / validation.
 EOF
 
 # Prompt to launch workspace
