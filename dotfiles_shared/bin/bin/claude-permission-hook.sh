@@ -5,6 +5,10 @@ set -euo pipefail
 
 INPUT=$(cat)
 
+# --- Skip if Claude's Kitty window currently has keyboard focus ---
+# Exiting 0 with no output defers to the normal CLI permission prompt.
+[[ -x "$HOME/bin/claude-window-focused.sh" ]] && "$HOME/bin/claude-window-focused.sh" && exit 0
+
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // "Unknown"')
 TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input // {}')
 SUGGESTION=$(echo "$INPUT" | jq -c '.permission_suggestions[0] // empty')
