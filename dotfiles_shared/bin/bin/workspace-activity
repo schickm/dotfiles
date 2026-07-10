@@ -1,0 +1,372 @@
+#!/bin/bash
+# workspace-activity — per-workspace activity indicators for waybar.
+#
+# Tracks "activity claims" (small JSON files) and renders them as a generated
+# stylesheet that draws a colored dot on the matching niri workspace buttons
+# in waybar. Claude Code hooks are the first claim source; any future source
+# can drop its own claim and re-render:
+#
+#   workspace-activity claim busy|attention --key K
+#       [--workspace NAME | --window NIRI_ID] [--pid PID] [--ttl SECS]
+#   workspace-activity clear --key K
+#   workspace-activity render
+#   workspace-activity hook EVENT     # Claude Code hook adapter (reads the
+#                                     # hook's JSON on stdin)
+#
+# Hook events drive a per-session state machine (key: claude-<session_id>):
+#   prompt-submit    -> busy       turn started
+#   pre-tool         -> busy; AskUserQuestion/ExitPlanMode -> attention (an
+#                       interactive prompt is on screen). Task/Agent spawns
+#                       with run_in_background != false bump bg_count.
+#   post-tool        -> busy       tool finished; any prompt was answered
+#   permission-start -> attention  permission prompt displayed (called from
+#                       claude-permission-hook.sh, not settings.json)
+#   permission-end   -> busy       prompt answered via the notification
+#   subagent-stop    -> busy, bg_count--  (main loop resumes with the result)
+#   stop             -> clear, unless bg_count > 0 (background agents still
+#                       running -> stay busy until they report in)
+#   session-end      -> clear
+#
+# Claims live in $XDG_RUNTIME_DIR/workspace-activity/, one JSON file each:
+#   {key, source, state, bg_count, window_id?, workspace?, pid?, expires_at?}
+# render prunes claims whose pid died, whose niri window vanished, or whose
+# expires_at passed. window_id is resolved to its *current* workspace on
+# every render, so a window dragged to another workspace follows along on the
+# next event. Workspace names are backslash-escaped into the CSS id selector,
+# so names with spaces etc. work; only unnamed workspaces can't be styled.
+#
+# Output: ~/.config/waybar/workspace-activity.css (@imported by style.css,
+# gitignored; the waybar.service.d/workspace-activity.conf drop-in renders it
+# before waybar starts). Waybar picks up changes itself via its
+# reload_style_on_change option — an in-place CSS re-apply, no reload signal.
+#
+# Troubleshooting: state transitions, prunes and render results are logged to
+# ~/.claude/logs/workspace-activity.log (steady-state no-op hook events are
+# not). Set WORKSPACE_ACTIVITY_DISABLE=1 to make every subcommand a no-op.
+set -uo pipefail
+
+[[ "${WORKSPACE_ACTIVITY_DISABLE:-0}" == "1" ]] && exit 0
+
+STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/workspace-activity"
+CSS_FILE="$HOME/.config/waybar/workspace-activity.css"
+LOG_FILE="$HOME/.claude/logs/workspace-activity.log"
+LOG_MAX_BYTES=524288
+
+mkdir -p "$STATE_DIR" "$(dirname "$LOG_FILE")" 2>/dev/null || true
+
+log() {
+    printf '%s %s\n' "$(date '+%F %T')" "$*" >> "$LOG_FILE" 2>/dev/null || true
+}
+
+rotate_log() {
+    local size
+    size=$(stat -c %s "$LOG_FILE" 2>/dev/null || echo 0)
+    (( size > LOG_MAX_BYTES )) && mv -f "$LOG_FILE" "$LOG_FILE.1" 2>/dev/null
+    return 0
+}
+
+# All claim mutations and renders serialize on one lock so concurrent hooks
+# (parallel tool calls, several sessions) can't interleave read-modify-write.
+lock() {
+    exec 9>"$STATE_DIR/.lock"
+    flock 9
+}
+
+# Resolve the niri window id of the Kitty OS window this process runs in.
+# Same approach as claude-stop-hook.sh: walk /proc up to the backing kitty
+# process, then disambiguate several OS windows of one kitty process by the
+# active pane title. Prints nothing when not running under kitty + niri.
+resolve_window_id() {
+    command -v niri >/dev/null 2>&1 || return 0
+    command -v kitty >/dev/null 2>&1 || return 0
+    [[ -n "${KITTY_WINDOW_ID:-}" ]] || return 0
+    local kpid=$$ wtitle
+    while [[ "${kpid:-1}" -gt 1 ]]; do
+        [[ "$(cat /proc/$kpid/comm 2>/dev/null || true)" == "kitty" ]] && break
+        kpid=$(awk '/^PPid:/{print $2}' /proc/$kpid/status 2>/dev/null || echo 1)
+    done
+    [[ "${kpid:-1}" -gt 1 ]] || return 0
+    wtitle=$(kitty @ ls 2>/dev/null | jq -r '
+        [ .[] | select(any(.tabs[].windows[]; .is_self == true)) ][0]
+        | .tabs[] | select(.is_active == true)
+        | .windows[] | select(.is_active == true) | .title' 2>/dev/null || true)
+    niri msg --json windows 2>/dev/null | jq -r --argjson p "$kpid" --arg t "$wtitle" '
+        ([ .[] | select(.pid == $p) ]) as $m
+        | (if ($m | length) == 1 then $m[0]
+           else ($m[] | select(.title == $t)) end).id // empty' 2>/dev/null | head -1 || true
+}
+
+# Nearest ancestor process named "claude", for liveness pruning of claims
+# whose session crashed without a session-end event. Empty when not found.
+resolve_claude_pid() {
+    local pid=$PPID
+    while [[ "${pid:-1}" -gt 1 ]]; do
+        if [[ "$(cat /proc/$pid/comm 2>/dev/null || true)" == "claude" ]]; then
+            echo "$pid"
+            return 0
+        fi
+        pid=$(awk '/^PPid:/{print $2}' /proc/$pid/status 2>/dev/null || echo 1)
+    done
+    return 0
+}
+
+write_claim() { # key state bg_count window_id workspace pid expires source
+    local key="$1" state="$2" bg="$3" window="$4" workspace="$5" pid="$6" expires="$7" source="$8"
+    local tmp
+    tmp=$(mktemp "$STATE_DIR/.claim.XXXXXX") || return 1
+    jq -n --arg key "$key" --arg state "$state" --argjson bg "$bg" \
+          --arg window "$window" --arg workspace "$workspace" \
+          --arg pid "$pid" --arg expires "$expires" --arg source "$source" \
+          --argjson now "$(date +%s)" '
+        {key: $key, source: $source, state: $state, bg_count: $bg, updated_at: $now}
+        + (if $window != "" then {window_id: ($window | tonumber)} else {} end)
+        + (if $workspace != "" then {workspace: $workspace} else {} end)
+        + (if $pid != "" then {pid: ($pid | tonumber)} else {} end)
+        + (if $expires != "" then {expires_at: ($expires | tonumber)} else {} end)' \
+        > "$tmp" && mv "$tmp" "$STATE_DIR/$key.json"
+}
+
+# Regenerate the CSS from the current claims. Callers must hold the lock.
+render_locked() {
+    local header="/* Generated by workspace-activity — do not edit. */"
+    local windows workspaces
+    if ! windows=$(niri msg --json windows 2>/dev/null) \
+       || ! workspaces=$(niri msg --json workspaces 2>/dev/null); then
+        log "render: niri unreachable — leaving CSS as-is"
+        # Still guarantee the file exists so style.css's @import never breaks.
+        [[ -f "$CSS_FILE" ]] || printf '%s\n' "$header" > "$CSS_FILE"
+        return 0
+    fi
+    local now
+    now=$(date +%s)
+
+    declare -A ws_state=()
+    local f key state window workspace pid expires name
+    for f in "$STATE_DIR"/*.json; do
+        [[ -e "$f" ]] || continue
+        key=$(jq -r '.key // ""' "$f" 2>/dev/null)
+        state=$(jq -r '.state // "busy"' "$f" 2>/dev/null)
+        window=$(jq -r '.window_id // ""' "$f" 2>/dev/null)
+        workspace=$(jq -r '.workspace // ""' "$f" 2>/dev/null)
+        pid=$(jq -r '.pid // ""' "$f" 2>/dev/null)
+        expires=$(jq -r '.expires_at // ""' "$f" 2>/dev/null)
+        if [[ -z "$key" ]]; then
+            rm -f "$f"
+            log "render: pruned $(basename "$f") (unparseable)"
+            continue
+        fi
+        if [[ -n "$expires" ]] && (( now > expires )); then
+            rm -f "$f"
+            log "$key: pruned (expired)"
+            continue
+        fi
+        if [[ -n "$pid" ]] && ! kill -0 "$pid" 2>/dev/null; then
+            rm -f "$f"
+            log "$key: pruned (pid $pid gone)"
+            continue
+        fi
+        if [[ -n "$workspace" ]]; then
+            name="$workspace"
+        elif [[ -n "$window" ]]; then
+            name=$(jq -r --argjson w "$window" --argjson wss "$workspaces" '
+                ([ .[] | select(.id == $w) ] | first) as $win
+                | if $win == null then "__GONE__"
+                  else (([ $wss[] | select(.id == $win.workspace_id) ] | first | .name) // "")
+                  end' <<<"$windows" 2>/dev/null)
+            if [[ "$name" == "__GONE__" ]]; then
+                rm -f "$f"
+                log "$key: pruned (window $window gone)"
+                continue
+            fi
+        else
+            log "$key: skipped (claim has neither window nor workspace)"
+            continue
+        fi
+        if [[ -z "$name" ]]; then
+            log "$key: skipped (workspace unnamed)"
+            continue
+        fi
+        # attention outranks busy
+        [[ "${ws_state[$name]:-}" == "attention" ]] || ws_state[$name]="$state"
+    done
+
+    local css="$header" summary="" sel
+    while IFS= read -r name; do
+        [[ -n "$name" ]] || continue
+        state="${ws_state[$name]}"
+        summary+="${summary:+ }$name=$state"
+        # Backslash-escape anything a CSS identifier can't contain raw, so
+        # names with spaces ("pr review") still form a valid id selector.
+        sel=$(printf '%s' "$name" | sed 's/[^A-Za-z0-9_-]/\\&/g')
+        # NB: GTK's CSS parser only accepts 1/2-value background-position
+        # (a parse error is FATAL to waybar — it crash-loops); the dot's
+        # right-edge inset is baked into the SVGs instead.
+        css+=$'\n\n'"#workspaces button#niri-workspace-$sel {
+    background-image: url(\"activity-$state.svg\");
+    background-repeat: no-repeat;
+    background-position: right center;
+    padding-right: 16px;
+}"
+    done < <(printf '%s\n' "${!ws_state[@]}" | sort)
+
+    if [[ ! -f "$CSS_FILE" ]] || [[ "$css" != "$(cat "$CSS_FILE")" ]]; then
+        local tmp
+        tmp=$(mktemp "$CSS_FILE.XXXXXX") || return 0
+        printf '%s\n' "$css" > "$tmp" && mv "$tmp" "$CSS_FILE"
+        # No reload signal: waybar runs with reload_style_on_change, which
+        # watches the @imported files and re-applies CSS in place. A SIGUSR2
+        # here would tear down the bar surface and shift every window.
+        log "render: css updated — ${summary:-nothing active}"
+    fi
+    return 0
+}
+
+cmd_hook() {
+    local event="$1" input session_id tool_name run_bg
+    input=$(cat)
+    session_id=$(printf '%s' "$input" | jq -r '.session_id // "unknown"' 2>/dev/null) || session_id=unknown
+    [[ -n "$session_id" ]] || session_id=unknown
+    tool_name=$(printf '%s' "$input" | jq -r '.tool_name // ""' 2>/dev/null || true)
+    run_bg=$(printf '%s' "$input" | jq -r '.tool_input.run_in_background // "" | tostring' 2>/dev/null || true)
+
+    local key="claude-$session_id" file="$STATE_DIR/claude-$session_id.json"
+    local target=busy bg_delta=0 remove=0
+    case "$event" in
+        prompt-submit | post-tool | permission-end) ;;
+        pre-tool)
+            case "$tool_name" in
+                AskUserQuestion | ExitPlanMode) target=attention ;;
+            esac
+            case "$tool_name" in
+                Task | Agent) [[ "$run_bg" != "false" ]] && bg_delta=1 ;;
+            esac
+            ;;
+        permission-start) target=attention ;;
+        subagent-stop) bg_delta=-1 ;;
+        stop) remove=1 ;;
+        session-end) remove=2 ;;
+        *)
+            log "hook: unknown event '$event'"
+            exit 0
+            ;;
+    esac
+
+    # Fast path for steady-state no-ops (the bulk of pre-/post-tool events):
+    # no lock, no render, no log. Transitions fall through to the slow path,
+    # which re-reads the claim under the lock.
+    if (( remove )); then
+        [[ -f "$file" ]] || exit 0
+    elif (( bg_delta == 0 )) && [[ -f "$file" ]] \
+         && [[ "$(jq -r '.state // ""' "$file" 2>/dev/null)" == "$target" ]]; then
+        exit 0
+    fi
+
+    rotate_log
+    lock
+
+    local cur_bg=0 window_id="" pid=""
+    if [[ -f "$file" ]]; then
+        cur_bg=$(jq -r '.bg_count // 0' "$file" 2>/dev/null) || cur_bg=0
+        window_id=$(jq -r '.window_id // ""' "$file" 2>/dev/null || true)
+        pid=$(jq -r '.pid // ""' "$file" 2>/dev/null || true)
+    fi
+
+    if (( remove )); then
+        if (( remove == 1 )) && (( cur_bg > 0 )); then
+            # Turn ended but background agents are still out working.
+            write_claim "$key" busy "$cur_bg" "$window_id" "" "$pid" "" claude-hook
+            log "$key: $event -> busy ($cur_bg background agent(s) still running)"
+        else
+            rm -f "$file"
+            log "$key: $event -> cleared"
+        fi
+        render_locked
+        exit 0
+    fi
+
+    local bg=$(( cur_bg + bg_delta ))
+    (( bg < 0 )) && bg=0
+
+    if [[ -z "$window_id" ]]; then
+        window_id=$(resolve_window_id)
+        if [[ -z "$window_id" ]]; then
+            log "$key: $event -> skipped (no kitty/niri window resolved)"
+            exit 0
+        fi
+        pid=$(resolve_claude_pid)
+    fi
+
+    write_claim "$key" "$target" "$bg" "$window_id" "" "$pid" "" claude-hook
+    log "$key: $event${tool_name:+ [$tool_name]} -> $target (bg_count=$bg window=$window_id)"
+    render_locked
+    exit 0
+}
+
+cmd_claim() {
+    local state="${1:-}"
+    shift || true
+    if [[ "$state" != "busy" && "$state" != "attention" ]]; then
+        echo "claim: state must be 'busy' or 'attention'" >&2
+        exit 1
+    fi
+    local key="" window="" workspace="" pid="" ttl="" source="manual"
+    while (( $# )); do
+        case "$1" in
+            --key) key="$2"; shift 2 ;;
+            --window) window="$2"; shift 2 ;;
+            --workspace) workspace="$2"; shift 2 ;;
+            --pid) pid="$2"; shift 2 ;;
+            --ttl) ttl="$2"; shift 2 ;;
+            --source) source="$2"; shift 2 ;;
+            *) echo "claim: unknown option '$1'" >&2; exit 1 ;;
+        esac
+    done
+    if [[ -z "$key" ]]; then
+        echo "claim: --key is required" >&2
+        exit 1
+    fi
+    local expires=""
+    [[ -n "$ttl" ]] && expires=$(( $(date +%s) + ttl ))
+    if [[ -z "$window" && -z "$workspace" ]]; then
+        window=$(resolve_window_id)
+        if [[ -z "$window" ]]; then
+            echo "claim: could not resolve a niri window; pass --window or --workspace" >&2
+            exit 1
+        fi
+    fi
+    rotate_log
+    lock
+    write_claim "$key" "$state" 0 "$window" "$workspace" "$pid" "$expires" "$source"
+    log "$key: claim $state (source=$source window=${window:-–} workspace=${workspace:-–} ttl=${ttl:-none})"
+    render_locked
+}
+
+cmd_clear() {
+    local key=""
+    while (( $# )); do
+        case "$1" in
+            --key) key="$2"; shift 2 ;;
+            *) echo "clear: unknown option '$1'" >&2; exit 1 ;;
+        esac
+    done
+    if [[ -z "$key" ]]; then
+        echo "clear: --key is required" >&2
+        exit 1
+    fi
+    rotate_log
+    lock
+    rm -f "$STATE_DIR/$key.json"
+    log "$key: cleared (manual)"
+    render_locked
+}
+
+case "${1:-}" in
+    claim)  shift; cmd_claim "$@" ;;
+    clear)  shift; cmd_clear "$@" ;;
+    render) rotate_log; lock; render_locked ;;
+    hook)   shift; cmd_hook "${1:?usage: workspace-activity hook EVENT}" ;;
+    *)
+        sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//' >&2
+        exit 1
+        ;;
+esac

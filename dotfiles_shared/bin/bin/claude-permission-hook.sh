@@ -5,6 +5,13 @@ set -euo pipefail
 
 INPUT=$(cat)
 
+# --- Flag the workspace "needs attention" while a permission prompt is up ---
+# (whether it ends up as the CLI prompt or our notification). The focused/CLI
+# path can't observe the answer; workspace-activity's PreToolUse/Stop events
+# naturally clear the flag once the tool runs or the turn ends.
+[[ -x "$HOME/bin/workspace-activity" ]] && \
+    printf '%s' "$INPUT" | "$HOME/bin/workspace-activity" hook permission-start || true
+
 # --- Skip if Claude's Kitty window currently has keyboard focus ---
 # Exiting 0 with no output defers to the normal CLI permission prompt.
 [[ -x "$HOME/bin/claude-window-focused.sh" ]] && "$HOME/bin/claude-window-focused.sh" && exit 0
@@ -37,6 +44,16 @@ ACTION=$(notify-send --app-name="Claude Code" \
     "${ACTIONS[@]}" \
     --wait \
     "Permission: $TOOL_NAME" "$DISPLAY")
+
+# Prompt answered -> workspace drops back to plain "busy" (the turn continues
+# with the decision either way). On dismissal we fall through to the CLI
+# prompt instead, so the attention flag stays up until PreToolUse/Stop.
+case "$ACTION" in
+    allow|always|deny)
+        [[ -x "$HOME/bin/workspace-activity" ]] && \
+            printf '%s' "$INPUT" | "$HOME/bin/workspace-activity" hook permission-end || true
+        ;;
+esac
 
 # Return decision as JSON
 case "$ACTION" in

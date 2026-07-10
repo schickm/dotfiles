@@ -5,6 +5,10 @@
     "height": 30, // Waybar height (to be removed for auto height)
     // "width": 1280, // Waybar width
     "spacing": 4, // Gaps between modules (4px)
+    // Re-apply CSS in place when style.css or its @imports change (the
+    // generated workspace-colors/-activity files). Unlike a SIGUSR2 reload,
+    // this doesn't tear down the bar surface, so windows don't shift.
+    "reload_style_on_change": true,
     // Choose the order of the modules
     "modules-left": [
         "niri/workspaces",

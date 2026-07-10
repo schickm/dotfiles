@@ -9,9 +9,10 @@
 # see workspace_color in workspace-lib.sh).
 #
 # Writes ~/.config/waybar/workspace-colors.css (@imported by style.css;
-# gitignored since ~/.config/waybar is stowed into the dotfiles repo) and
-# reloads waybar only when the output actually changed. Runs from waybar's
-# ExecStartPre drop-in and from resume-workspace.
+# gitignored since ~/.config/waybar is stowed into the dotfiles repo) only
+# when the output actually changed; waybar re-applies it in place via its
+# reload_style_on_change option. Runs from waybar's ExecStartPre drop-in and
+# from resume-workspace.
 set -e
 
 source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
@@ -56,5 +57,7 @@ if [[ ! -f "$css_file" ]] || [[ "$new_css" != "$(cat "$css_file")" ]]; then
     tmp=$(mktemp "$css_file.XXXXXX")
     printf '%s\n' "$new_css" > "$tmp"
     mv "$tmp" "$css_file"
-    pkill -SIGUSR2 -x waybar 2>/dev/null || true
+    # No reload signal needed: waybar runs with reload_style_on_change and
+    # re-applies the CSS in place (a SIGUSR2 reload would tear down the bar
+    # surface and momentarily shift every window).
 fi

@@ -47,6 +47,54 @@
           {
             "type": "command",
             "command": "~/bin/claude-disarm-watchdog.sh"
+          },
+          {
+            "type": "command",
+            "command": "~/bin/workspace-activity hook prompt-submit"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/bin/workspace-activity hook pre-tool"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/bin/workspace-activity hook post-tool"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/bin/workspace-activity hook subagent-stop"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/bin/workspace-activity hook session-end"
           }
         ]
       }
@@ -62,6 +110,10 @@
           {
             "type": "command",
             "command": "~/bin/claude-stop-hook.sh"
+          },
+          {
+            "type": "command",
+            "command": "~/bin/workspace-activity hook stop"
           }
         ]
       }
