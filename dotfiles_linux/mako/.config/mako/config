@@ -8,3 +8,8 @@ on-button-left=invoke-default-action
 # Middle-click dismisses without invoking any action (no focus change).
 on-button-middle=dismiss
 
+# Claude Code hooks tag notifications with --category=ws-<workspace>; stack
+# notifications from the same workspace together.
+[app-name="Claude Code"]
+group-by=category
+

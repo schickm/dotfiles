@@ -33,17 +33,27 @@ case "$TOOL_NAME" in
         ;;
 esac
 
+# --- Workspace context (sets WS_NAME / WS_COLOR / WS_TAG) ---
+CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
+source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
+resolve_workspace_context "$CWD"
+
+SUMMARY="Permission: $TOOL_NAME"
+BODY=$(pango_escape "$DISPLAY")
+[[ -n "$WS_TAG" ]] && BODY="$WS_TAG"$'\n'"$BODY"
+
 # Build notification actions
 ACTIONS=(--action="allow=Allow once" --action="deny=Deny")
 if [[ -n "$SUGGESTION" ]]; then
     ACTIONS=(--action="allow=Allow once" --action="always=Allow always" --action="deny=Deny")
 fi
+[[ -n "$WS_NAME" ]] && ACTIONS+=(--category="ws-$WS_NAME")
 
 # Send notification with actions, wait for response
 ACTION=$(notify-send --app-name="Claude Code" \
     "${ACTIONS[@]}" \
     --wait \
-    "Permission: $TOOL_NAME" "$DISPLAY")
+    "$SUMMARY" "$BODY")
 
 # Prompt answered -> workspace drops back to plain "busy" (the turn continues
 # with the decision either way). On dismissal we fall through to the CLI

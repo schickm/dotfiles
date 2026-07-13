@@ -49,43 +49,33 @@ CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 [[ -z "$CWD" ]] && CWD="$PWD"
 CWD_DISPLAY="${CWD/#$HOME/\~}"
 
-# Conversation name as the headline (helps tell apart multiple Claude windows);
-# falls back to the generic label before a title has been generated.
-SUMMARY="${TITLE:-Waiting for input}"
-BODY="$LAST_MESSAGE"$'\n\n'"📁 $CWD_DISPLAY"
+# --- Workspace context + niri window id (click-to-focus) ---
+# resolve_workspace_context sets WS_WINDOW_ID / WS_NAME / WS_COLOR / WS_TAG.
+source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
+resolve_workspace_context "$CWD"
+NIRI_ID="$WS_WINDOW_ID"
 
-# --- Resolve the niri window id of Claude's Kitty OS window (for click-to-focus) ---
-NIRI_ID=""
-if command -v niri >/dev/null 2>&1 && command -v kitty >/dev/null 2>&1; then
-    # Walk up to the kitty process backing this OS window.
-    kpid=$$
-    while [[ "${kpid:-1}" -gt 1 ]]; do
-        [[ "$(cat /proc/$kpid/comm 2>/dev/null || true)" == "kitty" ]] && break
-        kpid=$(awk '/^PPid:/{print $2}' /proc/$kpid/status 2>/dev/null || echo 1)
-    done
-    # Title of the active pane in Claude's OS window, to disambiguate when one
-    # kitty process backs several OS windows (same pid, different titles).
-    wtitle=$(kitty @ ls 2>/dev/null | jq -r '
-        [ .[] | select(any(.tabs[].windows[]; .is_self == true)) ][0]
-        | .tabs[] | select(.is_active == true)
-        | .windows[] | select(.is_active == true) | .title' 2>/dev/null || true)
-    if [[ "${kpid:-1}" -gt 1 ]]; then
-        NIRI_ID=$(niri msg --json windows 2>/dev/null | jq -r --argjson p "$kpid" --arg t "$wtitle" '
-            ([ .[] | select(.pid == $p) ]) as $m
-            | (if ($m | length) == 1 then $m[0]
-               else ($m[] | select(.title == $t)) end).id // empty' 2>/dev/null | head -1 || true)
-    fi
-fi
+# Conversation name as the headline (helps tell apart multiple Claude windows);
+# falls back to the generic label before a title has been generated. The
+# workspace pill leading the body says where it came from.
+SUMMARY="${TITLE:-Waiting for input}"
+BODY="$(pango_escape "$LAST_MESSAGE")"$'\n\n'"📁 $(pango_escape "$CWD_DISPLAY")"
+[[ -n "$WS_TAG" ]] && BODY="$WS_TAG"$'\n'"$BODY"
 
 # --- Notify (detached so the hook never blocks) and handle the click ---
+# The synchronous hint is per-workspace: a new stop notification replaces the
+# previous one from the same workspace but leaves other workspaces' up.
 export CLAUDE_SUMMARY="$SUMMARY"
 export CLAUDE_BODY="$BODY"
 export CLAUDE_NIRI_ID="$NIRI_ID"
+export CLAUDE_CATEGORY="${WS_NAME:+ws-$WS_NAME}"
+export CLAUDE_SYNC_KEY="claude-stop${WS_NAME:+-$WS_NAME}"
 setsid bash -c '
     action=$(notify-send --app-name="Claude Code" \
         --action="default=Focus window" \
         -t 0 \
-        -h "string:x-canonical-private-synchronous:claude-stop" \
+        ${CLAUDE_CATEGORY:+--category="$CLAUDE_CATEGORY"} \
+        -h "string:x-canonical-private-synchronous:$CLAUDE_SYNC_KEY" \
         --wait \
         "$CLAUDE_SUMMARY" "$CLAUDE_BODY") || exit 0
     if [[ "$action" == "default" ]]; then
