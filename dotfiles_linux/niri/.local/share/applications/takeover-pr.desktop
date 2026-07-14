@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Takeover PR
+Exec=takeover-pr
+Type=Application
+Terminal=false
+Keywords=rwgps;worktree;

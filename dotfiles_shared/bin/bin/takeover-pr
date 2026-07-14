@@ -1,0 +1,93 @@
+#!/bin/bash
+set -e
+
+source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
+
+# PR URL from arg, or prompt for it
+pr_url="$1"
+if [[ -z "$pr_url" ]]; then
+	pr_url=$(echo "" | fuzzel --dmenu --prompt "GitHub PR URL: ")
+	[[ -z "$pr_url" ]] && exit 0
+fi
+
+# Pick the workspace container: infer it from the URL's org/repo slug by
+# matching each container's origin remote; fall back to a picker.
+container=""
+if [[ "$pr_url" =~ github\.com[:/]([^/]+/[^/?#]+) ]]; then
+	container=$(container_for_github_slug "${BASH_REMATCH[1]}") || container=""
+fi
+if [[ -z "$container" ]]; then
+	repo=$(workspace_containers | xargs -rn1 basename | fuzzel --dmenu --prompt "Repository: ")
+	[[ -z "$repo" ]] && exit 0
+	container="$WORKVC_BASE/$repo"
+fi
+
+load_workspacerc "$container"
+[[ -z "$MAIN_WORKTREE" ]] && notify-send -u critical "Takeover PR Failed" "No main worktree found in $container" && exit 1
+
+cd "$container/$MAIN_WORKTREE"
+
+# Look up the PR's number and head branch
+pr_info=$(with_notification "Taking over PR..." "Looking up pull request..." \
+	gh pr view "$pr_url" --json number,headRefName -q '"\(.number) \(.headRefName)"') ||
+	{
+		notify-send -u critical "Takeover PR Failed" "Could not look up PR: $pr_url"
+		exit 1
+	}
+read -r pr_num head_ref <<<"$pr_info"
+[[ -z "$pr_num" || -z "$head_ref" ]] && notify-send -u critical "Takeover PR Failed" "Could not parse PR number/branch from: $pr_url" && exit 1
+
+# Worktree dir name: sanitized head branch. The dir name becomes the niri
+# workspace name and the repo/worktree handoff slug (which splits on "/"),
+# so it can't contain slashes — the local branch keeps the real name.
+dir=$(printf %s "$head_ref" | tr -cs 'a-zA-Z0-9._-' '-' | sed 's/^-*//; s/-*$//')
+
+if [[ ! -d "$container/$dir" ]]; then
+	# Fetch the PR head first so wt-add creates the worktree already on the
+	# PR's content — .wt-addrc (installs, port assignment) then runs against
+	# the right tree.
+	git fetch origin "pull/${pr_num}/head"
+	with_notification "Setting up worktree..." "$dir" fish -c "wt-add ../$dir --detach FETCH_HEAD" ||
+		{
+			notify-send -u critical "Takeover PR Failed" "Failed to create worktree: $dir"
+			exit 1
+		}
+fi
+
+cd "$container/$dir"
+
+# Turn the detached HEAD into the PR's branch with tracking/push config
+# (fork-safe). Also repairs a worktree left detached by an earlier failed run.
+if [[ "$(git rev-parse --abbrev-ref HEAD)" != "$head_ref" ]]; then
+	if ! gh pr checkout "$pr_url"; then
+		# A branch can only be checked out in one worktree. If the blocker is
+		# the disposable pr-review worktree (likely — we often review a PR
+		# right before taking it over), detach it and retry; --detach keeps
+		# its working tree as-is. Anything else is a real conflict.
+		blocker=$(git worktree list --porcelain |
+			awk -v b="refs/heads/$head_ref" '$1=="worktree"{w=$2} $1=="branch" && $2==b {print w}')
+		if [[ "$(basename "$blocker")" == "pr-review" ]]; then
+			git -C "$blocker" switch --detach
+			gh pr checkout "$pr_url"
+		else
+			notify-send -u critical "Takeover PR Failed" "Branch $head_ref is checked out in ${blocker:-another worktree}"
+			exit 1
+		fi
+	fi
+fi
+
+if [[ ! -f "$container/$dir/CLAUDE.local.md" ]]; then
+	seed_claude_local_md "$container/$dir" "This worktree's purpose is to take over and finish the work in this existing pull request:
+
+$pr_url
+
+Review the PR's existing discussion and review comments with the gh CLI before making changes."
+fi
+
+# Prompt to launch workspace
+action=$(notify-send --wait --action="yes=Yes" --action="no=No" "Workspace Ready" "Launch workspace $dir?")
+[[ "$action" != "yes" ]] && exit 0
+
+# Launch dev environment via resume-workspace (it discovers the PR URL for
+# the branch itself, so don't pass it — that would open a duplicate tab).
+resume-workspace "$(basename "$container")/$dir"

@@ -20,6 +20,11 @@
 #                           workspace's Chrome, e.g. a dev-server hotlink
 #   workspace_launch <dir>  launch the workspace's terminal windows
 #                           (default: claude + editor)
+#   workspace_claude_guidance <dir>
+#                           echo repo-specific standing guidance appended to
+#                           a new worktree's CLAUDE.local.md (default: use
+#                           the Chrome MCP for in-browser testing; define an
+#                           empty function to omit)
 #
 # workspace_launch (and the Chrome spawn) run inside a fresh kernel session
 # under niri-spawn-on-workspace: every window the launch's process tree opens
@@ -232,12 +237,27 @@ resolve_workspace_context() {
     return 0
 }
 
+# seed_claude_local_md <worktree_dir> <purpose>
+# Write the worktree's CLAUDE.local.md: the purpose text (may be multi-line)
+# followed by the container's workspace_claude_guidance output, if any.
+# Requires load_workspacerc to have run (it defines the guidance function).
+seed_claude_local_md() {
+    local worktree_dir="$1" purpose="$2"
+    local guidance
+    guidance=$(workspace_claude_guidance "$worktree_dir")
+    cat >"$worktree_dir/CLAUDE.local.md" <<EOF
+$purpose${guidance:+
+
+$guidance}
+EOF
+}
+
 # Source a container's .workspacerc and fill in defaults. Sets MAIN_WORKTREE
 # and guarantees workspace_urls / workspace_launch are defined.
 load_workspacerc() {
     local container="$1"
     MAIN_WORKTREE=""
-    unset -f workspace_urls workspace_launch 2>/dev/null || true
+    unset -f workspace_urls workspace_launch workspace_claude_guidance 2>/dev/null || true
 
     if [[ -f "$container/.workspacerc" ]]; then
         source "$container/.workspacerc"
@@ -249,6 +269,12 @@ load_workspacerc() {
 
     if ! declare -F workspace_urls >/dev/null; then
         workspace_urls() { :; }
+    fi
+
+    if ! declare -F workspace_claude_guidance >/dev/null; then
+        workspace_claude_guidance() {
+            echo "Be sure to use the Chrome MCP for anything that would benefit from in-browser testing / validation."
+        }
     fi
 
     if ! declare -F workspace_launch >/dev/null; then

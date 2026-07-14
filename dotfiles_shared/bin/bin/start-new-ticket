@@ -56,16 +56,9 @@ with_notification "Setting up worktree..." "$branch" fish -c "wt-add ../$branch"
 		exit 1
 	}
 
-# Write CLAUDE.local.md with ticket context. Remove any symlink first
-# (.wt-addrc may seed one pointing at the container's shared file — writing
-# through it would clobber that shared file for every worktree).
-cat >"$container/$branch/CLAUDE.local.md" <<EOF
-This worktree's purpose is to implement the following GitHub ticket:
+seed_claude_local_md "$container/$branch" "This worktree's purpose is to implement the following GitHub ticket:
 
-$issue_url
-
-Be sure to use the Chrome MCP for anything that would benefit from in-browser testing / validation.
-EOF
+$issue_url"
 
 # Prompt to launch workspace
 action=$(notify-send --wait --action="yes=Yes" --action="no=No" "Workspace Ready" "Launch workspace $branch?")
