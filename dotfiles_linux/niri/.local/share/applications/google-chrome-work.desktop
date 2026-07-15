@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Google Chrome (Work)
+GenericName=Web Browser
+Comment=ridewithgps.com profile
+Keywords=work;rwgps;ridewithgps;browser;
+Icon=google-chrome
+Exec=env -u XDG_ACTIVATION_TOKEN /usr/bin/google-chrome-stable "--profile-directory=Profile 1" %U
+Terminal=false
+StartupNotify=false
+StartupWMClass=Google-chrome
+Categories=Network;WebBrowser;
