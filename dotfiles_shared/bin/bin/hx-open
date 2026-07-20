@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# hx-open — resolve FILE[:LINE[:COL]] (including the bare basenames Claude Code
+# prints, e.g. "MapboxMapEngine.tsx:227") and open it in Helix at that line.
+#
+# Meant to be run by kitty's hints kitten in an overlay over the current window:
+#   map ctrl+shift+y kitten hints --type=linenum --linenum-action=self /home/matt/bin/hx-open {path} {line}
+#
+# This opens a fresh hx instance; :q returns to the underlying window. Helix has
+# no client/server mode (helix-editor/helix#312), so driving an already-running
+# instance would require keystroke injection, which can't be done safely in a
+# modal editor whose current mode is unknowable from outside.
+#
+# Usage: hx-open [--dry-run] FILE [LINE]
+
+set -uo pipefail
+
+fail() {
+    echo "hx-open: $1" >&2
+    notify-send hx-open "$1" 2>/dev/null || true
+    # When running in a hints overlay, pause so the error is readable.
+    [[ -t 0 && -t 1 ]] && read -rsn1 -p 'press any key to close'
+    exit 1
+}
+
+dry_run=
+[[ ${1:-} == --dry-run ]] && { dry_run=1; shift; }
+
+raw=${1:-}
+[[ -n $raw ]] || fail "usage: hx-open [--dry-run] FILE [LINE]"
+line=${2:-}
+col=
+
+raw=${raw#file://}
+# Kitty's hints path regex can drag along wrapping punctuation from prose,
+# e.g. "(MapboxMapEngine.tsx" out of "(MapboxMapEngine.tsx:227)". Strip it.
+raw=$(printf '%s' "$raw" | sed -E $'s/^[[({<"\'`]+//; s/[])}>"\'`,;:.]+$//')
+# Peel a trailing :line[:col] off the path if no explicit line was given.
+if [[ -z $line ]]; then
+    if [[ $raw =~ ^(.+):([0-9]+):([0-9]+):?$ ]]; then
+        raw=${BASH_REMATCH[1]} line=${BASH_REMATCH[2]} col=${BASH_REMATCH[3]}
+    elif [[ $raw =~ ^(.+):([0-9]+)(-[0-9]+)?:?$ ]]; then
+        raw=${BASH_REMATCH[1]} line=${BASH_REMATCH[2]}
+    fi
+fi
+# Ranges like foo.tsx:228-230 hand us "228-230"; keep the start.
+line=${line%%-*}
+
+# Resolve the path. If it doesn't exist relative to cwd (Claude Code often
+# prints bare basenames), search under the git root, falling back to cwd.
+if [[ -e $raw ]]; then
+    file=$(realpath "$raw")
+else
+    root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+    mapfile -t hits < <(fd --type f --full-path --fixed-strings --max-results 50 \
+        -E node_modules -E .git -E .cache -- "$raw" "$root" 2>/dev/null)
+    matches=()
+    for h in "${hits[@]}"; do
+        [[ $h == */$raw || $h == "$raw" ]] && matches+=("$h")
+    done
+    ((${#matches[@]})) || matches=("${hits[@]}")
+    ((${#matches[@]})) || fail "no file matching '$raw' under $root"
+    file=$(printf '%s\n' "${matches[@]}" | awk '{print length, $0}' | sort -n | head -1 | cut -d' ' -f2-)
+    file=$(realpath "$file")
+fi
+
+target=$file
+[[ -n $line ]] && target="$file:$line${col:+:$col}"
+
+if [[ -n $dry_run ]]; then
+    echo "would run: hx $target"
+    exit 0
+fi
+
+exec hx "$target"
