@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Workspace URL Open
+GenericName=Web Browser
+Comment=Open URLs in the Chrome window on the current niri workspace
+Icon=google-chrome
+Exec=/home/matt/bin/workspace-url-open %u
+Terminal=false
+StartupNotify=false
+NoDisplay=true
+MimeType=text/html;x-scheme-handler/http;x-scheme-handler/https;
+Categories=Network;WebBrowser;
