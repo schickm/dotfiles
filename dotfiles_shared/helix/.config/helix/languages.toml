@@ -1,0 +1,22 @@
+# TypeScript 7 (tsgo) as the LSP for TS/JS.
+# tsgo-lsp (~/.local/bin) resolves the repo-local @typescript/native binary.
+# tsgo is pull-diagnostics-only (textDocument/diagnostic); Helix >= 25.01 supports that.
+
+[language-server.tsgo]
+command = "tsgo-lsp"
+
+[[language]]
+name = "typescript"
+language-servers = ["tsgo"]
+
+[[language]]
+name = "tsx"
+language-servers = ["tsgo"]
+
+[[language]]
+name = "javascript"
+language-servers = ["tsgo"]
+
+[[language]]
+name = "jsx"
+language-servers = ["tsgo"]

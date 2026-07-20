@@ -1,0 +1,19 @@
+#!/bin/sh
+# TypeScript 7 (tsgo) LSP launcher for Helix. Walks up from cwd so each
+# worktree uses its own repo-local compiler (same one `pnpm lint:types` runs).
+dir=$PWD
+while [ "$dir" != "/" ]; do
+  # rwgps-ui installs TS7 under the alias @typescript/native; other repos may
+  # use @typescript/native-preview, whose bin is tsgo.
+  for candidate in "$dir/node_modules/@typescript/native/bin/tsc" "$dir/node_modules/.bin/tsgo"; do
+    if [ -x "$candidate" ]; then
+      exec "$candidate" --lsp --stdio
+    fi
+  done
+  dir=$(dirname "$dir")
+done
+if command -v tsgo >/dev/null 2>&1; then
+  exec tsgo --lsp --stdio
+fi
+echo "tsgo-lsp: no repo-local TypeScript 7 binary above $PWD and no global tsgo" >&2
+exit 1
