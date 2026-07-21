@@ -10,6 +10,11 @@ while [ "$dir" != "/" ]; do
       exec "$candidate" --lsp --stdio
     fi
   done
+  # Stock typescript package, but only major >= 7 (older tsc has no --lsp).
+  ts="$dir/node_modules/typescript"
+  if [ -x "$ts/bin/tsc" ] && grep -q '"version": *"[789]' "$ts/package.json" 2>/dev/null; then
+    exec "$ts/bin/tsc" --lsp --stdio
+  fi
   dir=$(dirname "$dir")
 done
 if command -v tsgo >/dev/null 2>&1; then
