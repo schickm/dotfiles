@@ -262,6 +262,9 @@ label:focus {
     padding: 0 10px;
     background-color: #2d3436;
     color: #ffffff;
+    /* Bell and bell-slash glyphs differ in width; reserve room for the
+       wider one so the module doesn't resize when toggled. */
+    min-width: 20px;
 }
 
 #custom-notifications.dnd {
