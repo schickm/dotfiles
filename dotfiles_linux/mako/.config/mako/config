@@ -13,3 +13,9 @@ on-button-middle=dismiss
 [app-name="Claude Code"]
 group-by=category
 
+# Do-not-disturb, toggled from the waybar bell module (waybar-mako-dnd) via
+# `makoctl mode -t do-not-disturb`. Notifications still queue while active
+# and appear once the mode is turned off (if they haven't timed out).
+[mode=do-not-disturb]
+invisible=1
+

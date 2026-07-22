@@ -19,6 +19,7 @@
     ],
     "modules-right": [
         "mpd",
+        "custom/notifications",
         "idle_inhibitor",
         "systemd-failed-units",
 	"custom/uair",
@@ -207,6 +208,18 @@
 			"suspend": "systemctl suspend",
 			"hibernate": "systemctl hibernate"
 		}
+    },
+    "custom/notifications": {
+        // Bell / bell-slash toggle for mako do-not-disturb. The script
+        // signals SIGRTMIN+9 after toggling so the icon updates instantly;
+        // the interval is just a fallback if the mode changes elsewhere.
+        "format": "{}",
+        "return-type": "json",
+        "interval": 60,
+        "signal": 9,
+        "exec": "$HOME/bin/waybar-mako-dnd status",
+        "on-click": "$HOME/bin/waybar-mako-dnd toggle",
+        "tooltip": true
     },
     "custom/uair": {
         "format": "{icon} {text}",

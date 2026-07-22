@@ -1,0 +1,27 @@
+#!/bin/sh
+# Waybar custom module for mako's do-not-disturb mode.
+#   status (default) — print module JSON reflecting the current mode
+#   toggle           — flip the mode, then poke waybar to re-render
+# The waybar module listens on SIGRTMIN+9 ("signal": 9 in config.jsonc).
+
+case "${1:-status}" in
+toggle)
+    makoctl mode -t do-not-disturb >/dev/null
+    # -x: exact match, so this doesn't kill this very script (waybar-mako-dnd)
+    pkill -x -SIGRTMIN+9 waybar
+    ;;
+status)
+    # Icons as octal UTF-8 escapes: \357\207\266 = U+F1F6 bell-slash,
+    # \357\203\263 = U+F0F3 bell (FontAwesome). Waybar hides custom modules
+    # whose text is empty, so literal glyphs lost in editing = invisible module.
+    if makoctl mode | grep -qx do-not-disturb; then
+        printf '{"text":"\357\207\266","class":"dnd","tooltip":"Notifications muted — click to unmute"}\n'
+    else
+        printf '{"text":"\357\203\263","class":"enabled","tooltip":"Notifications on — click to mute"}\n'
+    fi
+    ;;
+*)
+    echo "usage: waybar-mako-dnd [status|toggle]" >&2
+    exit 2
+    ;;
+esac
