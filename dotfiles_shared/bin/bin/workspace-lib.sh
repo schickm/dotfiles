@@ -74,17 +74,35 @@ detect_main_worktree() {
     return 1
 }
 
-# Print the container a worktree dir name belongs to. Fails for main-worktree
-# names (they collide across repos and with hand-named niri workspaces) and
-# for names present in more than one container.
+# Print the niri workspace name for a container's worktree dir. Generic
+# main-worktree names (master/main/trunk) collide across repos and with
+# hand-named niri workspaces, so they get a "<repo>/" prefix; every other
+# worktree name is used as-is.
+workspace_name_for() {
+    local container="$1" worktree="$2"
+    case "$worktree" in
+        master|main|trunk) echo "$(basename "$container")/$worktree" ;;
+        *) echo "$worktree" ;;
+    esac
+}
+
+# Print the container a niri workspace name belongs to. Workspace names are
+# derived from worktree dirs via workspace_name_for, so recompute the forward
+# name for every worktree and compare — no parsing of the name itself (repo
+# names may contain the separator). Fails for names that no worktree maps to
+# (hand-named workspaces, bare main-worktree names) and for names produced
+# by more than one container.
 container_for_worktree() {
-    local target="$1" container found=""
+    local target="$1" container dir found=""
     [[ -n "$target" ]] || return 1
-    case "$target" in master|main|trunk) return 1 ;; esac
     for container in $(workspace_containers); do
-        [[ -e "$container/$target/.git" ]] || continue
-        [[ -n "$found" ]] && return 1
-        found="$container"
+        for dir in "$container"/*/; do
+            dir="${dir%/}"
+            [[ -e "$dir/.git" ]] || continue
+            [[ "$(workspace_name_for "$container" "$(basename "$dir")")" == "$target" ]] || continue
+            [[ -n "$found" ]] && return 1
+            found="$container"
+        done
     done
     [[ -n "$found" ]] && echo "$found"
 }
@@ -180,16 +198,17 @@ container_for_cwd() {
     return 0
 }
 
-# Workspace label derived from a working directory: the worktree dir name for
-# paths inside a workspace container (matching the niri workspace names
-# resume-workspace assigns), otherwise the directory's basename.
+# Workspace label derived from a working directory: the worktree's workspace
+# name for paths inside a workspace container (matching the niri workspace
+# names resume-workspace assigns, see workspace_name_for), otherwise the
+# directory's basename.
 workspace_name_from_cwd() {
     local cwd="${1:-}" container
     [[ -n "$cwd" ]] || return 0
     container=$(container_for_cwd "$cwd")
     if [[ -n "$container" && "$cwd" != "$container" ]]; then
         local rel="${cwd#"$container"/}"
-        echo "${rel%%/*}"
+        workspace_name_for "$container" "${rel%%/*}"
     else
         basename "$cwd"
     fi

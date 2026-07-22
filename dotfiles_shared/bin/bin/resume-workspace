@@ -16,6 +16,7 @@ if [[ "${1:-}" == "--spawn-apps" ]]; then
     worktree="${selected#*/}"
     container="$WORKVC_BASE/$repo"
     worktree_dir="$container/$worktree"
+    ws_name=$(workspace_name_for "$container" "$worktree")
 
     load_workspacerc "$container"
     cd "$worktree_dir"
@@ -37,7 +38,7 @@ if [[ "${1:-}" == "--spawn-apps" ]]; then
                 '([.[] | select(.app_id=="google-chrome") | .id] - $before) | first // empty')
             if [[ -n "$new_id" ]]; then
                 niri msg action move-window-to-workspace \
-                    --window-id "$new_id" --focus false "$worktree"
+                    --window-id "$new_id" --focus false "$ws_name"
                 break
             fi
             sleep 0.2
@@ -85,6 +86,7 @@ repo="${selected%%/*}"
 worktree="${selected#*/}"
 container="$WORKVC_BASE/$repo"
 worktree_dir="$container/$worktree"
+ws_name=$(workspace_name_for "$container" "$worktree")
 
 [[ -d "$worktree_dir" ]] || { notify-send -u critical "Resume Workspace Failed" "No such worktree: $selected"; exit 1; }
 
@@ -95,8 +97,9 @@ cd "$worktree_dir"
 pr_url=$(with_notification "Resuming workspace..." "Looking up pull request..." \
     gh pr view --json url -q .url 2>/dev/null || true)
 
-# Create niri workspace with the descriptive name (no issue number)
-niri-create-workspace "$worktree"
+# Create niri workspace with the descriptive name (no issue number); main
+# worktrees get a repo-prefixed name (see workspace_name_for)
+niri-create-workspace "$ws_name"
 
 # Refresh waybar's per-repo workspace colors (a new worktree has no rule yet)
 waybar-workspace-colors || true
@@ -113,4 +116,4 @@ done < <(workspace_urls "$worktree_dir")
 # Launch everything (Chrome + terminals) via --spawn-apps under
 # niri-spawn-on-workspace: apps map their windows asynchronously, so late
 # arrivals get moved onto this workspace instead of wherever focus is now.
-niri-spawn-on-workspace "$worktree" "$0" --spawn-apps "$selected" "${chrome_urls[@]}"
+niri-spawn-on-workspace "$ws_name" "$0" --spawn-apps "$selected" "${chrome_urls[@]}"

@@ -33,9 +33,11 @@ is_excluded() {
 }
 
 # Niri workspaces are named after worktree dir basenames (resume-workspace /
-# niri-create-workspace), so a same-named workspace with windows means the
-# worktree's apps are still running — removing the worktree out from under
-# them leaves a zombie workspace. Snapshot once; if niri isn't reachable
+# niri-create-workspace; main worktrees get a repo prefix via
+# workspace_name_for, but those are excluded from cleanup anyway), so a
+# same-named workspace with windows means the worktree's apps are still
+# running — removing the worktree out from under them leaves a zombie
+# workspace. Snapshot once; if niri isn't reachable
 # (e.g. headless run) the check never matches and cleanup proceeds as before.
 niri_workspaces=$(niri msg --json workspaces 2>/dev/null || true)
 

@@ -1,9 +1,10 @@
 #!/bin/bash
 # Gather niri workspaces into contiguous per-repo groups.
 #
-# Workspace names are worktree dir names (resume-workspace passes them to
-# niri-create-workspace), so scanning the workspace containers on disk maps
-# each workspace to its repo — same trick as waybar-workspace-colors.
+# Workspace names are derived from worktree dir names (resume-workspace
+# passes workspace_name_for's output to niri-create-workspace), so scanning
+# the workspace containers on disk maps each workspace to its repo — same
+# trick as waybar-workspace-colors.
 #
 # This is a stable gather, not a full sort, so manual ordering survives:
 #   - each group keeps the position of its topmost member (the anchor)
@@ -25,17 +26,16 @@ source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
 dry_run=0
 [[ "$1" == "-n" ]] && dry_run=1
 
-# Map worktree dir name -> container. Main-worktree names collide across
-# repos AND with hand-named workspaces, so skip them (mirrors
-# waybar-workspace-colors); any other name found in two containers is
-# ambiguous and left alone rather than gathered to whichever repo wins.
+# Map workspace name -> container. Main-worktree names come out repo-prefixed
+# (see workspace_name_for), so they group like any other worktree; a name
+# found in two containers is ambiguous and left alone rather than gathered to
+# whichever repo wins.
 declare -A repo_of
 for container in $(workspace_containers); do
     for dir in "$container"/*/; do
         dir="${dir%/}"
         [[ -e "$dir/.git" ]] || continue
-        name=$(basename "$dir")
-        case "$name" in master|main|trunk) continue ;; esac
+        name=$(workspace_name_for "$container" "$(basename "$dir")")
         if [[ -n "${repo_of[$name]:-}" && "${repo_of[$name]}" != "$container" ]]; then
             repo_of[$name]="__ambiguous__"
         else
