@@ -659,6 +659,11 @@ binds {
     Print { screenshot; }
     Ctrl+Print { screenshot-screen; }
 
+    // Aim the "niri Dynamic Cast Target" screencast stream.
+    Mod+Shift+C hotkey-overlay-title="Cast the focused window" { set-dynamic-cast-window; }
+    Mod+Shift+Alt+C hotkey-overlay-title="Pick a window to cast" { spawn "sh" "-c" "niri msg action set-dynamic-cast-window --id $(niri msg --json pick-window | jq .id)"; }
+    Mod+Shift+Escape hotkey-overlay-title="Stop casting (blank the stream)" { clear-dynamic-cast-target; }
+
     // Applications such as remote-desktop clients and software KVM switches may
     // request that niri stops processing the keyboard shortcuts defined here
     // so they may, for example, forward the key presses as-is to a remote machine.
