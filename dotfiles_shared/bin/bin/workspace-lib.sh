@@ -11,7 +11,8 @@
 #
 # .workspacerc (optional, sourced bash) may define:
 #   MAIN_WORKTREE           subdir name of the primary worktree
-#                           (default: first of master/main/trunk that exists)
+#                           (default: first of master/main/trunk/develop that
+#                           exists)
 #   WORKSPACE_COLOR         background color (CSS hex) for this repo's
 #                           workspaces in waybar — pick something dark enough
 #                           for white text (default: hashed from repo name,
@@ -65,7 +66,7 @@ workspace_containers() {
 # Print the main worktree's directory name for a container.
 detect_main_worktree() {
     local container="$1" name
-    for name in master main trunk; do
+    for name in master main trunk develop; do
         if [[ -e "$container/$name/.git" ]]; then
             echo "$name"
             return 0
@@ -81,7 +82,7 @@ detect_main_worktree() {
 workspace_name_for() {
     local container="$1" worktree="$2"
     case "$worktree" in
-        master|main|trunk) echo "$(basename "$container")/$worktree" ;;
+        master|main|trunk|develop) echo "$(basename "$container")/$worktree" ;;
         *) echo "$worktree" ;;
     esac
 }

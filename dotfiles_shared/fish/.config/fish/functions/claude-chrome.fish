@@ -1,5 +1,5 @@
 function claude-chrome \
-    --description "Launch this project's Chrome (seeded from template) with remote debugging so the chrome-devtools MCP can attach. Arg 1: workspace dir (default PWD). Remaining args are passed to Chrome (e.g. URLs to open)."
+    --description "Manually launch this project's Chrome (seeded from template) headed, e.g. for initial logins or profile maintenance. The chrome-devtools MCP launches its own headless Chrome on demand (see claude.fish); don't run this while a Claude session is doing browser work — the profile singleton allows only one instance. Arg 1: workspace dir (default PWD). Remaining args are passed to Chrome (e.g. URLs to open)."
 
     set -l info (claude-cdp-info $argv[1])
     set -l profile $info[1]

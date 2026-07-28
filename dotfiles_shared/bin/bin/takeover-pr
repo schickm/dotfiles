@@ -76,13 +76,11 @@ if [[ "$(git rev-parse --abbrev-ref HEAD)" != "$head_ref" ]]; then
 	fi
 fi
 
-if [[ ! -f "$container/$dir/CLAUDE.local.md" ]]; then
-	seed_claude_local_md "$container/$dir" "This worktree's purpose is to take over and finish the work in this existing pull request:
+seed_claude_local_md "$container/$dir" "This worktree's purpose is to take over and finish the work in this existing pull request:
 
 $pr_url
 
 Review the PR's existing discussion and review comments with the gh CLI before making changes."
-fi
 
 # Prompt to launch workspace
 action=$(notify-send --wait --action="yes=Yes" --action="no=No" "Workspace Ready" "Launch workspace $dir?")
