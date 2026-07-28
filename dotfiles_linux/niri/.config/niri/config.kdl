@@ -378,6 +378,30 @@ window-rule {
     block-out-from "screencast"
 }
 
+// Indicate screencasted windows with red colors.
+window-rule {
+    match is-window-cast-target=true
+
+    focus-ring {
+        active-color "#f38ba8"
+        inactive-color "#7d0d2d"
+    }
+
+    // Border and shadow are off globally, so enable them just for cast
+    // targets — otherwise the colors below would have nothing to tint.
+    border {
+        on
+        active-color "#f38ba8"
+        inactive-color "#f38ba8"
+    }
+
+
+    tab-indicator {
+        active-color "#f38ba8"
+        inactive-color "#7d0d2d"
+    }
+}
+
 // Example: block out two password managers from screen capture.
 // (This example rule is commented out with a "/-" in front.)
 /-window-rule {
