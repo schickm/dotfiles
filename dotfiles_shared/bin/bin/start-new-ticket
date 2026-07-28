@@ -60,6 +60,10 @@ seed_claude_local_md "$container/$branch" "This worktree's purpose is to impleme
 
 $issue_url"
 
+# Work has started: move the ticket to In Progress on every project board
+# tracking it. Backgrounded — board updates must never delay the workspace.
+github-issue-set-status "$issue_url" "In Progress" &>/dev/null &
+
 # Prompt to launch workspace
 action=$(notify-send --wait --action="yes=Yes" --action="no=No" "Workspace Ready" "Launch workspace $branch?")
 [[ "$action" != "yes" ]] && exit 0

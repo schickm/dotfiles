@@ -1,0 +1,106 @@
+#!/bin/bash
+# github-issue-set-status <issue-url> <status-name>
+#
+# Move a GitHub issue to the given status (e.g. "In Progress") in every
+# Projects v2 board that tracks it. Status option names are matched
+# case-insensitively per project (boards disagree: "In Progress" vs
+# "In progress"). Successful updates are silent. Projects with no matching
+# option, and projects the token can't write to, are reported via
+# notify-send but don't fail the run —
+# callers fire this in the background and must never be blocked by it.
+#
+# Requires a gh token with the `project` scope (gh auth refresh -s project).
+set -euo pipefail
+
+issue_url="${1:-}"
+status_name="${2:-}"
+if [[ -z "$issue_url" || -z "$status_name" ]]; then
+	echo "usage: $(basename "$0") <issue-url> <status-name>" >&2
+	exit 2
+fi
+
+notify() {
+	local urgency="$1" title="$2" body="$3"
+	if command -v notify-send >/dev/null 2>&1; then
+		notify-send -u "$urgency" "$title" "$body"
+	else
+		echo "$title: $body" >&2
+	fi
+}
+
+# resource(url:) resolves the issue straight from its URL; each project item
+# carries its board's Status field id and option ids, so one query yields
+# everything the mutations need.
+items=$(gh api graphql -f url="$issue_url" -f query='
+query($url: URI!) {
+  resource(url: $url) {
+    ... on Issue {
+      projectItems(first: 20) {
+        nodes {
+          id
+          project {
+            id
+            title
+            field(name: "Status") {
+              ... on ProjectV2SingleSelectField { id options { id name } }
+            }
+          }
+        }
+      }
+    }
+  }
+}' --jq '.data.resource.projectItems.nodes // []') || {
+	notify critical "Issue Status Update Failed" "Could not look up projects for $issue_url"
+	exit 1
+}
+
+count=$(jq 'length' <<<"$items")
+if [[ "$count" -eq 0 ]]; then
+	exit 0
+fi
+
+skipped=()
+readonly_boards=()
+failed=()
+for i in $(seq 0 $((count - 1))); do
+	item=$(jq ".[$i]" <<<"$items")
+	title=$(jq -r '.project.title' <<<"$item")
+	option_id=$(jq -r --arg s "$status_name" \
+		'.project.field.options[]? | select(.name | ascii_downcase == ($s | ascii_downcase)) | .id' <<<"$item")
+	if [[ -z "$option_id" ]]; then
+		skipped+=("$title")
+		continue
+	fi
+	if out=$(gh api graphql \
+		-f projectId="$(jq -r '.project.id' <<<"$item")" \
+		-f itemId="$(jq -r '.id' <<<"$item")" \
+		-f fieldId="$(jq -r '.project.field.id' <<<"$item")" \
+		-f optionId="$option_id" \
+		-f query='
+mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+  updateProjectV2ItemFieldValue(input: {
+    projectId: $projectId, itemId: $itemId, fieldId: $fieldId,
+    value: { singleSelectOptionId: $optionId }
+  }) { projectV2Item { id } }
+}' 2>&1); then
+		: # success is silent — only problems get a notification
+	elif grep -q FORBIDDEN <<<"$out"; then
+		# Read-only board (e.g. another team's roadmap tracking the issue).
+		# Expected on every run for such boards, so it's info, not an error.
+		readonly_boards+=("$title")
+	else
+		failed+=("$title")
+	fi
+done
+
+body=""
+[[ ${#skipped[@]} -gt 0 ]] && body+="No \"$status_name\" option in: $(IFS=', '; echo "${skipped[*]}")"
+[[ ${#readonly_boards[@]} -gt 0 ]] && body+="${body:+$'\n'}No write access to: $(IFS=', '; echo "${readonly_boards[*]}")"
+[[ ${#failed[@]} -gt 0 ]] && body+="${body:+$'\n'}Update failed in: $(IFS=', '; echo "${failed[*]}")"
+
+if [[ ${#failed[@]} -gt 0 ]]; then
+	notify critical "Issue Status Update" "$body"
+	exit 1
+elif [[ -n "$body" ]]; then
+	notify normal "Issue Status Update" "$body"
+fi
