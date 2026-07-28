@@ -1,0 +1,199 @@
+#!/usr/bin/env python3
+"""Dismiss mako notifications for the Slack conversation you're looking at.
+
+Slack on Linux never withdraws its own desktop notifications: it calls Notify
+with expire_timeout=-1 and never follows up with CloseNotification, so popups
+outlive the moment you read the message. mako can't infer this on its own --
+nothing in the freedesktop protocol tells a daemon "the user read that". The
+only evidence outside Slack is its window title, which names the conversation
+currently on screen:
+
+    rwgps-ui (Channel) - Ride with GPS - 1 new item - Slack
+
+So: follow niri's focus, parse the conversation out of that title, and dismiss
+any Slack notification whose summary names the same conversation. Dismissed
+notifications stay in mako's history, so `makoctl restore` brings them back.
+
+Both strings this matches on -- the window title and the notification summary --
+are rendered by Slack's webapp, not shipped in the desktop app, so they can
+change without warning. Every failure here is a no-op that leaves the current
+behaviour intact: an unrecognised title or summary just means the notification
+stays put, which is what Slack does on its own anyway.
+
+Only the group-DM summary format ("New message in evan, william") has been seen
+in the wild; DM and mention formats are guesses. If a notification lingers after
+you have read the conversation, that is the likely reason. To find out:
+
+    systemctl --user stop mako-slack-dismiss
+    mako-slack-dismiss --debug      # reproduce it, then Ctrl-C
+    systemctl --user start mako-slack-dismiss
+
+--debug prints the conversation parsed out of the Slack window title, plus every
+Slack summary it declined to match and why -- enough to fix TITLE_RE or
+summary_names() against a real sample instead of guessing. Dismissals are logged
+either way, so `journalctl --user -u mako-slack-dismiss` shows what it has been
+clearing without needing debug mode.
+
+Runs as mako-slack-dismiss.service, started with the graphical session.
+"""
+
+import json
+import re
+import select
+import subprocess
+import sys
+
+# How often to re-check for new notifications while Slack stays focused. Needed
+# because a message can arrive while you're already reading the conversation --
+# mako has no "notification added" signal to subscribe to.
+POLL_INTERVAL = 2.0
+
+# "<conversation> (<kind>) - <workspace> - Slack", where kind is Channel, DM,
+# and friends. Non-greedy on the name: with an unusual name the worst case is a
+# wrong parse that matches no summary, i.e. nothing happens.
+TITLE_RE = re.compile(r"^(?P<name>.+?) \([^)]+\) - .*Slack$")
+
+DEBUG = "--debug" in sys.argv[1:]
+
+
+def log(msg):
+    print(msg, file=sys.stderr, flush=True)
+
+
+def dbg(msg):
+    if DEBUG:
+        log(msg)
+
+
+def conversation_from_title(title):
+    """The conversation Slack is currently showing, or None if unrecognised."""
+    m = TITLE_RE.match(title or "")
+    if not m:
+        return None
+    name = m.group("name").strip()
+    # One-character names would match far too eagerly.
+    return name if len(name) >= 2 else None
+
+
+def summary_names(summary, name):
+    """Does this notification summary refer to conversation `name`?
+
+    Matches the name as a whole unit so that a "#channel" prefix still counts,
+    while the DM "evan" does not swallow notifications from the group DM
+    "evan, william" (hence the comma in the trailing guard).
+    """
+    pattern = r"(?<![\w-])" + re.escape(name) + r"(?![\w,-])"
+    return re.search(pattern, summary or "", re.IGNORECASE) is not None
+
+
+def slack_notifications():
+    """Active Slack notifications, or [] if mako can't be reached."""
+    try:
+        out = subprocess.run(
+            ["makoctl", "list", "-j"], capture_output=True, text=True, check=True
+        ).stdout
+        data = json.loads(out)
+    except (OSError, subprocess.CalledProcessError, ValueError) as e:
+        dbg(f"makoctl list failed: {e}")
+        return []
+    # makoctl wraps the list one level deep: {"data": [[...]]}
+    notifications = data["data"][0] if isinstance(data, dict) else data
+    return [n for n in notifications if n.get("app_name") == "Slack"]
+
+
+def dismiss_matching(name):
+    for n in slack_notifications():
+        summary = n.get("summary", "")
+        if summary_names(summary, name):
+            try:
+                subprocess.run(
+                    ["makoctl", "dismiss", "-n", str(n["id"])],
+                    capture_output=True,
+                    check=True,
+                )
+                log(f"dismissed {n['id']}: {summary!r} (viewing {name!r})")
+            except (OSError, subprocess.CalledProcessError) as e:
+                dbg(f"dismiss {n['id']} failed: {e}")
+        else:
+            dbg(f"kept {n['id']}: {summary!r} does not name {name!r}")
+
+
+class Windows:
+    """niri's window list, kept current from the event stream."""
+
+    def __init__(self):
+        self.by_id = {}
+        self.focused = None
+
+    def apply(self, event):
+        for kind, payload in event.items():
+            if kind == "WindowsChanged":
+                self.by_id = {w["id"]: w for w in payload["windows"]}
+                focused = [w["id"] for w in payload["windows"] if w.get("is_focused")]
+                self.focused = focused[0] if focused else None
+            elif kind == "WindowOpenedOrChanged":
+                w = payload["window"]
+                self.by_id[w["id"]] = w
+                if w.get("is_focused"):
+                    self.focused = w["id"]
+            elif kind == "WindowClosed":
+                self.by_id.pop(payload["id"], None)
+            elif kind == "WindowFocusChanged":
+                self.focused = payload.get("id")
+
+    def focused_conversation(self):
+        """Conversation name if Slack is focused and showing one, else None."""
+        w = self.by_id.get(self.focused)
+        if not w or w.get("app_id") != "slack":
+            return None
+        return conversation_from_title(w.get("title"))
+
+
+def main():
+    try:
+        niri = subprocess.Popen(
+            ["niri", "msg", "-j", "event-stream"],
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+    except OSError as e:
+        log(f"cannot start niri event stream: {e}")
+        return 1
+
+    windows = Windows()
+    state = None  # (focused id, title) last acted on
+
+    while True:
+        conversation = windows.focused_conversation()
+        # Only tick while Slack is focused; otherwise block until niri speaks.
+        ready, _, _ = select.select(
+            [niri.stdout], [], [], POLL_INTERVAL if conversation else None
+        )
+
+        if not ready:
+            dismiss_matching(conversation)  # periodic re-check, same conversation
+            continue
+
+        line = niri.stdout.readline()
+        if not line:
+            log("niri event stream closed")
+            return 1  # let systemd restart us against the new compositor
+        try:
+            windows.apply(json.loads(line))
+        except (ValueError, KeyError, TypeError) as e:
+            dbg(f"skipped unparseable event: {e}")
+            continue
+
+        conversation = windows.focused_conversation()
+        current = (windows.focused, conversation)
+        if conversation and current != state:
+            dbg(f"slack showing {conversation!r}")
+            dismiss_matching(conversation)
+        state = current
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        sys.exit(0)

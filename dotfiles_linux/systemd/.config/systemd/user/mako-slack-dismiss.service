@@ -1,0 +1,17 @@
+[Unit]
+Description=Dismiss mako notifications for the Slack conversation in view
+Documentation=https://github.com/emersion/mako
+PartOf=graphical-session.target
+After=graphical-session.target
+Requisite=graphical-session.target
+
+[Service]
+# Needs niri's IPC socket and a Wayland session; both are in the user manager's
+# environment because niri runs as niri.service.
+ExecCondition=/bin/sh -c '[ -n "$WAYLAND_DISPLAY" ] && [ -n "$NIRI_SOCKET" ]'
+ExecStart=%h/bin/mako-slack-dismiss
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target
