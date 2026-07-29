@@ -23,9 +23,12 @@ if [[ -z "$container" ]]; then
 fi
 
 load_workspacerc "$container"
-[[ -z "$MAIN_WORKTREE" ]] && notify-send -u critical "Takeover PR Failed" "No main worktree found in $container" && exit 1
 
-cd "$container/$MAIN_WORKTREE"
+# A container is itself a valid git dir (its .git file points at .bare), so git
+# runs straight from it — no main worktree involved.
+[[ -f "$container/.git" ]] || { notify-send -u critical "Takeover PR Failed" "$container is not a git container"; exit 1; }
+
+cd "$container"
 
 # Look up the PR's number and head branch
 pr_info=$(with_notification "Taking over PR..." "Looking up pull request..." \
@@ -47,7 +50,7 @@ if [[ ! -d "$container/$dir" ]]; then
 	# PR's content — .wt-addrc (installs, port assignment) then runs against
 	# the right tree.
 	git fetch origin "pull/${pr_num}/head"
-	with_notification "Setting up worktree..." "$dir" fish -c "wt-add ../$dir --detach FETCH_HEAD" ||
+	with_notification "Setting up worktree..." "$dir" fish -c "wt-add $dir --detach FETCH_HEAD" ||
 		{
 			notify-send -u critical "Takeover PR Failed" "Failed to create worktree: $dir"
 			exit 1

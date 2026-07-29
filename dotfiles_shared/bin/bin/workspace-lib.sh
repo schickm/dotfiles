@@ -10,9 +10,6 @@
 # .wt-addrc.
 #
 # .workspacerc (optional, sourced bash) may define:
-#   MAIN_WORKTREE           subdir name of the primary worktree
-#                           (default: first of master/main/trunk/develop that
-#                           exists)
 #   WORKSPACE_COLOR         background color (CSS hex) for this repo's
 #                           workspaces in waybar — pick something dark enough
 #                           for white text (default: hashed from repo name,
@@ -63,18 +60,6 @@ workspace_containers() {
     return 0
 }
 
-# Print the main worktree's directory name for a container.
-detect_main_worktree() {
-    local container="$1" name
-    for name in master main trunk develop; do
-        if [[ -e "$container/$name/.git" ]]; then
-            echo "$name"
-            return 0
-        fi
-    done
-    return 1
-}
-
 # Print the niri workspace name for a container's worktree dir. Generic
 # main-worktree names (master/main/trunk) collide across repos and with
 # hand-named niri workspaces, so they get a "<repo>/" prefix; every other
@@ -110,11 +95,10 @@ container_for_worktree() {
 
 # Find the container whose origin remote matches a GitHub "org/repo" slug.
 container_for_github_slug() {
-    local slug="$1" container main remote
+    local slug="$1" container remote
     local slug_lc="${slug,,}"
     for container in $(workspace_containers); do
-        main=$(detect_main_worktree "$container") || continue
-        remote=$(git -C "$container/$main" remote get-url origin 2>/dev/null) || continue
+        remote=$(git -C "$container" remote get-url origin 2>/dev/null) || continue
         local remote_lc="${remote,,}"
         if [[ "$remote_lc" == *[:/]"$slug_lc" || "$remote_lc" == *[:/]"$slug_lc".git ]]; then
             echo "$container"
@@ -272,19 +256,14 @@ $guidance}
 EOF
 }
 
-# Source a container's .workspacerc and fill in defaults. Sets MAIN_WORKTREE
-# and guarantees workspace_urls / workspace_launch are defined.
+# Source a container's .workspacerc and fill in defaults. Guarantees
+# workspace_urls / workspace_launch are defined.
 load_workspacerc() {
     local container="$1"
-    MAIN_WORKTREE=""
     unset -f workspace_urls workspace_launch workspace_claude_guidance 2>/dev/null || true
 
     if [[ -f "$container/.workspacerc" ]]; then
         source "$container/.workspacerc"
-    fi
-
-    if [[ -z "$MAIN_WORKTREE" ]]; then
-        MAIN_WORKTREE=$(detect_main_worktree "$container") || MAIN_WORKTREE=""
     fi
 
     if ! declare -F workspace_urls >/dev/null; then

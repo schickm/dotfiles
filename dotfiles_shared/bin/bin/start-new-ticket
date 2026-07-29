@@ -24,7 +24,19 @@ if [[ -z "$container" ]]; then
 fi
 
 load_workspacerc "$container"
-[[ -z "$MAIN_WORKTREE" ]] && notify-send -u critical "Start Ticket Failed" "No main worktree found in $container" && exit 1
+
+# A container is itself a valid git dir (its .git file points at .bare), so
+# worktrees are created straight from it — no main worktree involved.
+[[ -f "$container/.git" ]] || { notify-send -u critical "Start Ticket Failed" "$container is not a git container"; exit 1; }
+
+# What to fork the ticket off. Deliberately origin's default branch rather than
+# local HEAD: a bare container's HEAD is left pointing at whatever branch was
+# added last (rwgps-poi's sits on a feature branch), and a local main branch
+# that a worktree has checked out can't be force-updated, so it goes stale.
+# Either would silently fork the ticket off the wrong base.
+default_branch=$(git -C "$container" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null) || default_branch=""
+default_branch=${default_branch#origin/}
+[[ -z "$default_branch" ]] && notify-send -u critical "Start Ticket Failed" "Could not resolve origin's default branch in $container" && exit 1
 
 # Use Claude to generate a short descriptive name (for workspace)
 claude_settings='{"permissions":{"allow":["Bash(gh:*)"]}}'
@@ -48,10 +60,16 @@ workspace_name=$(with_notification "Starting ticket..." "Generating workspace na
 # Create branch name by appending issue number
 branch="${workspace_name}-${issue_num}"
 
-# CD into the main worktree and create the new worktree with wt-add
-cd "$container/$MAIN_WORKTREE"
-with_notification "Setting up worktree..." "$branch" fish -c "wt-add ../$branch" ||
+# Create the branch off a freshly-fetched origin/<default>, then hand wt-add a
+# path plus that branch. Creating the branch up front (rather than `wt-add -b`)
+# keeps the worktree path as wt-add's first argument, which is what its closing
+# `cd` relies on — and it sets up remote tracking for free.
+cd "$container"
+git fetch origin "$default_branch"
+git branch "$branch" "origin/$default_branch"
+with_notification "Setting up worktree..." "$branch" fish -c "wt-add $branch $branch" ||
 	{
+		git branch -D "$branch" 2>/dev/null || true
 		notify-send -u critical "Start Ticket Failed" "Failed to create worktree: $branch"
 		exit 1
 	}
