@@ -15,7 +15,8 @@ status)
     # \357\203\263 = U+F0F3 bell (FontAwesome). Waybar hides custom modules
     # whose text is empty, so literal glyphs lost in editing = invisible module.
     if makoctl mode | grep -qx do-not-disturb; then
-        printf '{"text":"\357\207\266","class":"dnd","tooltip":"Notifications muted — click to unmute"}\n'
+        count=$(makoctl list | grep -c '^Notification ')
+        printf '{"text":"\357\207\266 %s","class":"dnd","tooltip":"%s notifications suppressed — click to unmute"}\n' "$count" "$count"
     else
         printf '{"text":"\357\203\263","class":"enabled","tooltip":"Notifications on — click to mute"}\n'
     fi

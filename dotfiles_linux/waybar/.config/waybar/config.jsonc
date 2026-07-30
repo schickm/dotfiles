@@ -210,12 +210,13 @@
 		}
     },
     "custom/notifications": {
-        // Bell / bell-slash toggle for mako do-not-disturb. The script
+        // Bell / bell-slash toggle for mako do-not-disturb; while muted the
+        // suppressed-notification count is shown next to the bell. The script
         // signals SIGRTMIN+9 after toggling so the icon updates instantly;
-        // the interval is just a fallback if the mode changes elsewhere.
+        // the short interval keeps the count fresh while muted.
         "format": "{}",
         "return-type": "json",
-        "interval": 60,
+        "interval": 5,
         "signal": 9,
         "exec": "$HOME/bin/waybar-mako-dnd status",
         "on-click": "$HOME/bin/waybar-mako-dnd toggle",
