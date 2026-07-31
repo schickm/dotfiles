@@ -1,10 +1,12 @@
 #!/usr/bin/env fish
 
-# kitty `open_url_with` handler.
+# System default URL handler (see workspace-url-open.desktop, wired up as the
+# http/https/text/html default in mimeapps.list), so any app's URL opens land
+# here — including kitty, whose `open_url_with default` goes through xdg-open.
 #
 # Goal: open a clicked URL in whatever Chrome window lives on the same niri
-# workspace as the kitty window the click happened in. No routing to
-# claude-chrome anymore — that's reserved for headless testing.
+# workspace as the window the click happened in. No routing to claude-chrome
+# anymore — that's reserved for headless testing.
 #
 # Mechanism: Chrome has no CLI to target a specific window, but a URL handed
 # to a running instance opens as a new tab in the profile's last-activated
@@ -12,10 +14,10 @@
 # profile the last-used one), give Chrome a beat to register the activation,
 # then hand it the URL with no --profile-directory so it follows that window.
 #
-# The kitty window that was clicked is focused, so the focused niri workspace
-# IS the workspace the click came from — no kitty remote-control cwd dance
-# needed. Floating Chrome windows are skipped (the picture-in-picture rule in
-# niri's config makes those floating; they aren't tabbed browser windows).
+# The window the click happened in is focused, so the focused niri workspace
+# IS the workspace the click came from. Floating Chrome windows are skipped
+# (the picture-in-picture rule in niri's config makes those floating; they
+# aren't tabbed browser windows).
 #
 # XDG_ACTIVATION_TOKEN is stripped everywhere so Chrome can't redeem a stale
 # token on some other window and yank focus across workspaces.
