@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dismiss mako notifications for the thing you are currently looking at.
+"""Close swaync notifications for the thing you are currently looking at.
 
 Some notifications outlive the moment they stop being useful, because the app
 that raised them never withdraws them. Nothing in the freedesktop protocol tells
@@ -9,22 +9,22 @@ so follow niri's focus and clear what the focused window has made redundant.
 Two rules, one event loop:
 
   Slack        Slack calls Notify with expire_timeout=-1 and never follows up
-               with CloseNotification, so popups outlive reading the message.
+               with CloseNotification, so notifications sit in swaync's control
+               center (and its waybar count) after you have read the message.
                The only evidence outside Slack is its window title, which names
                the conversation currently on screen:
 
                    rwgps-ui (Channel) - Ride with GPS - 1 new item - Slack
 
-               So parse the conversation out of the title and dismiss any Slack
+               So parse the conversation out of the title and close any Slack
                notification whose summary names the same conversation.
 
   Claude Code  The hooks (claude-stop-hook.sh, claude-permission-hook.sh) only
                notify when their Kitty window is unfocused, but once a
                notification is up nothing clears it: focusing the window by
-               keyboard, waybar or a workspace switch leaves it on screen
-               forever. There is no title to match on -- and mako's JSON drops
-               custom hints -- so the hooks register the mapping themselves, one
-               file per notification in $XDG_RUNTIME_DIR/claude-notifications:
+               keyboard, waybar or a workspace switch leaves it around forever.
+               The hooks register the mapping themselves, one file per
+               notification in $XDG_RUNTIME_DIR/claude-notifications:
 
                    <notification id>  ->  <niri window id>
 
@@ -32,29 +32,36 @@ Two rules, one event loop:
                permission notification this way makes the hook fall back to the
                in-terminal prompt, which is where you are looking anyway.
 
-Dismissed notifications stay in mako's history, so `makoctl restore` brings them
-back.
+swaync's D-Bus interface can close a notification by id (the freedesktop
+CloseNotification call) but cannot list active ones, so both rules work from
+out-of-band registries: the Claude hooks write theirs, and swaync itself
+records Slack notifications via swaync-slack-record (the "scripts" block in
+config.json). Closing an id that is already gone is a harmless no-op, which is
+what makes registry staleness safe; entries are also pruned by age, and the
+Slack registry is cleared on startup since swaync restarts reset its id
+counter.
 
-The Slack rule matches on strings rendered by Slack's webapp, not shipped in the
-desktop app, so they can change without warning. Every failure here is a no-op
-that leaves the current behaviour intact: an unrecognised title or summary just
-means the notification stays put, which is what Slack does on its own anyway.
+The Slack rule matches on strings rendered by Slack's webapp, not shipped in
+the desktop app, so they can change without warning. Every failure here is a
+no-op that leaves the current behaviour intact: an unrecognised title or
+summary just means the notification stays put, which is what Slack does on its
+own anyway.
 
 Only the group-DM summary format ("New message in evan, william") has been seen
 in the wild; DM and mention formats are guesses. If a notification lingers after
 you have read the conversation, that is the likely reason. To find out:
 
-    systemctl --user stop mako-focus-dismiss
-    mako-focus-dismiss --debug      # reproduce it, then Ctrl-C
-    systemctl --user start mako-focus-dismiss
+    systemctl --user stop swaync-focus-dismiss
+    swaync-focus-dismiss --debug      # reproduce it, then Ctrl-C
+    systemctl --user start swaync-focus-dismiss
 
 --debug prints the conversation parsed out of the Slack window title, the Claude
 registrations it declined to act on, plus every Slack summary it declined to
-match and why -- enough to fix TITLE_RE or summary_names() against a real sample
-instead of guessing. Dismissals are logged either way, so `journalctl --user -u
-mako-focus-dismiss` shows what it has been clearing without needing debug mode.
+match and why. Closures are logged either way, so `journalctl --user -u
+swaync-focus-dismiss` shows what it has been clearing without needing debug
+mode.
 
-Runs as mako-focus-dismiss.service, started with the graphical session.
+Runs as swaync-focus-dismiss.service, started with the graphical session.
 """
 
 import json
@@ -63,23 +70,31 @@ import re
 import select
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 # How often to re-check for new notifications while Slack stays focused. Needed
-# because a message can arrive while you're already reading the conversation --
-# mako has no "notification added" signal to subscribe to. The Claude rule needs
-# no equivalent: its hooks only notify while their window is unfocused, so the
-# focus event that makes a notification redundant always comes after it.
+# because a message can arrive while you're already reading the conversation.
+# The Claude rule needs no equivalent: its hooks only notify while their window
+# is unfocused, so the focus event that makes a notification redundant always
+# comes after it.
 POLL_INTERVAL = 2.0
+
+# Registry entries older than this are stale (their notification is long gone,
+# or its id has been reused by a later swaync session) and get dropped.
+MAX_REGISTRY_AGE = 12 * 60 * 60
 
 # "<conversation> (<kind>) - <workspace> - Slack", where kind is Channel, DM,
 # and friends. Non-greedy on the name: with an unusual name the worst case is a
 # wrong parse that matches no summary, i.e. nothing happens.
 TITLE_RE = re.compile(r"^(?P<name>.+?) \([^)]+\) - .*Slack$")
 
+RUNTIME_DIR = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp"))
 # Where the Claude Code hooks register <notification id> -> <niri window id>
 # (see register_claude_notification in workspace-lib.sh).
-CLAUDE_REGISTRY = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "claude-notifications"
+CLAUDE_REGISTRY = RUNTIME_DIR / "claude-notifications"
+# Where swaync-slack-record registers <notification id> -> <summary>.
+SLACK_REGISTRY = RUNTIME_DIR / "swaync-slack-notifications"
 
 DEBUG = "--debug" in sys.argv[1:]
 
@@ -114,90 +129,87 @@ def summary_names(summary, name):
     return re.search(pattern, summary or "", re.IGNORECASE) is not None
 
 
-def notifications():
-    """Every active notification, or [] if mako can't be reached."""
-    try:
-        out = subprocess.run(
-            ["makoctl", "list", "-j"], capture_output=True, text=True, check=True
-        ).stdout
-        data = json.loads(out)
-    except (OSError, subprocess.CalledProcessError, ValueError) as e:
-        dbg(f"makoctl list failed: {e}")
-        return []
-    # makoctl wraps the list one level deep: {"data": [[...]]}
-    return data["data"][0] if isinstance(data, dict) else data
+def close(notif_id, why):
+    """Close one notification via the freedesktop D-Bus call.
 
-
-def dismiss(notif_id, why):
-    """Dismiss one notification; True when mako accepted it."""
+    A dead id is a no-op at the daemon, so this can't misfire on stale
+    registry entries; it only fails if the bus itself is unreachable.
+    """
     try:
         subprocess.run(
-            ["makoctl", "dismiss", "-n", str(notif_id)], capture_output=True, check=True
+            [
+                "gdbus", "call", "--session",
+                "--dest", "org.freedesktop.Notifications",
+                "--object-path", "/org/freedesktop/Notifications",
+                "--method", "org.freedesktop.Notifications.CloseNotification",
+                str(notif_id),
+            ],
+            capture_output=True, check=True,
         )
-        log(f"dismissed {notif_id}: {why}")
+        log(f"closed {notif_id}: {why}")
         return True
     except (OSError, subprocess.CalledProcessError) as e:
-        dbg(f"dismiss {notif_id} failed: {e}")
+        dbg(f"close {notif_id} failed: {e}")
         return False
 
 
-def dismiss_slack(name):
-    """Clear Slack notifications naming the conversation on screen."""
-    for n in notifications():
-        if n.get("app_name") != "Slack":
-            continue
-        summary = n.get("summary", "")
-        if summary_names(summary, name):
-            dismiss(n["id"], f"{summary!r} (viewing {name!r})")
-        else:
-            dbg(f"kept {n['id']}: {summary!r} does not name {name!r}")
+def registry_entries(registry):
+    """{notification id: file content} for a registry dir, pruning junk.
 
-
-def claude_registrations():
-    """{notification id: niri window id} the Claude Code hooks have registered.
-
-    A file that doesn't parse is the writer's bug, not ours: drop it so one bad
-    write can't wedge the rule forever.
+    A file that doesn't parse is the writer's bug, not ours, and an old file's
+    id may have been reused by a later swaync session: drop both so one bad
+    write can't wedge a rule forever.
     """
     out = {}
     try:
-        entries = list(CLAUDE_REGISTRY.iterdir())
-    except OSError:  # not created yet, or no hook has ever run
+        entries = list(registry.iterdir())
+    except OSError:  # not created yet, or no writer has ever run
         return out
+    cutoff = time.time() - MAX_REGISTRY_AGE
     for path in entries:
         try:
-            out[int(path.name)] = int(path.read_text().strip())
+            if path.stat().st_mtime < cutoff:
+                dbg(f"pruned {registry.name}/{path.name}: older than max age")
+                path.unlink(missing_ok=True)
+                continue
+            out[int(path.name)] = path.read_text().strip()
         except (ValueError, OSError) as e:
             dbg(f"dropping unparseable registration {path.name}: {e}")
-            unregister(path.name)
+            try:
+                path.unlink()
+            except OSError:
+                pass
     return out
 
 
-def unregister(notif_id):
+def unregister(registry, notif_id):
     try:
-        (CLAUDE_REGISTRY / str(notif_id)).unlink()
+        (registry / str(notif_id)).unlink()
     except OSError:
         pass
 
 
-def dismiss_claude(focused_id):
-    """Clear Claude Code notifications belonging to the newly focused window.
+def dismiss_slack(name):
+    """Clear Slack notifications naming the conversation on screen."""
+    for notif_id, summary in registry_entries(SLACK_REGISTRY).items():
+        if summary_names(summary, name):
+            close(notif_id, f"{summary!r} (viewing {name!r})")
+            unregister(SLACK_REGISTRY, notif_id)
+        else:
+            dbg(f"kept {notif_id}: {summary!r} does not name {name!r}")
 
-    Doubles as the registry's garbage collector: a notification the user
-    clicked, answered or dismissed by hand is gone from mako but its file is
-    still here, and the hook that wrote it may have died with the session.
-    """
-    registered = claude_registrations()
-    if not registered:
-        return
-    live = {n["id"] for n in notifications()}
-    for notif_id, window_id in registered.items():
-        if notif_id not in live:
-            dbg(f"pruned {notif_id}: no longer an active notification")
-            unregister(notif_id)
-        elif window_id == focused_id:
-            if dismiss(notif_id, f"claude window {window_id} focused"):
-                unregister(notif_id)
+
+def dismiss_claude(focused_id):
+    """Clear Claude Code notifications belonging to the newly focused window."""
+    for notif_id, window_id in registry_entries(CLAUDE_REGISTRY).items():
+        try:
+            window_id = int(window_id)
+        except ValueError:
+            unregister(CLAUDE_REGISTRY, notif_id)
+            continue
+        if window_id == focused_id:
+            if close(notif_id, f"claude window {window_id} focused"):
+                unregister(CLAUDE_REGISTRY, notif_id)
         else:
             dbg(f"kept {notif_id}: window {window_id} is not the focused {focused_id}")
 
@@ -234,6 +246,12 @@ class Windows:
 
 
 def main():
+    # Slack ids don't survive a swaync restart (its counter resets), and this
+    # daemon restarts with the session: start from a clean slate. The Claude
+    # registry is left alone -- its writers outlive us and clean up themselves.
+    for stale in registry_entries(SLACK_REGISTRY):
+        unregister(SLACK_REGISTRY, stale)
+
     try:
         niri = subprocess.Popen(
             ["niri", "msg", "-j", "event-stream"],

@@ -193,16 +193,30 @@
 		}
     },
     "custom/notifications": {
-        // Bell / bell-slash toggle for mako do-not-disturb; while muted the
-        // suppressed-notification count is shown next to the bell. The script
-        // signals SIGRTMIN+9 after toggling so the icon updates instantly;
-        // the short interval keeps the count fresh while muted.
-        "format": "{}",
+        // swaync bell: icon tracks DND state, text is the control-center
+        // notification count (streamed by the -swb subscription, so updates
+        // are instant — no interval/signal needed). Left-click keeps the old
+        // mako habit of toggling DND; right-click opens the control center.
+        // Icons are literal FontAwesome PUA glyphs (F0F3 bell, F1F6
+        // bell-slash) — verify with `cat -A` after editing, they're invisible
+        // in most editors.
+        "format": "{icon} {text}",
+        "format-icons": {
+            "notification": "",
+            "none": "",
+            "inhibited-notification": "",
+            "inhibited-none": "",
+            "dnd-notification": "",
+            "dnd-none": "",
+            "dnd-inhibited-notification": "",
+            "dnd-inhibited-none": ""
+        },
         "return-type": "json",
-        "interval": 5,
-        "signal": 9,
-        "exec": "$HOME/bin/waybar-mako-dnd status",
-        "on-click": "$HOME/bin/waybar-mako-dnd toggle",
+        "exec-if": "which swaync-client",
+        "exec": "swaync-client -swb",
+        "on-click": "swaync-client -d -sw",
+        "on-click-right": "swaync-client -t -sw",
+        "escape": true,
         "tooltip": true
     },
     "custom/uair": {

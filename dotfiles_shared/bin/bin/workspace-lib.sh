@@ -44,7 +44,7 @@ with_notification() {
     local notif_id=$(notify-send -p "$title" "$body")
     "$@"
     local exit_code=$?
-    makoctl dismiss -n "$notif_id" >/dev/null
+    close_notification "$notif_id"
     return $exit_code
 }
 
@@ -241,11 +241,11 @@ resolve_workspace_context() {
     return 0
 }
 
-# Notification bookkeeping for mako-focus-dismiss: it clears a Claude Code
-# notification once you focus the window that raised it, but mako's JSON drops
-# custom hints, so there is nothing in the notification itself tying it to a
-# window. Record the mapping out of band instead — one file per notification,
-# named by notification id, holding the niri window id.
+# Notification bookkeeping for swaync-focus-dismiss: it clears a Claude Code
+# notification once you focus the window that raised it, but the notification
+# protocol gives the daemon no way to tie one to a window. Record the mapping
+# out of band instead — one file per notification, named by notification id,
+# holding the niri window id.
 #
 # Registering is best-effort throughout: with no niri window id, no runtime dir
 # or no daemon running, the notification simply behaves as it did before (it
@@ -257,6 +257,19 @@ register_claude_notification() {
     [[ "$notif_id" =~ ^[0-9]+$ && "$window_id" =~ ^[0-9]+$ ]] || return 0
     mkdir -p "$CLAUDE_NOTIFY_DIR" 2>/dev/null || return 0
     printf '%s\n' "$window_id" > "$CLAUDE_NOTIFY_DIR/$notif_id" 2>/dev/null || true
+    return 0
+}
+
+# Close a notification by id via the freedesktop D-Bus call (daemon-agnostic:
+# works with swaync, mako, or anything spec-compliant). No-op on a dead id.
+close_notification() {
+    local notif_id="${1:-}"
+    [[ "$notif_id" =~ ^[0-9]+$ ]] || return 0
+    gdbus call --session \
+        --dest org.freedesktop.Notifications \
+        --object-path /org/freedesktop/Notifications \
+        --method org.freedesktop.Notifications.CloseNotification \
+        "$notif_id" >/dev/null 2>&1 || true
     return 0
 }
 

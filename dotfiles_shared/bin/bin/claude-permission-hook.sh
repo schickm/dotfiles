@@ -1,6 +1,6 @@
 #!/bin/bash
 # Claude Code PermissionRequest hook
-# Uses notify-send actions with mako's fuzzel integration
+# Uses notify-send actions, shown as buttons on the swaync notification
 set -euo pipefail
 
 INPUT=$(cat)
@@ -54,7 +54,7 @@ fi
 # `-p` prints the notification id immediately and `--wait` prints the invoked
 # action when it closes, so read them off the same pipe in turn instead of
 # capturing everything at the end — the id is only useful while the
-# notification is still up. Registering it lets mako-focus-dismiss dismiss the
+# notification is still up. Registering it lets swaync-focus-dismiss dismiss the
 # notification when this window is focused, which reads here as "no action" and
 # falls through to the in-terminal prompt: the right outcome, since the
 # terminal is what you just focused.

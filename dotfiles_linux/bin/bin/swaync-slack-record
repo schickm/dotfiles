@@ -1,0 +1,10 @@
+#!/bin/sh
+# Run by swaync for every Slack notification (see the "scripts" block in
+# ~/.config/swaync/config.json): record <id> -> <summary> so
+# swaync-focus-dismiss can match notifications against the conversation on
+# screen. swaync's D-Bus interface can close a notification by id but cannot
+# list active ones, hence this out-of-band registry.
+[ -n "$SWAYNC_ID" ] || exit 0
+dir="${XDG_RUNTIME_DIR:-/tmp}/swaync-slack-notifications"
+mkdir -p "$dir" || exit 0
+printf '%s\n' "$SWAYNC_SUMMARY" > "$dir/$SWAYNC_ID"

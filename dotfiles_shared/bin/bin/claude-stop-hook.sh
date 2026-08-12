@@ -1,13 +1,12 @@
 #!/bin/bash
 # Claude Code Stop hook - notify when waiting for input.
 #   * Only notifies when Claude's Kitty window is NOT focused.
-#   * Left-click the notification -> focus that window in niri (switching to its
+#   * Click the notification -> focus that window in niri (switching to its
 #     workspace) and select its Kitty pane.
-#   * Right-click -> mako action menu; middle-click / `makoctl dismiss` -> dismiss
-#     without focusing.
+#   * swaync's close button dismisses without focusing.
 #   * Focusing the window any other way (keyboard, waybar, workspace switch) also
 #     clears it: the notification is registered against its niri window id and
-#     mako-focus-dismiss dismisses it when that window takes focus.
+#     swaync-focus-dismiss closes it when that window takes focus.
 set -euo pipefail
 
 INPUT=$(cat)
@@ -66,33 +65,41 @@ BODY="$(pango_escape "$LAST_MESSAGE")"$'\n\n'"📁 $(pango_escape "$CWD_DISPLAY"
 [[ -n "$WS_TAG" ]] && BODY="$WS_TAG"$'\n'"$BODY"
 
 # --- Notify (detached so the hook never blocks) and handle the click ---
-# The synchronous hint is per-workspace: a new stop notification replaces the
-# previous one from the same workspace but leaves other workspaces' up.
+# One stop notification per workspace: swaync ignores the
+# x-canonical-private-synchronous hint mako honored, so replacement is done by
+# hand — remember the previous notification's id per workspace and close it
+# before sending the new one (closing also releases its --wait process).
 #
 # `-p` prints the notification id as soon as it is created, `--wait` prints the
 # invoked action (nothing, if it was dismissed) when it closes — so read them
 # off the same pipe one at a time rather than capturing the lot at the end. The
 # id has to be in hand while the notification is still up: that is what lets
-# mako-focus-dismiss clear it when this window is focused.
+# swaync-focus-dismiss clear it when this window is focused.
 export CLAUDE_SUMMARY="$SUMMARY"
 export CLAUDE_BODY="$BODY"
 export CLAUDE_NIRI_ID="$NIRI_ID"
 export CLAUDE_CATEGORY="${WS_NAME:+ws-$WS_NAME}"
-export CLAUDE_SYNC_KEY="claude-stop${WS_NAME:+-$WS_NAME}"
+export CLAUDE_STOP_ID_FILE="${XDG_RUNTIME_DIR:-/tmp}/claude-stop-ids/claude-stop${WS_NAME:+-$WS_NAME}"
 export CLAUDE_LIB="$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
 setsid bash -c '
     source "$CLAUDE_LIB"
+    mkdir -p "$(dirname "$CLAUDE_STOP_ID_FILE")" 2>/dev/null || true
+    if prev=$(cat "$CLAUDE_STOP_ID_FILE" 2>/dev/null) && [[ "$prev" =~ ^[0-9]+$ ]]; then
+        close_notification "$prev"
+    fi
     exec 3< <(notify-send --app-name="Claude Code" \
         --action="default=Focus window" \
         -t 0 \
         ${CLAUDE_CATEGORY:+--category="$CLAUDE_CATEGORY"} \
-        -h "string:x-canonical-private-synchronous:$CLAUDE_SYNC_KEY" \
         -p --wait \
         "$CLAUDE_SUMMARY" "$CLAUDE_BODY")
     read -r notif_id <&3 || exit 0
+    printf "%s\n" "$notif_id" > "$CLAUDE_STOP_ID_FILE" 2>/dev/null || true
     register_claude_notification "$notif_id" "${CLAUDE_NIRI_ID:-}"
     read -r action <&3 || action=""
     unregister_claude_notification "$notif_id"
+    # Only clear the id file if a newer stop notification has not replaced it.
+    [[ "$(cat "$CLAUDE_STOP_ID_FILE" 2>/dev/null)" == "$notif_id" ]] && rm -f "$CLAUDE_STOP_ID_FILE"
     if [[ "$action" == "default" ]]; then
         [[ -n "${CLAUDE_NIRI_ID:-}" ]] && niri msg action focus-window --id "$CLAUDE_NIRI_ID" >/dev/null 2>&1 || true
         [[ -n "${KITTY_WINDOW_ID:-}" ]] && kitty @ focus-window --match "id:${KITTY_WINDOW_ID}" >/dev/null 2>&1 || true

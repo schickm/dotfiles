@@ -1,6 +1,6 @@
 [Unit]
-Description=Dismiss mako notifications for the window you are looking at
-Documentation=https://github.com/emersion/mako
+Description=Close swaync notifications for the window you are looking at
+Documentation=https://github.com/ErikReider/SwayNotificationCenter
 PartOf=graphical-session.target
 After=graphical-session.target
 Requisite=graphical-session.target
@@ -9,7 +9,7 @@ Requisite=graphical-session.target
 # Needs niri's IPC socket and a Wayland session; both are in the user manager's
 # environment because niri runs as niri.service.
 ExecCondition=/bin/sh -c '[ -n "$WAYLAND_DISPLAY" ] && [ -n "$NIRI_SOCKET" ]'
-ExecStart=%h/bin/mako-focus-dismiss
+ExecStart=%h/bin/swaync-focus-dismiss
 Restart=on-failure
 RestartSec=2
 
