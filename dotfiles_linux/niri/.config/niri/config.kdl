@@ -137,9 +137,9 @@ output "GIGA-BYTE TECHNOLOGY CO., LTD. GS34WQC 0x2B000460" {
 // https://yalter.github.io/niri/Configuration:-Layout
 layout {
     // Workspace background behind/between windows (the overview backdrop is
-    // set separately below). Solarized base2 — a step darker than the base3
+    // set separately below). Solarized base1 — well darker than the base3
     // windows so they stand out.
-    background-color "#eee8d5"
+    background-color "#93a1a1"
 
     // Set gaps around windows in logical pixels.
     gaps 8
