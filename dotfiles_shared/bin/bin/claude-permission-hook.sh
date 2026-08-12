@@ -33,7 +33,7 @@ case "$TOOL_NAME" in
         ;;
 esac
 
-# --- Workspace context (sets WS_NAME / WS_COLOR / WS_TAG) ---
+# --- Workspace context (sets WS_WINDOW_ID / WS_NAME / WS_COLOR / WS_TAG) ---
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
 resolve_workspace_context "$CWD"
@@ -49,11 +49,23 @@ if [[ -n "$SUGGESTION" ]]; then
 fi
 [[ -n "$WS_NAME" ]] && ACTIONS+=(--category="ws-$WS_NAME")
 
-# Send notification with actions, wait for response
-ACTION=$(notify-send --app-name="Claude Code" \
+# Send notification with actions, wait for response.
+#
+# `-p` prints the notification id immediately and `--wait` prints the invoked
+# action when it closes, so read them off the same pipe in turn instead of
+# capturing everything at the end — the id is only useful while the
+# notification is still up. Registering it lets mako-focus-dismiss dismiss the
+# notification when this window is focused, which reads here as "no action" and
+# falls through to the in-terminal prompt: the right outcome, since the
+# terminal is what you just focused.
+exec 3< <(notify-send --app-name="Claude Code" \
     "${ACTIONS[@]}" \
-    --wait \
+    -p --wait \
     "$SUMMARY" "$BODY")
+read -r NOTIF_ID <&3 || NOTIF_ID=""
+register_claude_notification "$NOTIF_ID" "${WS_WINDOW_ID:-}"
+read -r ACTION <&3 || ACTION=""
+unregister_claude_notification "$NOTIF_ID"
 
 # Prompt answered -> workspace drops back to plain "busy" (the turn continues
 # with the decision either way). On dismissal we fall through to the CLI

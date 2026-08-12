@@ -67,7 +67,7 @@ workspace_containers() {
 workspace_name_for() {
     local container="$1" worktree="$2"
     case "$worktree" in
-        master|main|trunk|develop) echo "$(basename "$container")/$worktree" ;;
+        master|main|trunk|develop|beta) echo "$(basename "$container")/$worktree" ;;
         *) echo "$worktree" ;;
     esac
 }
@@ -238,6 +238,35 @@ resolve_workspace_context() {
         WS_COLOR=$(palette_color_for "$WS_NAME")
     fi
     WS_TAG="<span background='$WS_COLOR' foreground='#ffffff' weight='bold'> $(pango_escape "$WS_NAME") </span>"
+    return 0
+}
+
+# Notification bookkeeping for mako-focus-dismiss: it clears a Claude Code
+# notification once you focus the window that raised it, but mako's JSON drops
+# custom hints, so there is nothing in the notification itself tying it to a
+# window. Record the mapping out of band instead — one file per notification,
+# named by notification id, holding the niri window id.
+#
+# Registering is best-effort throughout: with no niri window id, no runtime dir
+# or no daemon running, the notification simply behaves as it did before (it
+# waits for a click or a middle-click).
+CLAUDE_NOTIFY_DIR="${XDG_RUNTIME_DIR:-/tmp}/claude-notifications"
+
+register_claude_notification() {
+    local notif_id="${1:-}" window_id="${2:-}"
+    [[ "$notif_id" =~ ^[0-9]+$ && "$window_id" =~ ^[0-9]+$ ]] || return 0
+    mkdir -p "$CLAUDE_NOTIFY_DIR" 2>/dev/null || return 0
+    printf '%s\n' "$window_id" > "$CLAUDE_NOTIFY_DIR/$notif_id" 2>/dev/null || true
+    return 0
+}
+
+# Drop a registration once the notification is gone for any other reason (the
+# hook saw its action, or --wait returned). The daemon prunes leftovers too, so
+# this is only about not leaving obvious litter behind.
+unregister_claude_notification() {
+    local notif_id="${1:-}"
+    [[ "$notif_id" =~ ^[0-9]+$ ]] || return 0
+    rm -f "$CLAUDE_NOTIFY_DIR/$notif_id" 2>/dev/null || true
     return 0
 }
 

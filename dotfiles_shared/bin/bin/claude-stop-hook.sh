@@ -5,6 +5,9 @@
 #     workspace) and select its Kitty pane.
 #   * Right-click -> mako action menu; middle-click / `makoctl dismiss` -> dismiss
 #     without focusing.
+#   * Focusing the window any other way (keyboard, waybar, workspace switch) also
+#     clears it: the notification is registered against its niri window id and
+#     mako-focus-dismiss dismisses it when that window takes focus.
 set -euo pipefail
 
 INPUT=$(cat)
@@ -65,19 +68,31 @@ BODY="$(pango_escape "$LAST_MESSAGE")"$'\n\n'"📁 $(pango_escape "$CWD_DISPLAY"
 # --- Notify (detached so the hook never blocks) and handle the click ---
 # The synchronous hint is per-workspace: a new stop notification replaces the
 # previous one from the same workspace but leaves other workspaces' up.
+#
+# `-p` prints the notification id as soon as it is created, `--wait` prints the
+# invoked action (nothing, if it was dismissed) when it closes — so read them
+# off the same pipe one at a time rather than capturing the lot at the end. The
+# id has to be in hand while the notification is still up: that is what lets
+# mako-focus-dismiss clear it when this window is focused.
 export CLAUDE_SUMMARY="$SUMMARY"
 export CLAUDE_BODY="$BODY"
 export CLAUDE_NIRI_ID="$NIRI_ID"
 export CLAUDE_CATEGORY="${WS_NAME:+ws-$WS_NAME}"
 export CLAUDE_SYNC_KEY="claude-stop${WS_NAME:+-$WS_NAME}"
+export CLAUDE_LIB="$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
 setsid bash -c '
-    action=$(notify-send --app-name="Claude Code" \
+    source "$CLAUDE_LIB"
+    exec 3< <(notify-send --app-name="Claude Code" \
         --action="default=Focus window" \
         -t 0 \
         ${CLAUDE_CATEGORY:+--category="$CLAUDE_CATEGORY"} \
         -h "string:x-canonical-private-synchronous:$CLAUDE_SYNC_KEY" \
-        --wait \
-        "$CLAUDE_SUMMARY" "$CLAUDE_BODY") || exit 0
+        -p --wait \
+        "$CLAUDE_SUMMARY" "$CLAUDE_BODY")
+    read -r notif_id <&3 || exit 0
+    register_claude_notification "$notif_id" "${CLAUDE_NIRI_ID:-}"
+    read -r action <&3 || action=""
+    unregister_claude_notification "$notif_id"
     if [[ "$action" == "default" ]]; then
         [[ -n "${CLAUDE_NIRI_ID:-}" ]] && niri msg action focus-window --id "$CLAUDE_NIRI_ID" >/dev/null 2>&1 || true
         [[ -n "${KITTY_WINDOW_ID:-}" ]] && kitty @ focus-window --match "id:${KITTY_WINDOW_ID}" >/dev/null 2>&1 || true
