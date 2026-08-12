@@ -4,12 +4,14 @@
 :root {
   --cc-bg: rgba(253, 246, 227, 0.97);
   --noti-border-color: rgba(147, 161, 161, 0.5);
-  --noti-bg: 253, 246, 227;
-  --noti-bg-alpha: 0.97;
-  --noti-bg-darker: rgb(238, 232, 213);
-  --noti-bg-hover: rgb(238, 232, 213);
-  --noti-bg-focus: rgba(238, 232, 213, 0.8);
-  --noti-close-bg: rgb(238, 232, 213);
+  /* Cards are a whiter cream than the base3 terminals: highest surface on
+     screen, one visible step above everything else. */
+  --noti-bg: 255, 252, 240;
+  --noti-bg-alpha: 0.98;
+  --noti-bg-darker: rgb(246, 239, 220);
+  --noti-bg-hover: rgb(253, 246, 227);
+  --noti-bg-focus: rgba(253, 246, 227, 0.9);
+  --noti-close-bg: rgb(246, 239, 220);
   --noti-close-bg-hover: rgb(147, 161, 161);
   --text-color: rgb(7, 54, 66);
   --text-color-disabled: rgb(101, 123, 131);
@@ -34,13 +36,13 @@
 /* Fallback for older CSS themes */
 @define-color cc-bg rgba(253, 246, 227, 0.97);
 @define-color noti-border-color rgba(147, 161, 161, 0.5);
-@define-color noti-bg rgba(253, 246, 227, 0.97);
-@define-color noti-bg-opaque rgb(253, 246, 227);
-@define-color noti-bg-darker rgb(238, 232, 213);
-@define-color noti-bg-hover rgb(238, 232, 213);
-@define-color noti-bg-hover-opaque rgb(238, 232, 213);
-@define-color noti-bg-focus rgba(238, 232, 213, 0.8);
-@define-color noti-close-bg rgb(238, 232, 213);
+@define-color noti-bg rgba(255, 252, 240, 0.98);
+@define-color noti-bg-opaque rgb(255, 252, 240);
+@define-color noti-bg-darker rgb(246, 239, 220);
+@define-color noti-bg-hover rgb(253, 246, 227);
+@define-color noti-bg-hover-opaque rgb(253, 246, 227);
+@define-color noti-bg-focus rgba(253, 246, 227, 0.9);
+@define-color noti-close-bg rgb(246, 239, 220);
 @define-color noti-close-bg-hover rgb(147, 161, 161);
 @define-color text-color rgb(7, 54, 66);
 @define-color text-color-disabled rgb(101, 123, 131);
