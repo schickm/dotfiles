@@ -51,6 +51,12 @@ notificationwindow, blankwindow {
   background: transparent;
 }
 
+/* Breathing room between waybar's bottom edge and the first popup (there is
+   no notification-window-margin-* config option, so it's done here). */
+notificationwindow {
+  padding-top: 8px;
+}
+
 notificationwindow,
 .control-center {
   font-family: "SF Pro Text", sans-serif;

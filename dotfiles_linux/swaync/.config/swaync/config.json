@@ -53,5 +53,7 @@
       "app-name": "Slack",
       "exec": "/home/matt/bin/swaync-slack-record"
     }
-  }
+  },
+  "control-center-margin-top": 8,
+  "control-center-margin-right": 8
 }
