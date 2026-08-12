@@ -471,7 +471,11 @@ binds {
 
     // Show 1Password prompt
     Mod+Shift+Backslash hotkey-overlay-title="1Password Quick Access" { spawn "1password" "--quick-access"; }
-    Mod+Shift+Alt+P hotkey-overlay-title="Flameshot" { spawn "flameshot" "gui"; }
+    // XDG_CURRENT_DESKTOP=sway makes flameshot capture via grim/wlr-screencopy
+    // instead of the xdg-desktop-portal → gnome-Screenshot path, which niri
+    // only implements for a single output (fails with lid open + external
+    // monitor). Needs grim installed.
+    Mod+Shift+Alt+P hotkey-overlay-title="Flameshot" { spawn-sh "XDG_CURRENT_DESKTOP=sway flameshot gui"; }
     // Toggle: start/stop a gpu-screen-recorder screen recording (prompts for a name on stop, then opens it).
     Mod+Shift+Alt+R hotkey-overlay-title="Toggle screen recording" { spawn "gpu-screen-recorder-toggle.sh"; }
     // Toggle: hide all floating windows to the "scratch" workspace, then restore them.
