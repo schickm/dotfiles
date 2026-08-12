@@ -193,9 +193,18 @@ button:hover {
     min-width: 100px;
 }
 
+/* Text-only temperature tiers: this laptop hovers just under the critical
+   threshold, so a filled red block would be lit half the time. */
+#temperature {
+    color: #859900;
+}
+
+#temperature.warning {
+    color: #b58900;
+}
+
 #temperature.critical {
-    background-color: #dc322f;
-    color: #fdf6e3;
+    color: #dc322f;
 }
 
 #systemd-failed-units.degraded {
