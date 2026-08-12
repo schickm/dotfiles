@@ -78,10 +78,12 @@ button:hover {
     background: #fdf6e3;
 }
 
+/* The focused workspace is the one solid-filled chip on the bar (repo
+   workspaces use their own hue via workspace-colors.css, same pattern). */
 #workspaces button.focused {
-    background-color: #fdf6e3;
-    color: #073642;
-    box-shadow: inset 0 -3px #268bd2;
+    background-color: #268bd2;
+    color: #fdf6e3;
+    box-shadow: inset 0 -3px #073642;
 }
 
 #workspaces button.urgent {
