@@ -1,3 +1,14 @@
+# Solarized Light theme, matching waybar/fuzzel/niri.
+font=SF Pro Text 11
+background-color=#fdf6e3f2
+text-color=#657b83
+border-color=#268bd2
+border-size=2
+border-radius=8
+padding=12
+margin=8
+progress-color=over #eee8d5
+
 # Enable icons (should be default, but let's be explicit)
 icons=1
 max-icon-size=64
@@ -18,4 +29,12 @@ group-by=category
 # and appear once the mode is turned off (if they haven't timed out).
 [mode=do-not-disturb]
 invisible=1
+
+[urgency=low]
+border-color=#93a1a1
+text-color=#93a1a1
+
+[urgency=high]
+border-color=#dc322f
+text-color=#586e75
 

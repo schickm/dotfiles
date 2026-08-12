@@ -136,8 +136,13 @@ output "GIGA-BYTE TECHNOLOGY CO., LTD. GS34WQC 0x2B000460" {
 // Find more information on the wiki:
 // https://yalter.github.io/niri/Configuration:-Layout
 layout {
+    // Workspace background behind/between windows (the overview backdrop is
+    // set separately below). Solarized base2 — a step darker than the base3
+    // windows so they stand out.
+    background-color "#eee8d5"
+
     // Set gaps around windows in logical pixels.
-    gaps 5
+    gaps 8
 
     // When to center a column when changing focus, options are:
     // - "never", default behavior, focusing an off-screen column will keep at the left
@@ -192,14 +197,17 @@ layout {
         // - RGB hex: "#rgb", "#rgba", "#rrggbb", "#rrggbbaa"
         // - CSS-like notation: "rgb(255, 127, 0)", rgba(), hsl() and a few others.
 
-        // Color of the ring on the active monitor.
-        active-color "#7fc8ff"
+        // Color of the ring on the active monitor. (Solarized blue)
+        active-color "#268bd2"
 
         // Color of the ring on inactive monitors.
         //
         // The focus ring only draws around the active window, so the only place
-        // where you can see its inactive-color is on other monitors.
-        inactive-color "#505050"
+        // where you can see its inactive-color is on other monitors. (Solarized base1)
+        inactive-color "#93a1a1"
+
+        // Ring color around windows requesting attention. (Solarized red)
+        urgent-color "#dc322f"
 
         // You can also use gradients. They take precedence over solid colors.
         // Gradients are rendered the same as CSS linear-gradient(angle, from, to).
@@ -221,6 +229,8 @@ layout {
         width 4
         gap 5
 	place-within-column
+	active-color "#268bd2"
+	inactive-color "#93a1a1"
 	// length total-proportion=1.0
     }
 
@@ -247,8 +257,7 @@ layout {
 
     // You can enable drop shadows for windows.
     shadow {
-        // Uncomment the next line to enable shadows.
-        // on
+        on
 
         // By default, the shadow draws only around its window, and not behind it.
         // Uncomment this setting to make the shadow draw behind its window.
@@ -310,6 +319,12 @@ layout {
 hotkey-overlay {
     // Uncomment this line to disable the "Important Hotkeys" pop-up at startup.
     skip-at-startup
+}
+
+// Backdrop behind workspaces (visible behind windows, in the overview, and
+// during workspace switches). Solarized base3 — window edges read via shadows.
+overview {
+    backdrop-color "#fdf6e3"
 }
 
 // Uncomment this line to ask the clients to omit their client-side decorations if possible.
@@ -416,11 +431,27 @@ window-rule {
     // block-out-from "screencast"
 }
 
-// Example: enable rounded corners for all windows.
-// (This example rule is commented out with a "/-" in front.)
-/-window-rule {
-    geometry-corner-radius 12
+// Rounded corners for all windows. With prefer-no-csd above, niri knows the
+// radius and draws focus ring / shadows to match.
+window-rule {
+    geometry-corner-radius 8
     clip-to-geometry true
+}
+
+// Drop shadow for the fuzzel launcher (it can't draw its own; niri shadows
+// the layer surface instead). Don't do this for mako: it renders every
+// notification on one surface, so the shadow wraps the whole stack — gaps
+// included — as a single ugly blob.
+layer-rule {
+    match namespace="^launcher$"
+    shadow {
+        on
+        softness 30
+        spread 5
+        offset x=0 y=5
+        color "#0007"
+    }
+    geometry-corner-radius 8
 }
 
 binds {
