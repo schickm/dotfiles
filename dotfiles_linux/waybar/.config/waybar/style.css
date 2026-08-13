@@ -194,7 +194,8 @@ button:hover {
    half-width mono cell. */
 #network {
     font-family: "JetBrainsMonoNL Nerd Font Propo", "SF Pro Text", sans-serif;
-    font-size: 16px;
+    /* Large enough that the hollow "empty bars" outline stays visible. */
+    font-size: 19px;
 }
 
 #network.disconnected {
