@@ -20,7 +20,7 @@
     "modules-right": [
         "custom/notifications",
         "idle_inhibitor",
-        "systemd-failed-units",
+        "custom/failed-units",
 	"custom/uair",
         "pulseaudio",
         "battery",
@@ -70,13 +70,16 @@
             "deactivated": ""
         }
     },
-    "systemd-failed-units": {
-	"hide-on-ok": false,
-	"format": "✗ {nr_failed}",
-	"format-ok": "✓",
-	"system": true,
-	"user": true,
-	"on-click": "pkill -SIGRTMIN+1 waybar"
+    "custom/failed-units": {
+        // Replaces the built-in systemd-failed-units module: same ✓ / ✗ N,
+        // but the tooltip names the failed units. Click to refresh now.
+        "format": "{}",
+        "return-type": "json",
+        "interval": 30,
+        "signal": 1,
+        "exec": "$HOME/bin/waybar-failed-units",
+        "on-click": "pkill -SIGRTMIN+1 waybar",
+        "tooltip": true
     },
     "tray": {
         // "icon-size": 21,

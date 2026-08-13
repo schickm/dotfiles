@@ -1,0 +1,15 @@
+#!/bin/sh
+# Waybar custom module replacing the built-in systemd-failed-units: same
+# ✓ / ✗ N display, but the tooltip names the failed units (the built-in
+# module can only show counts).
+sys=$(systemctl --failed --plain --no-legend 2>/dev/null | awk '{print "system: " $1}')
+usr=$(systemctl --user --failed --plain --no-legend 2>/dev/null | awk '{print "user: " $1}')
+all=$(printf '%s\n%s\n' "$sys" "$usr" | grep .)
+count=$(printf '%s' "$all" | grep -c .)
+
+if [ "$count" -eq 0 ]; then
+    printf '{"text":"✓","class":"ok","tooltip":"No failed units"}\n'
+else
+    jq -cn --arg text "✗ $count" --arg tip "$all" \
+        '{"text":$text,"class":"degraded","tooltip":$tip}'
+fi

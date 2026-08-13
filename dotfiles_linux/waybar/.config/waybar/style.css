@@ -120,7 +120,7 @@ button:hover {
 #idle_inhibitor,
 #power-profiles-daemon,
 #custom-power,
-#systemd-failed-units,
+#custom-failed-units,
 #language,
 #keyboard-state {
     padding: 0 10px;
@@ -215,7 +215,7 @@ button:hover {
     color: #dc322f;
 }
 
-#systemd-failed-units.degraded {
+#custom-failed-units.degraded {
     color: #dc322f;
 }
 
