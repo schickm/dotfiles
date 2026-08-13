@@ -188,6 +188,14 @@ button:hover {
     color: #859900;
 }
 
+/* The tiered wifi glyphs come from the nerd font; scoped here so NFM's
+   bundled (thinner) FontAwesome variants don't take over the whole bar.
+   Slightly larger: the mono glyphs render small at body size. */
+#network {
+    font-family: "JetBrainsMono NFM", "SF Pro Text", sans-serif;
+    font-size: 16px;
+}
+
 #network.disconnected {
     color: #dc322f;
 }

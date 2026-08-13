@@ -154,7 +154,9 @@
         // picks from format-icons by signalStrength). SSID/strength/IP live
         // in the tooltip; click for the ifname/IP text in the bar.
         "format-wifi": "{icon}",
-        "format-icons": ["\u2582   ", "\u2582\u2584  ", "\u2582\u2584\u2586 ", "\u2582\u2584\u2586\u2588"],
+        // Nerd-font md-wifi_strength_1..4 (U+F091F/F0922/F0925/F0928); the
+        // glyphs are invisible in most editors — verify with `cat -A`.
+        "format-icons": ["󰤟", "󰤢", "󰤥", "󰤨"],
         "tooltip-format-wifi": "{essid} ({signalStrength}%)\n{ifname} \u00b7 {ipaddr} via {gwaddr}",
         "format-ethernet": "{ipaddr}/{cidr} ",
         "tooltip-format": "{ifname} via {gwaddr} ",
