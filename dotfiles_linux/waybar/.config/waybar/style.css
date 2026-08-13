@@ -34,8 +34,8 @@ window#waybar.DP-2 * {
    cream terminals; active elements (focused workspace, hover, locked keys)
    pop up to cream base2. */
 window#waybar {
-    /* base1 lightened 40% toward white — same cool gray hue, brighter */
-    background-color: rgba(190, 199, 199, 0.95);
+    /* base1 lightened 70% toward white — same cool gray hue, brighter */
+    background-color: rgba(222, 227, 227, 0.95);
     border-bottom: 2px solid rgba(88, 110, 117, 0.4);
     color: #002b36;
     transition-property: background-color;
