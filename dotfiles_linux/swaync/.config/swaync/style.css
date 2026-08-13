@@ -1,20 +1,22 @@
-/* Solarized Light, matching waybar/fuzzel/niri. Based on the default
-   stylesheet with the :root variables (and fallback @define-colors) swapped;
-   the per-notification --notification-shadow is why we're on swaync. */
+/* Pale cool-gray (blended solarized base1), matching waybar and fuzzel.
+   Based on the default stylesheet with the :root variables (and fallback
+   @define-colors) swapped; the per-notification --notification-shadow is
+   why we're on swaync. Cards sit near-white, one level above the #dee3e3
+   panel/bar surface. */
 :root {
-  --cc-bg: rgba(253, 246, 227, 0.97);
+  --cc-bg: rgba(222, 227, 227, 0.97);
   --noti-border-color: rgba(147, 161, 161, 0.5);
-  /* Cards are a whiter cream than the base3 terminals: highest surface on
-     screen, one visible step above everything else. */
-  --noti-bg: 255, 252, 240;
+  /* Cards are near-white cool gray: highest surface on screen, one visible
+     step above the panel/bar tone. */
+  --noti-bg: 244, 245, 245;
   --noti-bg-alpha: 0.98;
-  --noti-bg-darker: rgb(246, 239, 220);
-  --noti-bg-hover: rgb(253, 246, 227);
-  --noti-bg-focus: rgba(253, 246, 227, 0.9);
-  --noti-close-bg: rgb(246, 239, 220);
-  --noti-close-bg-hover: rgb(147, 161, 161);
-  --text-color: rgb(7, 54, 66);
-  --text-color-disabled: rgb(101, 123, 131);
+  --noti-bg-darker: rgb(222, 227, 227);
+  --noti-bg-hover: rgb(222, 227, 227);
+  --noti-bg-focus: rgba(222, 227, 227, 0.9);
+  --noti-close-bg: rgb(222, 227, 227);
+  --noti-close-bg-hover: rgb(190, 199, 199);
+  --text-color: rgb(0, 43, 54);
+  --text-color-disabled: rgb(88, 110, 117);
   --bg-selected: rgb(38, 139, 210);
   --notification-icon-size: 64px;
   --notification-app-icon-size: calc(var(--notification-icon-size) / 3);
@@ -34,18 +36,18 @@
 
 /* Fallback for older CSS themes */
 /* Fallback for older CSS themes */
-@define-color cc-bg rgba(253, 246, 227, 0.97);
+@define-color cc-bg rgba(222, 227, 227, 0.97);
 @define-color noti-border-color rgba(147, 161, 161, 0.5);
-@define-color noti-bg rgba(255, 252, 240, 0.98);
-@define-color noti-bg-opaque rgb(255, 252, 240);
-@define-color noti-bg-darker rgb(246, 239, 220);
-@define-color noti-bg-hover rgb(253, 246, 227);
-@define-color noti-bg-hover-opaque rgb(253, 246, 227);
-@define-color noti-bg-focus rgba(253, 246, 227, 0.9);
-@define-color noti-close-bg rgb(246, 239, 220);
-@define-color noti-close-bg-hover rgb(147, 161, 161);
-@define-color text-color rgb(7, 54, 66);
-@define-color text-color-disabled rgb(101, 123, 131);
+@define-color noti-bg rgba(244, 245, 245, 0.98);
+@define-color noti-bg-opaque rgb(244, 245, 245);
+@define-color noti-bg-darker rgb(222, 227, 227);
+@define-color noti-bg-hover rgb(222, 227, 227);
+@define-color noti-bg-hover-opaque rgb(222, 227, 227);
+@define-color noti-bg-focus rgba(222, 227, 227, 0.9);
+@define-color noti-close-bg rgb(222, 227, 227);
+@define-color noti-close-bg-hover rgb(190, 199, 199);
+@define-color text-color rgb(0, 43, 54);
+@define-color text-color-disabled rgb(88, 110, 117);
 @define-color bg-selected rgb(38, 139, 210);
 notificationwindow, blankwindow {
   background: transparent;
