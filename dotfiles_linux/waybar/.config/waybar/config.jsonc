@@ -222,24 +222,23 @@
     },
     "custom/uair": {
         "format": "{icon} {text}",
+        // A one-character pie gauge instead of a ten-dot bar: the icon is
+        // picked from {percent} (time *remaining*), so it drains ●→○ as the
+        // session runs out. Session name and total live in the tooltip.
         "format-icons": [
-            "○○○○○○○○○●",
-            "○○○○○○○○●●",
-            "○○○○○○●●●●",
-            "○○○○○●●●●●",
-            "○○○○●●●●●●",
-            "○○○●●●●●●●",
-            "○○●●●●●●●●",
-            "○●●●●●●●●●",
-            "●●●●●●●●●●"
+            "○",
+            "◔",
+            "◑",
+            "◕",
+            "●"
         ],
-        "tooltip": false,
+        "tooltip": true,
         "return-type": "json",
         "interval": 5,
         "on-click": "uairctl toggle",
         "on-click-middle": "uairctl prev",
         "on-click-right": "uairctl next",
         "exec-if": "which uairctl",
-        "exec": "uairctl fetch '{\"text\":\"{name} {time} {percent}%\",\"class\":\"{state}\",\"percentage\":{percent}}'"
+        "exec": "uairctl fetch '{\"text\":\"{time}\",\"tooltip\":\"{name} — {time} left of {total}\",\"class\":\"{state}\",\"percentage\":{percent}}'"
     }
 }

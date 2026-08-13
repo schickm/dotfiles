@@ -1,6 +1,8 @@
-/* Solarized Light — accents used as text color, not background blocks.
-   base3 #fdf6e3 (bg)  base2 #eee8d5 (bg highlight)  base00 #657b83 (dim)
-   base02 #073642 (text)
+/* Solarized bar: dark chrome (base02/base03) over light apps — the light
+   bases are all warm creams that echoed the kitty background, so the bar
+   uses the palette's dark side instead. Accents as text color, not blocks.
+   base03 #002b36  base02 #073642  base01 #586e75 (dim)
+   base1 #93a1a1 (text)  base2 #eee8d5 (emphasis)
    blue #268bd2  cyan #2aa198  green #859900  yellow #b58900
    orange #cb4b16  red #dc322f  magenta #d33682  violet #6c71c4 */
 
@@ -29,13 +31,10 @@ window#waybar.DP-2 * {
     font-size: 14px;
 }
 
-/* Surface hierarchy: the bar sits at base2, one step below the base3
-   terminals; active elements (focused workspace, hover, locked keys) pop
-   back up to base3. Notifications are lighter than both. */
 window#waybar {
-    background-color: rgba(238, 232, 213, 0.95);
-    border-bottom: 2px solid rgba(147, 161, 161, 0.35);
-    color: #073642;
+    background-color: rgba(7, 54, 66, 0.95);
+    border-bottom: 2px solid rgba(0, 43, 54, 0.8);
+    color: #93a1a1;
     transition-property: background-color;
     transition-duration: .5s;
 }
@@ -45,13 +44,13 @@ window#waybar.hidden {
 }
 
 tooltip {
-    background: #fdf6e3;
-    border: 1px solid #eee8d5;
+    background: #073642;
+    border: 1px solid #002b36;
     border-radius: 8px;
 }
 
 tooltip label {
-    color: #073642;
+    color: #93a1a1;
 }
 
 button {
@@ -64,18 +63,18 @@ button {
 
 /* https://github.com/Alexays/Waybar/wiki/FAQ#the-workspace-buttons-have-a-strange-hover-effect */
 button:hover {
-    background: #fdf6e3;
-    box-shadow: inset 0 -3px #93a1a1;
+    background: #002b36;
+    box-shadow: inset 0 -3px #586e75;
 }
 
 #workspaces button {
     padding: 0 5px;
     background-color: transparent;
-    color: #073642;
+    color: #93a1a1;
 }
 
 #workspaces button:hover {
-    background: #fdf6e3;
+    background: #002b36;
 }
 
 /* The focused workspace is the one solid-filled chip on the bar (repo
@@ -83,7 +82,7 @@ button:hover {
 #workspaces button.focused {
     background-color: #268bd2;
     color: #fdf6e3;
-    box-shadow: inset 0 -3px #073642;
+    box-shadow: inset 0 -3px #fdf6e3;
 }
 
 #workspaces button.urgent {
@@ -92,7 +91,7 @@ button:hover {
 }
 
 #mode {
-    background-color: #fdf6e3;
+    background-color: #002b36;
     box-shadow: inset 0 -3px #268bd2;
 }
 
@@ -116,7 +115,7 @@ button:hover {
 #language,
 #keyboard-state {
     padding: 0 10px;
-    color: #073642;
+    color: #93a1a1;
 }
 
 #window,
@@ -135,7 +134,7 @@ button:hover {
 }
 
 #clock {
-    color: #073642;
+    color: #eee8d5;
 }
 
 #battery.charging, #battery.plugged {
@@ -185,7 +184,7 @@ button:hover {
 }
 
 #pulseaudio.muted {
-    color: #657b83;
+    color: #586e75;
 }
 
 #custom-media {
@@ -226,7 +225,7 @@ button:hover {
 
 #custom-notifications {
     padding: 0 10px;
-    color: #073642;
+    color: #93a1a1;
     /* Bell and bell-slash glyphs differ in width; reserve room for the
        wider one so the module doesn't resize when toggled. */
     min-width: 20px;
@@ -247,12 +246,12 @@ button:hover {
 
 #keyboard-state > label {
     padding: 0 5px;
-    color: #657b83;
+    color: #586e75;
 }
 
 #keyboard-state > label.locked {
-    color: #073642;
-    background: #fdf6e3;
+    color: #eee8d5;
+    background: #002b36;
 }
 
 #privacy {
