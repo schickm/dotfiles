@@ -201,12 +201,9 @@ button:hover {
     min-width: 100px;
 }
 
-/* Text-only temperature tiers: this laptop hovers just under the critical
-   threshold, so a filled red block would be lit half the time. */
-#temperature {
-    color: #859900;
-}
-
+/* Text-only temperature tiers, and only for the states worth noticing — the
+   normal state inherits the bar's text color so it reads as just another
+   number. Thresholds are set so those states are rare (see config.jsonc). */
 #temperature.warning {
     color: #b58900;
 }

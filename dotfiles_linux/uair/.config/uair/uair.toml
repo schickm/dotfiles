@@ -8,25 +8,25 @@ loop_on_end = true
 format = "{time}\n"
 paused_state_text = "paused"
 resumed_state_text = "resumed"
+# "-" suppresses padding, so the bar shows 9:05 rather than 09:05 — one less
+# character in a module that's only ever glanced at.
+time_format = "%-M:%S"
 
 [[sessions]]
 id = "work"
 name = "Work"
 duration = "52m"
-time_format = "%M:%S"
 command = "notify-send 'Work Done!'"
 
 [[sessions]]
 id = "shortwork"
 name = "Short Work"
 duration = "30m"
-time_format = "%M:%S"
 command = "notify-send 'Short Work Done!'"
 
 [[sessions]]
 id = "rest"
 name = "Rest"
 duration = "17m"
-time_format = "%M:%S"
 command = "notify-send 'Rest Done!'"
 
