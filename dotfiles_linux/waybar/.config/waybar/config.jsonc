@@ -150,7 +150,12 @@
     },
     "network": {
         // "interface": "wlp2*", // (Optional) To force the use of this interface
-        "format-wifi": "{essid} ({signalStrength}%) ",
+        // Icon-only wifi: the bars are a real strength indicator (waybar
+        // picks from format-icons by signalStrength). SSID/strength/IP live
+        // in the tooltip; click for the ifname/IP text in the bar.
+        "format-wifi": "{icon}",
+        "format-icons": ["\u2582   ", "\u2582\u2584  ", "\u2582\u2584\u2586 ", "\u2582\u2584\u2586\u2588"],
+        "tooltip-format-wifi": "{essid} ({signalStrength}%)\n{ifname} \u00b7 {ipaddr} via {gwaddr}",
         "format-ethernet": "{ipaddr}/{cidr} ",
         "tooltip-format": "{ifname} via {gwaddr} ",
         "format-linked": "{ifname} (No IP) ",
