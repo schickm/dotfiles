@@ -53,10 +53,13 @@ tooltip {
 }
 
 /* text-shadow: GTK's default tooltip style adds one (for white-on-dark
-   tooltips); on a light background it reads as blur. */
+   tooltips); on a light background it reads as blur. Tooltips are separate
+   windows, so they miss the per-output 14px rule above — pin them to match
+   the external bar's size. */
 tooltip label {
     color: #002b36;
     text-shadow: none;
+    font-size: 14px;
 }
 
 button {
