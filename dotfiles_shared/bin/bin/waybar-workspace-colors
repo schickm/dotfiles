@@ -33,20 +33,20 @@ generate() {
             # an identifier can't contain raw (the "/" in repo-prefixed
             # main-worktree names) — same trick as workspace-activity.
             sel=$(printf '%s' "$name" | sed 's/[^A-Za-z0-9_-]/\\&/g')
-            # Dark-bar treatment: unfocused is a hue tint with light text;
+            # Gray-bar treatment: unfocused is a hue tint with dark text;
             # focused is the one solid-filled chip on the bar (cream text —
             # the hues are all mid-dark, see workspace_color).
             cat <<EOF
 
 /* $(basename "$container") */
 #workspaces button#niri-workspace-$sel {
-    background-color: alpha($color, 0.4);
-    color: #eee8d5;
+    background-color: alpha($color, 0.3);
+    color: #002b36;
 }
 #workspaces button#niri-workspace-$sel.focused {
     background-color: $color;
     color: #fdf6e3;
-    box-shadow: inset 0 -3px #fdf6e3;
+    box-shadow: inset 0 -3px #002b36;
 }
 EOF
         done
