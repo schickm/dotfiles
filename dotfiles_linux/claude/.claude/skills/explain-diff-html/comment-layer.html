@@ -1,0 +1,383 @@
+<!-- explain-diff-html comment layer. Paste verbatim immediately before </body>,
+     AFTER a script tag defining:
+       window.__EXPLAINER_META = { sessionId: "<uuid>", repo: "<abs repo path>", bridge: "http://127.0.0.1:8790" }
+     Talks to bridge.py (same skill directory). Safe when the bridge is down:
+     shows an offline badge and nothing else. -->
+<style>
+  .xdh-add {
+    position: absolute; z-index: 40; width: 26px; height: 26px; border-radius: 50%;
+    border: 1.5px solid #b4552d; background: #fff; color: #b4552d; font-size: 17px;
+    line-height: 1; cursor: pointer; display: none; align-items: center; justify-content: center;
+    font-family: system-ui, sans-serif; box-shadow: 0 1px 4px rgba(0,0,0,0.15); padding: 0;
+  }
+  .xdh-add:hover { background: #b4552d; color: #fff; }
+  .xdh-pin {
+    position: absolute; top: -8px; right: -10px; z-index: 39; min-width: 22px; height: 22px;
+    border-radius: 50% 50% 50% 4px; background: #b4552d; color: #fff; border: none;
+    font: 700 11px system-ui, sans-serif; cursor: pointer; padding: 0 5px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  }
+  .xdh-pin.xdh-pending { background: #2d5fb4; }
+  .xdh-has-pin { position: relative; }
+  .xdh-toggle {
+    position: fixed; right: 18px; bottom: 18px; z-index: 60; border: none; border-radius: 999px;
+    background: #1a2233; color: #fff; font: 600 13px system-ui, sans-serif;
+    padding: 10px 16px; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  }
+  .xdh-toggle.xdh-offline { background: #8a8577; cursor: default; }
+  .xdh-session {
+    position: absolute; top: 10px; right: 12px; z-index: 55;
+    font: 600 11.5px system-ui, sans-serif; padding: 5px 11px; border-radius: 999px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.15); max-width: min(46vw, 430px); line-height: 1.35;
+  }
+  .xdh-session.xdh-sess-open { background: #fdf6e3; color: #7a5c0a; border: 1px solid #e0c568; }
+  .xdh-session.xdh-sess-closed { background: #e6f4ea; color: #2d7d46; border: 1px solid #9fd0ae; }
+  .xdh-session.xdh-sess-idle { background: #e8eefb; color: #2d5fb4; border: 1px solid #a8bfe8; }
+  .xdh-panel {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 70; width: min(380px, 100vw);
+    background: #faf9f5; border-left: 1px solid #d8d4c9; box-shadow: -4px 0 18px rgba(0,0,0,0.12);
+    display: none; flex-direction: column; font-family: system-ui, sans-serif;
+  }
+  .xdh-panel.xdh-open { display: flex; }
+  .xdh-panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid #d8d4c9; font-weight: 700; font-size: 14px;
+  }
+  .xdh-close { border: none; background: none; font-size: 18px; cursor: pointer; color: #5b6478; }
+  .xdh-threads { overflow-y: auto; flex: 1; padding: 12px; }
+  .xdh-thread {
+    background: #fff; border: 1px solid #e3e0d8; border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 12px;
+  }
+  .xdh-thread.xdh-focus { border-color: #b4552d; box-shadow: 0 0 0 2px rgba(180,85,45,0.15); }
+  .xdh-anchor {
+    font-size: 11.5px; color: #5b6478; border-left: 3px solid #e3e0d8; padding: 2px 8px;
+    margin-bottom: 8px; font-style: italic; cursor: pointer; overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .xdh-anchor .xdh-sec { font-style: normal; font-weight: 600; color: #b4552d; }
+  .xdh-msg { margin: 7px 0; font-size: 13px; line-height: 1.5; }
+  .xdh-msg .xdh-who { font-size: 10.5px; font-weight: 700; color: #5b6478; text-transform: uppercase; letter-spacing: 0.05em; }
+  .xdh-msg-user .xdh-body { background: #e8eefb; border-radius: 8px; padding: 6px 9px; }
+  .xdh-msg-assistant .xdh-body { background: #f1efe9; border-radius: 8px; padding: 6px 9px; }
+  .xdh-msg-error .xdh-body { background: #fbe8e8; border-radius: 8px; padding: 6px 9px; color: #b42d2d; }
+  .xdh-body { white-space: pre-wrap; overflow-wrap: break-word; }
+  .xdh-body code { font-family: ui-monospace, Menlo, monospace; font-size: 0.9em; background: rgba(0,0,0,0.07); padding: 0 3px; border-radius: 3px; }
+  .xdh-body .xdh-pre {
+    display: block; background: #22283a; color: #e8eaf2; font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px; line-height: 1.5; padding: 6px 9px; border-radius: 6px;
+    overflow-x: auto; white-space: pre; margin: 4px 0;
+  }
+  .xdh-note {
+    background: #fdf6e3; border-left: 3px solid #b8860b; color: #7a5c0a;
+    font-size: 11.5px; padding: 4px 8px; border-radius: 0 6px 6px 0; margin-bottom: 4px;
+  }
+  .xdh-thinking { color: #2d5fb4; font-size: 12.5px; }
+  .xdh-thinking::after { content: "…"; animation: xdh-dots 1.2s steps(4) infinite; }
+  @keyframes xdh-dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+  .xdh-compose { display: flex; gap: 6px; margin-top: 8px; }
+  .xdh-compose textarea {
+    flex: 1; resize: vertical; min-height: 44px; border: 1px solid #d8d4c9; border-radius: 8px;
+    padding: 6px 8px; font: 13px system-ui, sans-serif;
+  }
+  .xdh-compose button {
+    border: none; border-radius: 8px; background: #b4552d; color: #fff; font-weight: 600;
+    padding: 0 14px; cursor: pointer; font-size: 13px;
+  }
+  .xdh-compose button:disabled { opacity: 0.5; cursor: default; }
+  .xdh-empty { color: #5b6478; font-size: 13px; text-align: center; margin-top: 30px; }
+</style>
+<script>
+(function () {
+  "use strict";
+  var META = window.__EXPLAINER_META;
+  if (!META || !META.sessionId) return;
+  var BRIDGE = META.bridge || "http://127.0.0.1:8790";
+  var REPORT = decodeURIComponent(location.pathname);
+  var container = document.querySelector(".wrap") || document.body;
+  var BLOCK_SEL = "p, pre, table, ul, ol, blockquote, .timeline, .callout, .browser-row, .quiz-q, h2, h3";
+
+  var state = { threads: [], online: false, panelOpen: false, focusThread: null, draft: null };
+  var blocks = [];
+
+  function collectBlocks() {
+    blocks = Array.prototype.slice.call(container.querySelectorAll(BLOCK_SEL))
+      .filter(function (el) { return !el.closest(".xdh-panel"); });
+  }
+
+  function sectionIdFor(el) {
+    var headings = Array.prototype.slice.call(container.querySelectorAll("h2[id], h3[id]"));
+    var best = null;
+    for (var i = 0; i < headings.length; i++) {
+      if (headings[i].compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) best = headings[i];
+    }
+    return best ? best.id : "";
+  }
+
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function mdLite(s) {
+    return esc(s)
+      .replace(/```\w*\n?([\s\S]*?)```/g, '<span class="xdh-pre">$1</span>')
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+      .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  }
+
+  /* ---------- server ---------- */
+  function api(path, opts) {
+    return fetch(BRIDGE + path, opts).then(function (r) {
+      if (!r.ok) throw new Error("bridge " + r.status);
+      return r.json();
+    });
+  }
+  function loadThreads() {
+    return api("/threads?report=" + encodeURIComponent(REPORT)).then(function (data) {
+      state.threads = data.threads || [];
+      render();
+      schedulePoll();
+    });
+  }
+  function anyPending() {
+    return state.threads.some(function (t) {
+      return t.messages.some(function (m) { return m.status === "pending"; });
+    });
+  }
+  var pollTimer = null;
+  function schedulePoll() {
+    if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+    if (anyPending()) pollTimer = setTimeout(function () { loadThreads(); }, 2500);
+  }
+  function send(threadId, anchor, question, done) {
+    api("/comments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        report: REPORT, repo: META.repo, sessionId: META.sessionId,
+        threadId: threadId, anchor: anchor, question: question,
+      }),
+    }).then(function (res) {
+      state.focusThread = res.threadId;
+      state.draft = null;
+      loadThreads();
+      if (done) done(null);
+    }).catch(function (e) { if (done) done(e); });
+  }
+
+  /* ---------- UI chrome ---------- */
+  var toggle = document.createElement("button");
+  toggle.className = "xdh-toggle";
+  toggle.textContent = "💬";
+  document.body.appendChild(toggle);
+
+  var panel = document.createElement("div");
+  panel.className = "xdh-panel";
+  panel.innerHTML =
+    '<div class="xdh-panel-head"><span>Comments</span>' +
+    '<button class="xdh-close" title="Close">✕</button></div>' +
+    '<div class="xdh-threads"></div>';
+  document.body.appendChild(panel);
+  var threadsEl = panel.querySelector(".xdh-threads");
+  panel.querySelector(".xdh-close").addEventListener("click", function () { setPanel(false); });
+  toggle.addEventListener("click", function () {
+    if (!state.online) { alert("Comment bridge is offline.\nStart it with:\n  python3 ~/.claude/skills/explain-diff-html/bridge/bridge.py &"); return; }
+    setPanel(!state.panelOpen);
+  });
+  function setPanel(open) {
+    state.panelOpen = open;
+    panel.classList.toggle("xdh-open", open);
+    if (open) render();
+  }
+
+  var addBtn = document.createElement("button");
+  addBtn.className = "xdh-add";
+  addBtn.textContent = "+";
+  addBtn.title = "Ask Claude about this passage";
+  document.body.appendChild(addBtn);
+  var hoverBlock = null;
+
+  container.addEventListener("mouseover", function (e) {
+    if (!state.online) return;
+    var block = e.target.closest && e.target.closest(BLOCK_SEL);
+    if (!block || !container.contains(block) || block.closest(".xdh-panel")) return;
+    hoverBlock = block;
+    var r = block.getBoundingClientRect();
+    var cr = container.getBoundingClientRect();
+    addBtn.style.display = "flex";
+    addBtn.style.top = (window.scrollY + r.top) + "px";
+    addBtn.style.left = Math.max(4, window.scrollX + cr.left - 36) + "px";
+  });
+  document.addEventListener("mouseout", function (e) {
+    if (e.target === addBtn && !hoverBlock) addBtn.style.display = "none";
+  });
+  addBtn.addEventListener("click", function () {
+    if (!hoverBlock) return;
+    var sel = window.getSelection();
+    var selText = sel && !sel.isCollapsed && hoverBlock.contains(sel.anchorNode) ? sel.toString().trim() : "";
+    var excerpt = (selText || hoverBlock.textContent.trim().replace(/\s+/g, " ")).slice(0, 200);
+    state.draft = {
+      anchor: { sectionId: sectionIdFor(hoverBlock), blockIndex: blocks.indexOf(hoverBlock), excerpt: excerpt },
+    };
+    state.focusThread = "draft";
+    setPanel(true);
+    var ta = threadsEl.querySelector(".xdh-thread.xdh-focus textarea");
+    if (ta) ta.focus();
+  });
+
+  /* ---------- rendering ---------- */
+  function blockForAnchor(anchor) {
+    if (anchor && typeof anchor.blockIndex === "number" && blocks[anchor.blockIndex]) return blocks[anchor.blockIndex];
+    if (anchor && anchor.sectionId) return document.getElementById(anchor.sectionId);
+    return null;
+  }
+
+  function renderPins() {
+    Array.prototype.forEach.call(document.querySelectorAll(".xdh-pin"), function (p) { p.remove(); });
+    state.threads.forEach(function (t, i) {
+      var block = blockForAnchor(t.anchor);
+      if (!block) return;
+      block.classList.add("xdh-has-pin");
+      var pin = document.createElement("button");
+      var pending = t.messages.some(function (m) { return m.status === "pending"; });
+      pin.className = "xdh-pin" + (pending ? " xdh-pending" : "");
+      pin.textContent = String(i + 1);
+      pin.title = "Open comment thread";
+      pin.style.right = (-10 - (countPinsOn(block, i) * 24)) + "px";
+      pin.addEventListener("click", function () {
+        state.focusThread = t.id;
+        setPanel(true);
+        var el = threadsEl.querySelector('[data-tid="' + t.id + '"]');
+        if (el) el.scrollIntoView({ block: "nearest" });
+      });
+      block.appendChild(pin);
+    });
+  }
+  function countPinsOn(block, uptoIdx) {
+    var n = 0;
+    for (var i = 0; i < uptoIdx; i++) {
+      if (blockForAnchor(state.threads[i].anchor) === block) n++;
+    }
+    return n;
+  }
+
+  function threadHtml(t, idx) {
+    var focus = state.focusThread === t.id ? " xdh-focus" : "";
+    var sec = t.anchor && t.anchor.sectionId ? '<span class="xdh-sec">#' + esc(t.anchor.sectionId) + "</span> " : "";
+    var html = '<div class="xdh-thread' + focus + '" data-tid="' + t.id + '">' +
+      '<div class="xdh-anchor" data-jump="' + idx + '">' + sec + esc((t.anchor && t.anchor.excerpt) || "") + "</div>";
+    t.messages.forEach(function (m) {
+      var cls = m.role === "user" ? "xdh-msg-user" : (m.status === "error" || m.role === "error") ? "xdh-msg-error" : "xdh-msg-assistant";
+      html += '<div class="xdh-msg ' + cls + '"><span class="xdh-who">' + (m.role === "user" ? "You" : "Claude") + "</span>";
+      if (m.note) html += '<div class="xdh-note">⚠ ' + esc(m.note) + "</div>";
+      html += m.status === "pending"
+        ? '<div class="xdh-thinking">Claude is reading the report and code</div>'
+        : '<div class="xdh-body">' + mdLite(m.text) + "</div>";
+      html += "</div>";
+    });
+    html += '<div class="xdh-compose"><textarea placeholder="Reply…"></textarea><button>Send</button></div></div>';
+    return html;
+  }
+
+  function draftHtml() {
+    var a = state.draft.anchor;
+    var sec = a.sectionId ? '<span class="xdh-sec">#' + esc(a.sectionId) + "</span> " : "";
+    return '<div class="xdh-thread xdh-focus" data-tid="draft">' +
+      '<div class="xdh-anchor">' + sec + esc(a.excerpt) + "</div>" +
+      '<div class="xdh-compose"><textarea placeholder="Ask Claude about this passage…"></textarea>' +
+      "<button>Send</button></div></div>";
+  }
+
+  function render() {
+    collectBlocks();
+    renderPins();
+    if (!state.panelOpen) { updateToggle(); return; }
+    var html = "";
+    if (state.draft) html += draftHtml();
+    // Panel sorts by recency (latest activity first) so a just-sent comment is
+    // at the top; pin numbers keep stable creation order, hence the index pairing.
+    state.threads
+      .map(function (t, i) { return { t: t, i: i }; })
+      .sort(function (a, b) {
+        var ts = function (t) { var m = t.t.messages; return m.length ? m[m.length - 1].ts : 0; };
+        return ts(b) - ts(a);
+      })
+      .forEach(function (o) { html += threadHtml(o.t, o.i); });
+    if (!html) html = '<div class="xdh-empty">Hover any paragraph and click <b>+</b> to ask a question about it.</div>';
+    threadsEl.innerHTML = html;
+    Array.prototype.forEach.call(threadsEl.querySelectorAll(".xdh-thread"), function (el) {
+      var tid = el.getAttribute("data-tid");
+      var ta = el.querySelector("textarea");
+      var btn = el.querySelector(".xdh-compose button");
+      function submit() {
+        var q = ta.value.trim();
+        if (!q) return;
+        btn.disabled = true;
+        var isDraft = tid === "draft";
+        send(isDraft ? null : tid, isDraft ? state.draft.anchor : null, q, function (err) {
+          if (err) { btn.disabled = false; alert("Failed to send: " + err.message); }
+        });
+      }
+      btn.addEventListener("click", submit);
+      ta.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit();
+      });
+      var jump = el.querySelector(".xdh-anchor[data-jump]");
+      if (jump) jump.addEventListener("click", function () {
+        var t = state.threads[parseInt(jump.getAttribute("data-jump"), 10)];
+        var block = t && blockForAnchor(t.anchor);
+        if (block) block.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+    updateToggle();
+  }
+  function updateToggle() {
+    toggle.textContent = state.online ? "💬 " + state.threads.length : "💬 offline";
+    toggle.classList.toggle("xdh-offline", !state.online);
+  }
+
+  /* ---------- generating-session status banner ---------- */
+  var sessBanner = document.createElement("div");
+  sessBanner.className = "xdh-session";
+  sessBanner.style.display = "none";
+  document.body.appendChild(sessBanner);
+  function refreshSessionStatus() {
+    api("/session-status?sid=" + encodeURIComponent(META.sessionId) +
+        "&report=" + encodeURIComponent(REPORT)).then(function (res) {
+      sessBanner.style.display = "block";
+      if (res.live) {
+        sessBanner.className = "xdh-session xdh-sess-closed";
+        sessBanner.textContent = "⚡ Live: the generating session is watching this report and answers questions directly.";
+      } else if (!res.active) {
+        sessBanner.className = "xdh-session xdh-sess-closed";
+        sessBanner.textContent = "✓ Generating session closed — questions get full-context answers from its fork.";
+      } else if (res.kind === "interactive" && res.status === "idle") {
+        sessBanner.className = "xdh-session xdh-sess-idle";
+        sessBanner.textContent = "Generating session open but idle — full-context answers should work. " +
+          "If an answer says otherwise, close that session.";
+      } else {
+        sessBanner.className = "xdh-session xdh-sess-open";
+        sessBanner.textContent = "⚠ Generating session still " +
+          (res.status === "busy" ? "busy" : "open") + " — questions will be answered by a fresh Claude " +
+          "(report + code context). Close that session for full-context answers.";
+      }
+    }).catch(function () { sessBanner.style.display = "none"; });
+  }
+
+  /* ---------- boot ---------- */
+  var ctrl = new AbortController();
+  var timeout = setTimeout(function () { ctrl.abort(); }, 2000);
+  fetch(BRIDGE + "/health", { signal: ctrl.signal })
+    .then(function (r) { return r.json(); })
+    .then(function () {
+      clearTimeout(timeout);
+      state.online = true;
+      collectBlocks();
+      loadThreads();
+      refreshSessionStatus();
+      setInterval(refreshSessionStatus, 30000);
+    })
+    .catch(function () { state.online = false; updateToggle(); });
+  updateToggle();
+})();
+</script>
