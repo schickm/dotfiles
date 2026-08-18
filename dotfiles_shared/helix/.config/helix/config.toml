@@ -13,3 +13,6 @@ u = ":update"
 
 [keys.insert]
 C-c = "normal_mode"
+
+[editor.file-picker]
+hidden = false
