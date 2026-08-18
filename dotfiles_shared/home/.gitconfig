@@ -49,7 +49,6 @@
         difftool = true
 [difftool "meld"]
         trustExitCode = true
-        cmd = open -W -a Meld --args \"$LOCAL\" \"$REMOTE\"
 	# cmd = meld \"$LOCAL\" \"$REMOTE\"
 [difftool "json-diff"]
 	cmd = json-diff \"$LOCAL\" \"$REMOTE\"

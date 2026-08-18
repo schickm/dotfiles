@@ -27,7 +27,6 @@
         "network",
         "power-profiles-daemon",
         "cpu",
-        "memory",
         "temperature",
         "backlight",
         "niri/language",
@@ -98,9 +97,6 @@
     "cpu": {
         "format": "{usage}% ",
         "tooltip": true
-    },
-    "memory": {
-        "format": "{}% "
     },
     "temperature": {
         // "thermal-zone": 2,
@@ -198,7 +194,10 @@
         // "exec": "$HOME/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
     },
     "custom/power": {
-        "format" : "⏻ ",
+        // FontAwesome power-off (U+F011), not the bare Unicode ⏻ (U+23FB) —
+        // that one isn't in FontAwesome or SF Pro, so it fell through to a
+        // fallback font and rendered hairline-thin next to the other icons.
+        "format": "",
 		"tooltip": false,
 		"menu": "on-click",
 		"menu-file": "$HOME/.config/waybar/power_menu.xml", // Menu file in resources folder

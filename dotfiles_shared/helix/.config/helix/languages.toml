@@ -20,3 +20,22 @@ language-servers = ["tsgo"]
 [[language]]
 name = "jsx"
 language-servers = ["tsgo"]
+
+# prettierd (pnpm global) rather than plain prettier: it keeps a daemon warm, so
+# format-on-write doesn't pay node startup every time.
+#
+# Helix doesn't expand the buffer path into formatter args, so the filename below
+# is a fixed stand-in — prettier only uses it to pick a parser by extension.
+# Project .prettierrc still applies; it resolves against Helix's cwd.
+
+[[language]]
+name = "json"
+formatter = { command = "prettierd", args = ["file.json"] }
+auto-format = true
+
+# Prettier defaults to trailing commas in jsonc, which several consumers of the
+# format reject (waybar's parser among them). Force them off.
+[[language]]
+name = "jsonc"
+formatter = { command = "prettierd", args = ["file.jsonc", "--trailing-comma=none"] }
+auto-format = true

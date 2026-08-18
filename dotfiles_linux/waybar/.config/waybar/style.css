@@ -107,7 +107,6 @@ button:hover {
 #clock,
 #battery,
 #cpu,
-#memory,
 #disk,
 #temperature,
 #backlight,
@@ -130,6 +129,24 @@ button:hover {
 #window,
 #workspaces {
     margin: 0 4px;
+}
+
+/* Outer edges: niri uses `gaps 8`, so windows below the bar sit 8px in from
+   the screen edges. Inset the first and last module by the same amount so the
+   bar's contents line up with the window edges instead of hugging the screen. */
+.modules-left {
+    margin-left: 8px;
+}
+
+.modules-right {
+    margin-right: 8px;
+}
+
+/* The power glyph's ink overhangs its text box on the right, so the shared
+   10px module padding would push it ~13px in — trimmed to 5px so the icon
+   itself lands 8px from the edge, level with the workspace chip. */
+#custom-power {
+    padding-right: 5px;
 }
 
 /* If workspaces is the leftmost module, omit left margin */

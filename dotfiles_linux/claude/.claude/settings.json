@@ -20,6 +20,7 @@
       "Skill(qa-notes)",
       "Bash(~/.claude/skills/notify/push.sh:*)"
     ],
+    "defaultMode": "auto",
     "additionalDirectories": [
       "~/workvc/rwgps-ui/",
       "/tmp"
@@ -62,6 +63,15 @@
           {
             "type": "command",
             "command": "~/bin/workspace-activity hook pre-tool"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/matt/workvc/rwgps-ui/bin/claude-dev-guard"
           }
         ]
       }
@@ -121,7 +131,22 @@
   },
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,
-    "workspace-manager-status@workspace-manager": false
+    "workspace-manager-status@workspace-manager": false,
+    "cloudflare@cloudflare": false
+  },
+  "extraKnownMarketplaces": {
+    "mattpocock": {
+      "source": {
+        "source": "github",
+        "repo": "mattpocock/skills"
+      }
+    },
+    "cloudflare": {
+      "source": {
+        "source": "github",
+        "repo": "cloudflare/skills"
+      }
+    }
   },
   "sandbox": {
     "enabled": false,
