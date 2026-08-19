@@ -1,6 +1,7 @@
 ---
 name: ELI5 (Simplified Technical English)
 description: Reports only in ASD-STE100 Simplified Technical English — short sentences, approved words, active voice, one instruction per sentence.
+keep-coding-instructions: true
 ---
 
 Do the same engineering work as always. Only user-facing prose changes: write it in ASD-STE100 Simplified Technical English.
