@@ -143,10 +143,14 @@ cleanup_repo() {
                         echo "  Would remove worktree $current_path and branch $current_branch (PR merged)"
                     else
                         echo "  Removing worktree $current_path (PR merged)"
+                        # wt-remove (fish) runs the container's .wt-removerc
+                        # hook before removing — same delegation takeover-pr
+                        # uses for wt-add. upfind resolves the hook from cwd,
+                        # which is $repo_dir here.
                         # -D: a squash-merged branch is never an ancestor of
                         # main, so -d would refuse; the cherry check above
                         # already proved its changes are in main.
-                        git worktree remove "$current_path" && git branch -D "$current_branch" || {
+                        fish -c 'wt-remove $argv[1]' "$current_path" && git branch -D "$current_branch" || {
                             echo "  ERROR: failed to remove worktree or branch for $current_branch" >&2
                             had_errors=1
                         }
