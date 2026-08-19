@@ -1,0 +1,258 @@
+#!/usr/bin/env python3
+"""Searchable, actionable palette of every niri keybind.
+
+niri's built-in overlay (Mod+Shift+Slash) is a static wall of text showing only
+the curated subset of binds. There is no IPC to enumerate binds, so this parses
+config.kdl directly, feeds every bind to `fuzzel --dmenu`, and runs the picked
+one via `niri msg action`.
+
+Bound to Mod+Slash. Escape dismisses without doing anything.
+"""
+
+import os
+import re
+import shlex
+import subprocess
+import sys
+
+FUZZEL_FONT = "JetBrainsMono NFM:size=11"
+FUZZEL_LINES = 18
+
+# Maximum width of the description column, in monospace cells.
+DESC_WIDTH = 58
+
+# A bind line looks like:  Key+Combo [prop=val ...] { action "arg" "arg"; }
+BIND_RE = re.compile(r"^(?P<key>[^\s{]+)\s*(?P<rest>.*)$")
+PROP_RE = re.compile(r"([a-z-]+)=(\"(?:[^\"\\]|\\.)*\"|\S+)")
+
+
+class Bind:
+    def __init__(self, key, chord, action, args, title, props):
+        self.key = key
+        self.chord = chord
+        self.action = action
+        self.args = args
+        self.title = title
+        self.props = props
+
+
+def config_path():
+    if os.environ.get("NIRI_CONFIG"):
+        return os.environ["NIRI_CONFIG"]
+    base = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
+    return os.path.join(base, "niri", "config.kdl")
+
+
+def strip_comment(line):
+    """Drop a trailing // comment, ignoring // that appears inside a string."""
+    in_str = False
+    i = 0
+    while i < len(line):
+        c = line[i]
+        if c == "\\" and in_str:
+            i += 2
+            continue
+        if c == '"':
+            in_str = not in_str
+        elif c == "/" and not in_str and line[i + 1 : i + 2] == "/":
+            return line[:i]
+        i += 1
+    return line
+
+
+def unquote(value):
+    if len(value) >= 2 and value[0] == '"' and value[-1] == '"':
+        return value[1:-1].replace('\\"', '"').replace("\\\\", "\\")
+    return value
+
+
+def prettify_chord(key):
+    """Mod is Super on a TTY; show what's actually on the keyboard."""
+    return "+".join("Super" if p == "Mod" else p for p in key.split("+"))
+
+
+def parse_binds(path):
+    """Extract every bind from the binds { } block, in config order."""
+    with open(path, encoding="utf-8") as fh:
+        lines = fh.read().splitlines()
+
+    binds = []
+    depth = 0
+    inside = False
+    skipped = 0
+
+    for raw in lines:
+        line = strip_comment(raw).strip()
+        if not line:
+            continue
+
+        if not inside:
+            if re.match(r"^binds\s*\{", line):
+                inside = True
+                depth = 1
+            continue
+
+        # Track nesting so we know where the binds block ends.
+        if line == "}" and depth == 1:
+            break
+
+        m = BIND_RE.match(line)
+        if not m:
+            continue
+        rest = m.group("rest")
+        if "{" not in rest or not rest.rstrip().endswith("}"):
+            # Multi-line bind — this line-oriented parser can't see the body.
+            skipped += 1
+            continue
+
+        props_str, body = rest.split("{", 1)
+        body = body.rstrip().rstrip("}").strip().rstrip(";").strip()
+        if not body:
+            continue
+
+        props = {k: unquote(v) for k, v in PROP_RE.findall(props_str)}
+
+        try:
+            tokens = shlex.split(body)
+        except ValueError:
+            skipped += 1
+            continue
+        if not tokens:
+            continue
+
+        title = props.get("hotkey-overlay-title")
+        if title == "null":
+            title = None
+
+        key = m.group("key")
+        binds.append(
+            Bind(
+                key=key,
+                chord=prettify_chord(key),
+                action=tokens[0],
+                args=tokens[1:],
+                title=title,
+                props=props,
+            )
+        )
+
+    if skipped:
+        print(f"warning: skipped {skipped} bind(s) this parser couldn't read",
+              file=sys.stderr)
+    return binds
+
+
+def describe(bind):
+    """Return the searchable text shown to the right of the chord.
+
+    fuzzel matches what you type against this text, so hyphens in action names
+    are replaced by spaces: typing "focus monitor" has to find
+    focus-monitor-left. Spawned commands stay verbatim, since they are real
+    commands and the exact spelling matters.
+    """
+    if bind.action == "spawn":
+        detail = " ".join(bind.args)
+    elif bind.action == "spawn-sh":
+        detail = " ".join(bind.args)
+    else:
+        detail = " ".join([bind.action.replace("-", " ")] + bind.args)
+
+    if bind.title and bind.title.lower() != detail.lower():
+        detail = f"{bind.title}  ·  {detail}"
+
+    if len(detail) > DESC_WIDTH:
+        detail = detail[: DESC_WIDTH - 1] + "…"
+    return detail
+
+
+def action_argv(bind):
+    """Translate a parsed bind into a `niri msg action` invocation."""
+    argv = ["niri", "msg", "action", bind.action]
+    if bind.args:
+        # -- so args like "-10%" aren't eaten as flags by clap.
+        argv.append("--")
+        argv.extend(bind.args)
+    return argv
+
+
+def notify(summary, body):
+    subprocess.run(
+        ["notify-send", "-a", "niri-hotkey-search", summary, body],
+        check=False,
+    )
+
+
+def build_rows(binds):
+    """Render one aligned text row per bind, in config order."""
+    chord_width = max(len(b.chord) for b in binds) + 2
+    return [f"{b.chord:<{chord_width}}{describe(b)}" for b in binds]
+
+
+def pick(binds):
+    """Show the palette; return the chosen Bind, or None if dismissed."""
+    rows = build_rows(binds)
+    width = max(len(r) for r in rows) + 4
+
+    proc = subprocess.run(
+        [
+            "fuzzel",
+            "--dmenu",
+            "--index",
+            "--counter",
+            "--match-mode=fzf",
+            f"--font={FUZZEL_FONT}",
+            f"--width={width}",
+            f"--lines={FUZZEL_LINES}",
+            "--prompt=hotkey ",
+            "--placeholder=search binds",
+        ],
+        input="\n".join(rows),
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0:
+        return None
+
+    out = proc.stdout.strip()
+    if not out.lstrip("-").isdigit():
+        return None
+    idx = int(out)
+    if idx < 0 or idx >= len(binds):
+        return None
+    return binds[idx]
+
+
+def main():
+    path = config_path()
+    if not os.path.exists(path):
+        notify("niri-hotkey-search", f"config not found: {path}")
+        return 1
+
+    binds = parse_binds(path)
+    if not binds:
+        notify("niri-hotkey-search", f"no binds parsed from {path}")
+        return 1
+
+    # --list prints the rows and exits. Use it to check the parser.
+    if "--list" in sys.argv[1:]:
+        for row in build_rows(binds):
+            print(row)
+        return 0
+
+    chosen = pick(binds)
+    if chosen is None:
+        return 0
+
+    argv = action_argv(chosen)
+    result = subprocess.run(argv, capture_output=True, text=True)
+    if result.returncode != 0:
+        notify(
+            f"Failed: {chosen.chord}",
+            (result.stderr.strip() or " ".join(argv))[:300],
+        )
+        return result.returncode
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

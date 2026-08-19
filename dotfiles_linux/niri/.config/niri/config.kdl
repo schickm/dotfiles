@@ -468,6 +468,9 @@ binds {
     // Mod-Shift-/, which is usually the same as Mod-?,
     // shows a list of important hotkeys.
     Mod+Shift+Slash { show-hotkey-overlay; }
+    // Searchable version of the above: fuzzy-find any bind in this file (not
+    // just the overlay's curated subset) and run it. See niri-hotkey-search.
+    Mod+Slash hotkey-overlay-title="Search hotkeys" { spawn "niri-hotkey-search"; }
 
     // Show 1Password prompt
     Mod+Shift+Backslash hotkey-overlay-title="1Password Quick Access" { spawn "1password" "--quick-access"; }
