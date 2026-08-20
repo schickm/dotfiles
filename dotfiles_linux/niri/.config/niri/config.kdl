@@ -123,12 +123,39 @@ input {
 }
 
 output "eDP-1" {
-    // scale 2
+    // Anchor the built-in panel at the origin so externals can be positioned
+    // relative to it. Without this, niri auto-places outputs in connector-name
+    // order and "HDMI-A-1" sorts before "eDP-1", landing externals on the left.
+    position x=0 y=0
+}
+
+output "PNP(SOB) S1 S1  20240415" {
+    // "S1" 14" portable monitor (1920x1080, 309x174 mm => ~158 dpi).
+    // EDID caps it at 1080p60: max dotclock 170 MHz, max TMDS 225 MHz, and the
+    // range limits are 50-61 Hz. 60 Hz is the ceiling, not a fallback.
+    //
+    // No `mode` on purpose. The EDID lists 1920x1080@60.000 three times (DTD 1
+    // at 16:9, DMT 0x52, and CTA VIC 76 at 64:27). A `mode "1920x1080@60.000"`
+    // line matched the 64:27 CTA entry, and the EDID also declares "Always
+    // Overscanned", so a CE-flagged mode invites the panel to overscan.
+    // Leaving mode unset makes niri use the preferred 16:9 detailed timing.
+
+    // Same pixel density as eDP-1 (both ~158 dpi), so the same scale keeps text
+    // the same physical size on both screens. Logical size becomes 1536x864.
+    scale 1.25
+
+    // Physically to the right of the laptop. eDP-1 is 1536 logical px wide.
+    position x=1536 y=0
+
+    // No VRR: the EDID has no adaptive-sync range and niri reports
+    // "Variable refresh rate: not supported". Do not add variable-refresh-rate.
 }
 
 output "GIGA-BYTE TECHNOLOGY CO., LTD. GS34WQC 0x2B000460" {
     // Gigabyte GS34WQC — 100 Hz, matched by monitor identity (any port).
     // No VRR over HDMI on this Intel GPU; use DisplayPort for FreeSync.
+    // Position is left unset on purpose: this monitor is only used with the
+    // laptop lid closed, so eDP-1 is disabled and this is the sole output.
     mode "3440x1440@99.982"
 }
 
@@ -488,7 +515,9 @@ binds {
     Mod+T hotkey-overlay-title="Open a Terminal: kitty" { spawn "kitty"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
     Mod+E hotkey-overlay-title="Emoji Picker: bemoji" { spawn "bemoji" "-t"; }
-    Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
+    // Moved off Super+Alt+L so Mod+Alt+L is free for move-workspace-to-monitor-right.
+    // Mod resolves to Super, so Mod+Alt+L and Super+Alt+L are the same key.
+    Mod+Ctrl+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
 
     // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
     // Note: the entire command goes as a single argument. It's passed verbatim to `sh -c`.
@@ -549,14 +578,15 @@ binds {
     Mod+Ctrl+Home { move-column-to-first; }
     Mod+Ctrl+End  { move-column-to-last; }
 
-    Mod+Shift+Left  { focus-monitor-left; }
+    // Titled so they show up in the hotkey overlay (Mod+Shift+Slash).
+    Mod+Shift+Left  hotkey-overlay-title="Focus monitor left"  { focus-monitor-left; }
     Mod+Shift+Down  { focus-monitor-down; }
     Mod+Shift+Up    { focus-monitor-up; }
-    Mod+Shift+Right { focus-monitor-right; }
-    Mod+Shift+H     { focus-monitor-left; }
+    Mod+Shift+Right hotkey-overlay-title="Focus monitor right" { focus-monitor-right; }
+    Mod+Shift+H     hotkey-overlay-title="Focus monitor left (vim keys)"  { focus-monitor-left; }
     Mod+Shift+J     { focus-monitor-down; }
     Mod+Shift+K     { focus-monitor-up; }
-    Mod+Shift+L     { focus-monitor-right; }
+    Mod+Shift+L     hotkey-overlay-title="Focus monitor right (vim keys)" { focus-monitor-right; }
 
     Mod+Shift+Ctrl+Left  { move-column-to-monitor-left; }
     Mod+Shift+Ctrl+Down  { move-column-to-monitor-down; }
@@ -571,9 +601,15 @@ binds {
     // Mod+Shift+Ctrl+Left  { move-window-to-monitor-left; }
     // ...
 
-    // And you can also move a whole workspace to another monitor:
-    // Mod+Shift+Ctrl+Left  { move-workspace-to-monitor-left; }
-    // ...
+    // Move the whole focused workspace to the monitor on the left or right.
+    // niri ships no default bind for this; its sample config only suggests
+    // Mod+Shift+Ctrl+Left, which is already move-column-to-monitor-left above.
+    // Mod+Alt is free, and H/L keep the left/right letter convention.
+    // The up/down variants exist too, but the monitors sit side by side.
+    Mod+Alt+Left  hotkey-overlay-title="Move workspace to monitor left"  { move-workspace-to-monitor-left; }
+    Mod+Alt+Right hotkey-overlay-title="Move workspace to monitor right" { move-workspace-to-monitor-right; }
+    Mod+Alt+H     hotkey-overlay-title="Move workspace to monitor left (vim keys)"  { move-workspace-to-monitor-left; }
+    Mod+Alt+L     hotkey-overlay-title="Move workspace to monitor right (vim keys)" { move-workspace-to-monitor-right; }
 
     Mod+Page_Down      { focus-workspace-down; }
     Mod+Page_Up        { focus-workspace-up; }
