@@ -16,8 +16,14 @@ workspaces=$(niri msg --json workspaces)
 # Get current workspace index
 current_idx=$(echo "$workspaces" | jq '[.[] | select(.is_focused)] | .[0].idx')
 
-# Get the last workspace index (niri keeps an empty one at the bottom)
-last_idx=$(echo "$workspaces" | jq 'map(.idx) | max')
+# Get the last workspace index on the focused output (niri keeps an empty
+# workspace at the bottom of every output's strip). Scope this to the focused
+# output: index references resolve per output, so with a second monitor
+# attached a global max names an index the focused output doesn't have, and
+# set-workspace-name then does nothing and still exits 0.
+current_output=$(echo "$workspaces" | jq -r '[.[] | select(.is_focused)] | .[0].output')
+last_idx=$(echo "$workspaces" | jq --arg o "$current_output" \
+    '[.[] | select(.output == $o) | .idx] | max')
 
 # Name the empty workspace at the bottom
 niri msg action set-workspace-name "$name" --workspace "$last_idx"
@@ -31,6 +37,10 @@ niri msg action set-workspace-name "$name" --workspace "$last_idx"
 niri-sort-workspaces || true
 ws=$(niri msg --json workspaces)
 new_idx=$(jq -r --arg n "$name" '.[] | select(.name == $n) | .idx' <<<"$ws")
+if [[ -z "$new_idx" ]]; then
+    echo "$(basename "$0"): failed to name workspace '$name'" >&2
+    exit 1
+fi
 output=$(jq -r --arg n "$name" '.[] | select(.name == $n) | .output' <<<"$ws")
 above=$(jq -r --arg o "$output" --argjson i "$new_idx" \
     '.[] | select(.output == $o and .idx == $i - 1) | .name // ""' <<<"$ws")
