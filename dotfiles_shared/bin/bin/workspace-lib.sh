@@ -1,7 +1,10 @@
 #!/bin/bash
 # Shared plumbing for the workspace scripts (start-new-ticket, resume-workspace).
-# Source it, don't execute it:
+# Source it, don't execute it. From a script in this same stow package:
 #   source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
+# From anywhere else (another stow package, a hook), go through the installed
+# copy instead — the sibling form breaks as soon as the caller moves packages:
+#   source "$HOME/bin/workspace-lib.sh"
 #
 # Convention: ~/workvc/<repo>/ is a "workspace container" — machine-local
 # support files (.wt-addrc, .workspacerc, certs, ...) at the top level, git
