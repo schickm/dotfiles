@@ -253,12 +253,20 @@ layout {
     }
 
     tab-indicator {
-        width 4
+        // A bar across the top of the column, split into one segment per tab.
+        // Reads like a real tab strip instead of the default hairline on the
+        // left edge, which is easy to miss.
+        position "top"
+        width 8
         gap 5
-	place-within-column
-	active-color "#268bd2"
-	inactive-color "#93a1a1"
-	// length total-proportion=1.0
+        gaps-between-tabs 4
+        corner-radius 4
+        // Span the full column width so the segments are the widest possible.
+        length total-proportion=1.0
+        place-within-column
+        active-color "#268bd2"
+        inactive-color "#93a1a1"
+        urgent-color "#dc322f"
     }
 
     // You can also add a border. It's similar to the focus ring, but always visible.
