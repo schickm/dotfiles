@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Fuzzy-find a file and open it with its default application.
+#
+# fuzzel has no file browser mode, so this feeds `fd` output to `fuzzel --dmenu`
+# and hands the picked path to xdg-open. Bound to Mod+Shift+D, next to the
+# plain fuzzel launcher on Mod+D.
+#
+# Usage: fuzzel-open [DIR]        DIR defaults to $HOME
+#
+# Tunables (env):
+#   FUZZEL_OPEN_WIDTH   window width, in characters (default 130)
+#   FUZZEL_OPEN_LINES   rows of results to show (default 20)
+#
+# One width has to suit both screens. With the SF Pro Text:size=13 font from
+# fuzzel.ini, the window measures 10*width + 84 logical pixels. 130 gives
+# 1384 px, which fills the 1536 px laptop screen and still shows long paths
+# on the 3440 px ultra-wide screen.
+
+set -euo pipefail
+
+root=${1:-$HOME}
+width=${FUZZEL_OPEN_WIDTH:-130}
+lines=${FUZZEL_OPEN_LINES:-20}
+
+notify() {
+  notify-send -a fuzzel-open "$1" "${2:-}" || true
+}
+
+if [[ ! -d $root ]]; then
+  notify "fuzzel-open" "not a directory: $root"
+  exit 1
+fi
+
+# fd skips hidden and .gitignore'd files by default, which is what you want for
+# $HOME. Symlinks are not followed, to avoid loops and duplicate paths.
+#
+# Escape makes fuzzel exit non-zero. That is a normal dismissal, not an error,
+# hence `|| exit 0`. --only-match rejects free text, so the result is a real path.
+pick=$(fd --type f . "$root" \
+  | fuzzel --dmenu --only-match --match-mode=fzf \
+      --width="$width" --lines="$lines" \
+      --prompt='open ' --placeholder='search files' \
+      --no-run-if-empty) || exit 0
+
+[[ -n $pick ]] || exit 0
+
+# setsid -f detaches the application, so it survives after this script exits.
+setsid -f xdg-open "$pick" || notify "Failed to open" "$pick"

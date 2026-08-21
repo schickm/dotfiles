@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Open File
+Exec=fuzzel-open
+Type=Application
+Terminal=false
+Keywords=file;open;find;search;xdg-open;

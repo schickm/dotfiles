@@ -514,6 +514,9 @@ binds {
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+T hotkey-overlay-title="Open a Terminal: kitty" { spawn "kitty"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
+    // fuzzel has no file mode; fuzzel-open pipes `fd` into it and opens the pick
+    // with xdg-open. Set FUZZEL_OPEN_WIDTH to change the window width.
+    Mod+Shift+D hotkey-overlay-title="Open a File: fuzzel-open" { spawn "fuzzel-open"; }
     Mod+E hotkey-overlay-title="Emoji Picker: bemoji" { spawn "bemoji" "-t"; }
     // Moved off Super+Alt+L so Mod+Alt+L is free for move-workspace-to-monitor-right.
     // Mod resolves to Super, so Mod+Alt+L and Super+Alt+L are the same key.
