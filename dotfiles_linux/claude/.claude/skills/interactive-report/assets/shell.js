@@ -17,14 +17,25 @@
       var h4 = document.createElement("h4");
       h4.textContent = "Contents";
       var ol = document.createElement("ol");
+      var lastTop = null;   /* the h2 <li> that h3 entries nest under */
       heads.forEach(function (h) {
         var li = document.createElement("li");
-        if (h.tagName === "H3") li.className = "sub";
         var a = document.createElement("a");
         a.href = "#" + h.id;
         a.textContent = h.textContent;
         li.appendChild(a);
-        ol.appendChild(li);
+        if (h.tagName === "H3" && lastTop) {
+          var sub = lastTop.querySelector("ol.sub");
+          if (!sub) {
+            sub = document.createElement("ol");
+            sub.className = "sub";
+            lastTop.appendChild(sub);
+          }
+          sub.appendChild(li);
+        } else {
+          ol.appendChild(li);
+          lastTop = li;
+        }
       });
       nav.appendChild(h4);
       nav.appendChild(ol);

@@ -133,7 +133,13 @@ nav.toc ol { margin: 0; padding-left: 1.2rem; }
 nav.toc li { margin: 0.28rem 0; }
 nav.toc a { text-decoration: none; }
 nav.toc a:hover { text-decoration: underline; }
-nav.toc .sub { font-size: 0.9rem; color: var(--muted); }
+nav.toc ol.sub {
+  list-style: lower-alpha;
+  margin: 0.28rem 0 0.35rem;
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
 
 /* --- callouts --- */
 .callout {
