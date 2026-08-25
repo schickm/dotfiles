@@ -253,15 +253,15 @@ layout {
     }
 
     tab-indicator {
-        // A bar across the top of the column, split into one segment per tab.
-        // Reads like a real tab strip instead of the default hairline on the
-        // left edge, which is easy to miss.
-        position "top"
-        width 8
+        // A bar down the left of the column, split into one segment per tab.
+        // Wider than the default hairline, which is easy to mistake for the
+        // focus ring.
+        position "left"
+        width 12
         gap 5
         gaps-between-tabs 4
         corner-radius 4
-        // Span the full column width so the segments are the widest possible.
+        // Span the full column height so the segments are the longest possible.
         length total-proportion=1.0
         place-within-column
         active-color "#268bd2"
