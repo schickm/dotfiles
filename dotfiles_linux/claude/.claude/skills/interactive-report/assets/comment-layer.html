@@ -1,4 +1,4 @@
-<!-- explain-diff-html comment layer. Paste verbatim immediately before </body>,
+<!-- interactive-report comment layer. Paste verbatim immediately before </body>,
      AFTER a script tag defining:
        window.__EXPLAINER_META = { sessionId: "<uuid>", repo: "<abs repo path>", bridge: "http://127.0.0.1:8790" }
      Talks to bridge.py (same skill directory). Safe when the bridge is down:
@@ -95,14 +95,14 @@
   var BRIDGE = META.bridge || "http://127.0.0.1:8790";
   var REPORT = decodeURIComponent(location.pathname);
   var container = document.querySelector(".wrap") || document.body;
-  var BLOCK_SEL = "p, pre, table, ul, ol, blockquote, .timeline, .callout, .browser-row, .quiz-q, h2, h3";
+  var BLOCK_SEL = "p, pre, table, ul, ol, blockquote, h2, h3, .callout, .fig, .q, .timeline, .browser-row";
 
   var state = { threads: [], online: false, panelOpen: false, focusThread: null, draft: null };
   var blocks = [];
 
   function collectBlocks() {
     blocks = Array.prototype.slice.call(container.querySelectorAll(BLOCK_SEL))
-      .filter(function (el) { return !el.closest(".xdh-panel"); });
+      .filter(function (el) { return !el.closest(".xdh-panel") && !el.closest("nav.toc"); });
   }
 
   function sectionIdFor(el) {
@@ -181,7 +181,7 @@
   var threadsEl = panel.querySelector(".xdh-threads");
   panel.querySelector(".xdh-close").addEventListener("click", function () { setPanel(false); });
   toggle.addEventListener("click", function () {
-    if (!state.online) { alert("Comment bridge is offline.\nStart it with:\n  python3 ~/.claude/skills/explain-diff-html/bridge/bridge.py &"); return; }
+    if (!state.online) { alert("Comment bridge is offline.\nStart it with:\n  python3 ~/.claude/skills/interactive-report/bridge/bridge.py &"); return; }
     setPanel(!state.panelOpen);
   });
   function setPanel(open) {
@@ -200,7 +200,7 @@
   container.addEventListener("mouseover", function (e) {
     if (!state.online) return;
     var block = e.target.closest && e.target.closest(BLOCK_SEL);
-    if (!block || !container.contains(block) || block.closest(".xdh-panel")) return;
+    if (!block || !container.contains(block) || block.closest(".xdh-panel") || block.closest("nav.toc")) return;
     hoverBlock = block;
     var r = block.getBoundingClientRect();
     var cr = container.getBoundingClientRect();

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Comment bridge for explain-diff-html explainers.
+"""Comment bridge for interactive-report pages.
 
 A tiny resident HTTP server (127.0.0.1 only) that receives reader comments
 from generated explainer pages and answers them by forking the Claude Code
