@@ -1,0 +1,168 @@
+#!/usr/bin/env python3
+"""Bridge between workspace-url-open and the chrome-tab-router extension.
+
+Two modes, picked from argv:
+
+  chrome-tab-router chrome-extension://<id>/ [--parent-window=N]
+      Native messaging host. Chrome spawns this when the extension calls
+      connectNative. Speaks the native messaging framing (u32 LE length + JSON)
+      on stdin/stdout and listens on $XDG_RUNTIME_DIR/chrome-tab-router.sock.
+      Each socket client sends one JSON line {url, title}; the host forwards it
+      to the extension, waits for the matching reply, writes it back as one
+      JSON line, and closes. Exits (and removes the socket) when Chrome closes
+      stdin.
+
+  chrome-tab-router open URL_OR_PATH TITLE
+      Client. A bare path becomes a file:// URL. Exit 0 when the extension
+      opened the tab, 1 when it reported an error, 2 when no host is running.
+"""
+
+import json
+import os
+import socket
+import struct
+import sys
+import threading
+from pathlib import Path
+
+SOCK = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "chrome-tab-router.sock"
+REPLY_TIMEOUT = 5.0
+
+
+# ---------------------------------------------------------------- host mode
+
+
+def read_native():
+    raw = sys.stdin.buffer.read(4)
+    if len(raw) < 4:
+        return None
+    (n,) = struct.unpack("<I", raw)
+    return json.loads(sys.stdin.buffer.read(n))
+
+
+out_lock = threading.Lock()
+
+
+def write_native(obj):
+    data = json.dumps(obj).encode()
+    with out_lock:
+        sys.stdout.buffer.write(struct.pack("<I", len(data)) + data)
+        sys.stdout.buffer.flush()
+
+
+pending = {}  # id -> (Event, [reply])
+pending_lock = threading.Lock()
+next_id = 0
+
+
+def serve_client(conn):
+    global next_id
+    try:
+        conn.settimeout(REPLY_TIMEOUT)
+        buf = b""
+        while not buf.endswith(b"\n"):
+            chunk = conn.recv(65536)
+            if not chunk:
+                break
+            buf += chunk
+        req = json.loads(buf or b"{}")
+        with pending_lock:
+            next_id += 1
+            rid = next_id
+            ev, box = threading.Event(), []
+            pending[rid] = (ev, box)
+        write_native({"id": rid, "url": req.get("url"), "title": req.get("title")})
+        if ev.wait(REPLY_TIMEOUT):
+            reply = box[0]
+        else:
+            reply = {"ok": False, "error": "timeout waiting for extension"}
+        with pending_lock:
+            pending.pop(rid, None)
+        conn.sendall(json.dumps(reply).encode() + b"\n")
+    except Exception as e:  # noqa: BLE001
+        try:
+            conn.sendall(json.dumps({"ok": False, "error": str(e)}).encode() + b"\n")
+        except OSError:
+            pass
+    finally:
+        conn.close()
+
+
+def accept_loop(srv):
+    while True:
+        try:
+            conn, _ = srv.accept()
+        except OSError:
+            return
+        threading.Thread(target=serve_client, args=(conn,), daemon=True).start()
+
+
+def host_main():
+    try:
+        SOCK.unlink()
+    except FileNotFoundError:
+        pass
+    srv = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    srv.bind(str(SOCK))
+    os.chmod(SOCK, 0o600)
+    srv.listen(8)
+    threading.Thread(target=accept_loop, args=(srv,), daemon=True).start()
+    try:
+        while True:
+            msg = read_native()
+            if msg is None:
+                break
+            with pending_lock:
+                entry = pending.get(msg.get("id"))
+            if entry:
+                entry[1].append(msg)
+                entry[0].set()
+    finally:
+        srv.close()
+        try:
+            SOCK.unlink()
+        except FileNotFoundError:
+            pass
+
+
+# -------------------------------------------------------------- client mode
+
+
+def to_url(arg):
+    if "://" in arg or arg.startswith(("about:", "chrome:", "mailto:")):
+        return arg
+    return Path(arg).resolve().as_uri()
+
+
+def open_main(target, title):
+    if not SOCK.exists():
+        return 2
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as c:
+            c.settimeout(REPLY_TIMEOUT + 1)
+            c.connect(str(SOCK))
+            c.sendall(json.dumps({"url": to_url(target), "title": title}).encode() + b"\n")
+            buf = b""
+            while not buf.endswith(b"\n"):
+                chunk = c.recv(65536)
+                if not chunk:
+                    break
+                buf += chunk
+    except OSError as e:
+        print(f"chrome-tab-router: {e}", file=sys.stderr)
+        return 2
+    reply = json.loads(buf or b"{}")
+    if reply.get("ok"):
+        return 0
+    print(f"chrome-tab-router: {reply.get('error', 'unknown error')}", file=sys.stderr)
+    return 1
+
+
+if __name__ == "__main__":
+    if len(sys.argv) >= 2 and sys.argv[1].startswith("chrome-extension://"):
+        host_main()
+    elif len(sys.argv) == 4 and sys.argv[1] == "open":
+        sys.exit(open_main(sys.argv[2], sys.argv[3]))
+    else:
+        print(__doc__, file=sys.stderr)
+        sys.exit(64)

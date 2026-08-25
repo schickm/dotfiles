@@ -8,11 +8,12 @@
 # workspace as the window the click happened in. No routing to claude-chrome
 # anymore — that's reserved for headless testing.
 #
-# Mechanism: Chrome has no CLI to target a specific window, but a URL handed
-# to a running instance opens as a new tab in the profile's last-activated
-# window. So: focus the workspace's Chrome window first (which also makes its
-# profile the last-used one), give Chrome a beat to register the activation,
-# then hand it the URL with no --profile-directory so it follows that window.
+# Mechanism: the chrome-tab-router extension (~/.config/chrome-tab-router)
+# opens the URL as a tab in the window whose active tab matches the niri
+# window title. Fallback without the extension: Chrome has no CLI to target a
+# window, but a URL handed to a running instance opens as a new tab in the
+# profile's last-activated window, so focus the workspace's Chrome window
+# first, give Chrome a beat, then hand it the URL with no --profile-directory.
 #
 # The window the click happened in is focused, so the focused niri workspace
 # IS the workspace the click came from. Floating Chrome windows are skipped
@@ -31,8 +32,23 @@ set -l win_id (niri msg --json windows | jq --argjson ws "$ws_id" \
     '[.[] | select(.app_id=="google-chrome" and .workspace_id==$ws and .is_floating==false) | .id] | first // empty')
 
 if test -n "$win_id"
-    # Chrome window on this workspace → focus it, then open the URL as a tab
-    # in it (last-activated window of the last-used profile).
+    # Preferred path: ask the chrome-tab-router extension to open the URL as
+    # a tab in that exact window, matched by its niri title. No focus change.
+    # Exit 2 means the extension/host is not running → fall through to the
+    # focus-based path below. To disable, remove the extension in
+    # chrome://extensions; this branch then silently skips itself.
+    set -l title (niri msg --json windows | jq -r --argjson w "$win_id" \
+        '.[] | select(.id==$w) | .title')
+    if chrome-tab-router open $url "$title"
+        exit 0
+    end
+
+    # Fallback when the extension is not running: focus the window, then hand
+    # Chrome the URL. Chrome opens it as a tab in its last-activated window,
+    # and on Wayland "activated" means "last received keyboard focus", so the
+    # focus change must be real. It is not real when the window is already
+    # focused (e.g. right after fuzzel-open); the router branch above exists
+    # for that case.
     niri msg action focus-window --id $win_id
     sleep 0.3
     env -u XDG_ACTIVATION_TOKEN google-chrome-stable $url

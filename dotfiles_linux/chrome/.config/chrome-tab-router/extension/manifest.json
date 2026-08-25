@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "chrome-tab-router",
+  "version": "0.1",
+  "description": "Opens URLs sent by workspace-url-open in the Chrome window on the current niri workspace.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxuv4WkDCpR3cqqsqCYbPrxUEb5nuaoiRatWt4qno28+M5CWBloFtC78FPYeStWhQaodfndY4ZKA9pl2apSG2Q5VEivHhDRrxr4aoWb74HR91YI6z8JMOWWB1jv5PqEoXzQjWQ2aS7pt30TlUqFibkt8pwuxfzGOrp+0VBPCbFDNfas8OSJ+HWDYbyd6axlMvlJmJaGGPn1SBSDB/p4S51r/qAgOBFJXUVBfQdLVWy7SW0j69eK/wIdYEx6VzsWUDp17jpCIooFjFtaLdJqUBYUnGf02IRiA0kjLRlEdrnqivJCj/JQ22YB6ReOmNqkxX7JE8uC/RlJZyUUJB8c+9PwIDAQAB",
+  "permissions": ["nativeMessaging", "tabs"],
+  "background": { "service_worker": "background.js" }
+}
