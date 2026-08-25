@@ -32,7 +32,7 @@
         lb = !git reflog show --pretty=format:'%gs ~ %gd' --date=relative | grep 'checkout:' | grep -oE '[^ ]+ ~ .*' | awk -F~ '!seen[$1]++' | head -n 10 | awk -F' ~ HEAD@{' '{printf(\"  \\033[33m%s: \\033[0m %s\\n\", substr($2, 1, length($2)-1), $1)}'
 [core]
 	editor = "kak -e 'autowrap-enable; execute-keys -with-hooks A'"
-	pager = diff-so-fancy | less --tabs=4 -RFX
+	pager = delta
 [colors]
 	ui = true
 
@@ -54,6 +54,7 @@
 	cmd = json-diff \"$LOCAL\" \"$REMOTE\"
 [merge]
         tool = meld
+	conflictStyle = zdiff3
 [mergetool]
         prompt = false
 	keepBackup = false
@@ -79,3 +80,9 @@
 	defaultBranch = main
 [rebase]
 	autosquash = true
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
+	light = true
+	side-by-side = true
