@@ -16,18 +16,25 @@ const TITLE_SUFFIX = / - Google Chrome$/;
 let port = null;
 let retryMs = 1000;
 
+// Idempotent: a second connectNative would spawn a second host process, and
+// both hosts bind the same socket path. Requests then reach one host while
+// replies go out the other port, so every client times out after the tab has
+// already opened — and workspace-url-open falls back and opens it again.
 function connect() {
+  if (port) return;
+  let p;
   try {
-    port = chrome.runtime.connectNative(HOST);
+    p = chrome.runtime.connectNative(HOST);
   } catch (e) {
     console.warn('connectNative failed', e);
     scheduleReconnect();
     return;
   }
-  port.onMessage.addListener(handle);
-  port.onDisconnect.addListener(() => {
+  port = p;
+  p.onMessage.addListener((msg) => handle(msg, p));
+  p.onDisconnect.addListener(() => {
     console.warn('host disconnected', chrome.runtime.lastError?.message);
-    port = null;
+    if (port === p) port = null;
     scheduleReconnect();
   });
   retryMs = 1000;
@@ -48,7 +55,7 @@ async function findWindow(title) {
   return null;
 }
 
-async function handle(msg) {
+async function handle(msg, from) {
   const reply = { id: msg.id, ok: false };
   try {
     const w = await findWindow(msg.title || '');
@@ -63,9 +70,10 @@ async function handle(msg) {
   } catch (e) {
     reply.error = String(e?.message || e);
   }
-  if (port) port.postMessage(reply);
+  from.postMessage(reply);
 }
 
-chrome.runtime.onStartup.addListener(connect);
-chrome.runtime.onInstalled.addListener(connect);
+// The top-level call runs on every service worker start, which already covers
+// browser startup and install/reload. onStartup/onInstalled listeners on top
+// of it produced the duplicate host described above.
 connect();
