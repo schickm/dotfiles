@@ -1,0 +1,18 @@
+[Unit]
+Description=Solaar - Logitech device manager (diverts the M520 DPI button to niri)
+Documentation=https://github.com/pwr-Solaar/Solaar
+PartOf=graphical-session.target
+After=graphical-session.target
+Requisite=graphical-session.target
+
+[Service]
+# The rule in ~/.config/solaar/rules.yaml runs `niri msg`, so this needs niri's
+# IPC socket; it is in the user manager's environment because niri runs as
+# niri.service.
+ExecCondition=/bin/sh -c '[ -n "$WAYLAND_DISPLAY" ] && [ -n "$NIRI_SOCKET" ]'
+ExecStart=/usr/bin/solaar --window=hide
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target
