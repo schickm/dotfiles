@@ -5,6 +5,7 @@ theme = "solarized_light"
     ":run-shell-command kitty @ launch --no-response --type=overlay --cwd=current tig",
     ":redraw",
     ":reload-all",
+    ":reload",
 ]
 
 # Merges into the default space menu rather than replacing it.
