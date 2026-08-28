@@ -1,5 +1,5 @@
 bind status + >git commit --amend
-bind status P !<git push --no-verify --force
+bind status P !<git push --no-verify --force-with-lease
 bind status K <sh -c 'echo "evaluate-commands -try-client $kak_client edit %(file)" | kak -p $kak_session'
 set tab-size = 4
 bind generic C >git commit
