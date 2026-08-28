@@ -1,9 +1,11 @@
 theme = "solarized_light"
 
-# Helix has no auto-reload-on-disk-change yet (helix-editor/helix#1125),
-# so this is the manual equivalent.
 [keys.normal]
-A-r = ":reload-all"
+"C-t" = [
+    ":run-shell-command kitty @ launch --no-response --type=overlay --cwd=current tig",
+    ":redraw",
+    ":reload-all",
+]
 
 # Merges into the default space menu rather than replacing it.
 # :update writes only when the buffer is modified, so mashing this
