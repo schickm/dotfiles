@@ -96,6 +96,9 @@
     },
     "cpu": {
         "format": "{usage}% ",
+        // The tooltip can only show per-core bars (the module has no
+        // tooltip-format), so click through to htop for the process list.
+        "on-click": "kitty --app-id htop htop",
         "tooltip": true
     },
     "temperature": {

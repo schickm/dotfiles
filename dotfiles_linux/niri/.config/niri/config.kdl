@@ -420,6 +420,16 @@ window-rule {
     open-floating true
 }
 
+// The htop window waybar's cpu module opens on click: floating and nearly
+// full-screen, so it reads as an overlay rather than joining the layout.
+// 0.92 leaves an even 4% margin on each side; niri centers it by default.
+window-rule {
+    match app-id=r#"^htop$"#
+    open-floating true
+    default-column-width { proportion 0.92; }
+    default-window-height { proportion 0.92; }
+}
+
 // Hide floating windows from screen sharing.
 // Floating windows render as a solid block in PipeWire screencasts
 // (screen shares) but stay fully visible on the actual screen.
