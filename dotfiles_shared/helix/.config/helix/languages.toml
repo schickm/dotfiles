@@ -40,3 +40,11 @@ auto-format = true
 name = "jsonc"
 formatter = { command = "prettierd", args = ["%{file_path_absolute}", "--trailing-comma=none"] }
 auto-format = true
+
+# Prose wraps at the viewport instead of running off the right edge.
+# Per-language soft-wrap overrides the global default, so only markdown
+# buffers get it.
+
+[[language]]
+name = "markdown"
+soft-wrap = { enable = true }
