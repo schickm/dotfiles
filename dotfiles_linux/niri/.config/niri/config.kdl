@@ -351,6 +351,11 @@ layout {
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
 
+// Move floating windows to the focused workspace on every switch
+// (niri has no native sticky windows yet: niri#932). Unfiltered, so every
+// floating window is sticky; Mod+Shift+Alt+S un-sticks one if needed.
+spawn-at-startup "niri-float-sticky"
+
 hotkey-overlay {
     // Uncomment this line to disable the "Important Hotkeys" pop-up at startup.
     skip-at-startup
@@ -528,6 +533,8 @@ binds {
     Mod+Shift+Alt+R hotkey-overlay-title="Toggle screen recording" { spawn "gpu-screen-recorder-toggle.sh"; }
     // Toggle: hide all floating windows to the "scratch" workspace, then restore them.
     Mod+Shift+Alt+H hotkey-overlay-title="Hide/show floating windows" { spawn "niri-toggle-hide-floating.sh"; }
+    // Toggle: make the focused floating window sticky (follows workspace switches).
+    Mod+Shift+Alt+S hotkey-overlay-title="Toggle sticky floating window" { spawn "niri-float-sticky" "-ipc" "toggle_sticky"; }
 
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+T hotkey-overlay-title="Open a Terminal: kitty" { spawn "kitty"; }
