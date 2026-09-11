@@ -2,15 +2,19 @@
 name: pattern-divergence-report
 description: Analyzes code for places where new code diverges from existing code's patterns.
 disable-model-invocation: true
-context: fork
 ---
 
 For your current branch, make a report of places where the newly added code diverges from existing patterns in the codebase.
 
-The end product should be an HTML page. Write the page body to a scratch file as an HTML fragment. Then read
-`~/.claude/skills/interactive-report/SKILL.md` and follow it, with:
+The end product is one HTML page. For each divergence show the new code, the existing
+pattern it departs from, and where that pattern lives.
 
-- `content` = the scratch file path
-- `title` = a title for the page
-- `slug` = `explanation-<short slug for the change>`
-- `repo` = the absolute path of the repo the change is in
+## Publish
+
+Publish the page with the Artifact tool, in this session. Only the main session holds
+the comment watch, so a page published by a subagent leaves readers' questions
+unanswered. Load the `artifact-design` skill before writing the page; the Artifact
+tool's own rules cover the file shape, theme, and embedded images.
+
+In the final message give the artifact URL, and say that this session answers comments
+sent to Claude while it runs.

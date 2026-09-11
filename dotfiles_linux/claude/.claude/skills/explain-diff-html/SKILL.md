@@ -8,24 +8,20 @@ disable-model-invocation: true
 
 Please make me a rich, interactive explanation of the specified code change.
 
-This skill decides **what the explanation says**. The `interactive-report` skill turns
-it into the published HTML page. Write the content as a fragment, then follow that
-skill.
+This skill decides **what the explanation says**. The page is published as an
+artifact; see Publish.
 
 ## Sections
 
 - **Background**: Explain the existing system relevant to this change. Explore the
   surrounding code broadly first. We don't know how much the reader already knows, so
-  give a deep background for beginners in a `<details class="skippable">`, and then a
+  give a deep background for beginners in a collapsed `<details>`, and then a
   narrow background directly relevant to the change.
 - **Intuition**: Explain the core intuition for the code change. The focus here is the
   essence, not the full details. Use concrete examples with toy data. Use figures and
   diagrams liberally.
 - **Code**: Do a high-level walkthrough of the changes to the code. Group and order
   the changes in an understandable way.
-- **Quiz**: Write five questions that test the reader's knowledge of this PR. Medium
-  difficulty: hard enough that you must understand the substance of the PR to answer
-  them, but not gotchas. The goal is to help the reader confirm that they understood.
 
 ## Writing
 
@@ -40,14 +36,10 @@ skill.
 
 ## Publish
 
-Write the page body to a scratch file as an HTML fragment. Then read
-`~/.claude/skills/interactive-report/SKILL.md` and follow it, with:
+Publish the page with the Artifact tool, in this session. Only the main session holds
+the comment watch, so a page published by a subagent leaves readers' questions
+unanswered. Load the `artifact-design` skill before writing the page; the Artifact
+tool's own rules cover the file shape, theme, and embedded images.
 
-- `content` = the scratch file path
-- `title` = a title for the page
-- `slug` = `explanation-<short slug for the change>`
-- `repo` = the absolute path of the repo the change is in
-
-That skill lists the component classes to use for callouts, figures, diagrams,
-timelines and the quiz. Follow its steps in this session. Do not send them to a
-subagent — the same session has to answer the reader's comments.
+In the final message give the artifact URL, and say that this session answers comments
+sent to Claude while it runs.
