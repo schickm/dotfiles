@@ -18,9 +18,7 @@ if [[ "$issue_url" =~ github\.com[:/]([^/]+/[^/?#]+) ]]; then
 	container=$(container_for_github_slug "${BASH_REMATCH[1]}") || container=""
 fi
 if [[ -z "$container" ]]; then
-	repo=$(workspace_containers | xargs -rn1 basename | fuzzel --dmenu --prompt "Repository: ")
-	[[ -z "$repo" ]] && exit 0
-	container="$WORKVC_BASE/$repo"
+	container=$(pick_container) || exit 0
 fi
 
 load_workspacerc "$container"
@@ -29,14 +27,17 @@ load_workspacerc "$container"
 # worktrees are created straight from it — no main worktree involved.
 [[ -f "$container/.git" ]] || { notify-send -u critical "Start Ticket Failed" "$container is not a git container"; exit 1; }
 
-# What to fork the ticket off. Deliberately origin's default branch rather than
-# local HEAD: a bare container's HEAD is left pointing at whatever branch was
-# added last (rwgps-poi's sits on a feature branch), and a local main branch
-# that a worktree has checked out can't be force-updated, so it goes stale.
-# Either would silently fork the ticket off the wrong base.
-default_branch=$(git -C "$container" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null) || default_branch=""
-default_branch=${default_branch#origin/}
-[[ -z "$default_branch" ]] && notify-send -u critical "Start Ticket Failed" "Could not resolve origin's default branch in $container" && exit 1
+# What to fork the ticket off. Asked up front, before the Claude call below,
+# so every prompt is out of the way before the one step that makes you wait.
+# origin's default branch is pinned on top of the menu and is usually the right
+# answer; the rest of the list is there for the ticket that builds on another
+# branch. pick_base_branch reports its own failures; 1 is a dismissed prompt.
+set +e
+base_ref=$(pick_base_branch "$container" "Start Ticket")
+rc=$?
+set -e
+((rc == 1)) && exit 0
+((rc != 0)) && exit 1
 
 # Use Claude to generate a short descriptive name (for workspace)
 claude_settings='{"permissions":{"allow":["Bash(gh:*)"]}}'
@@ -60,16 +61,8 @@ workspace_name=$(with_notification "Starting ticket..." "Generating workspace na
 # Create branch name by appending issue number
 branch="${workspace_name}-${issue_num}"
 
-# Create the branch off a freshly-fetched origin/<default>, then hand wt-add a
-# path plus that branch. Creating the branch up front (rather than `wt-add -b`)
-# keeps the worktree path as wt-add's first argument, which is what its closing
-# `cd` relies on — and it sets up remote tracking for free.
-cd "$container"
-git fetch origin "$default_branch"
-git branch "$branch" "origin/$default_branch"
-with_notification "Setting up worktree..." "$branch" fish -c "wt-add $branch $branch" ||
+create_worktree_branch "$container" "$base_ref" "$branch" ||
 	{
-		git branch -D "$branch" 2>/dev/null || true
 		notify-send -u critical "Start Ticket Failed" "Failed to create worktree: $branch"
 		exit 1
 	}

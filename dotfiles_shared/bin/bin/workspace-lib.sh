@@ -1,5 +1,6 @@
 #!/bin/bash
-# Shared plumbing for the workspace scripts (start-new-ticket, resume-workspace).
+# Shared plumbing for the workspace scripts (start-new-workspace, start-new-ticket,
+# resume-workspace).
 # Source it, don't execute it. From a script in this same stow package:
 #   source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
 # From anywhere else (another stow package, a hook), go through the installed
@@ -94,6 +95,117 @@ container_for_worktree() {
         done
     done
     [[ -n "$found" ]] && echo "$found"
+}
+
+# Prompt for a workspace container with fuzzel; prints its absolute path.
+# Returns 1 when the prompt is dismissed (a normal cancel, not an error).
+# --only-match rejects free text, so the result is always a real container.
+pick_container() {
+    local repo
+    repo=$(workspace_containers | xargs -rn1 basename |
+        fuzzel --dmenu --only-match --prompt "Repository: ") || return 1
+    [[ -n "$repo" ]] || return 1
+    echo "$WORKVC_BASE/$repo"
+}
+
+# Prompt for the base branch to fork new work off; prints the ref to fork from
+# (a full refs/... path, or whatever free text was typed).
+#   return 1  prompt dismissed — a normal cancel, caller should exit quietly
+#   return 2  real failure — already reported via notify-send
+#
+# The menu merges refs/heads and refs/remotes/origin into one entry per branch
+# name, newest commit first, with origin's default branch pinned on top. A name
+# that exists only locally is marked "(local)": the mark answers "is this on the
+# remote?", nothing more — an unmarked name may still resolve to its local ref.
+#
+# Resolution deliberately fetches BEFORE comparing dates: refs/remotes is only
+# as fresh as the last fetch, so "newest wins" against stale refs would pick a
+# local ref that the remote has already moved past. A tie goes to the local ref
+# (in practice the two are the same commit, so the base is identical anyway).
+pick_base_branch() {
+    local container="$1" title="${2:-Pick Base Branch}"
+
+    local default_branch
+    default_branch=$(git -C "$container" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null) || default_branch=""
+    default_branch=${default_branch#origin/}
+
+    local list
+    list=$({
+        git -C "$container" for-each-ref --format='%(committerdate:unix) %(refname:lstrip=3) r' refs/remotes/origin
+        git -C "$container" for-each-ref --format='%(committerdate:unix) %(refname:lstrip=2) l' refs/heads
+    } | awk '
+        $3 == "r" && $2 == "HEAD" { next }
+        { if (!($2 in date) || $1 > date[$2]) date[$2] = $1
+          if ($3 == "r") remote[$2] = 1 }
+        END { for (n in date) printf "%s\t%s%s\n", date[n], n, (n in remote ? "" : " (local)") }
+    ' | sort -rn | cut -f2-)
+
+    if [[ -z "$list" ]]; then
+        notify-send -u critical "$title Failed" "No branches in $(basename "$container")"
+        return 2
+    fi
+
+    # Pin the default branch on top, dropping the copy the date sort produced.
+    local menu="$list"
+    if [[ -n "$default_branch" ]]; then
+        menu=$(printf '%s\n' "$default_branch"; grep -vxF "$default_branch" <<<"$list")
+    fi
+
+    # No --only-match here: free text is how you base off a tag or a raw SHA.
+    local pick
+    pick=$(fuzzel --dmenu --prompt "Base branch: " <<<"$menu") || return 1
+    [[ -n "$pick" ]] || return 1
+    pick=${pick% (local)}
+
+    local has_remote="" has_local=""
+    git -C "$container" show-ref --verify --quiet "refs/remotes/origin/$pick" && has_remote=1
+    git -C "$container" show-ref --verify --quiet "refs/heads/$pick" && has_local=1
+
+    # Free text: not a branch at all, so it has to name some other commit-ish.
+    if [[ -z "$has_remote" && -z "$has_local" ]]; then
+        if ! git -C "$container" rev-parse --verify --quiet "$pick^{commit}" >/dev/null; then
+            notify-send -u critical "$title Failed" "Not a branch, tag or commit: $pick"
+            return 2
+        fi
+        echo "$pick"
+        return 0
+    fi
+
+    if [[ -n "$has_remote" ]]; then
+        with_notification "$title" "Fetching $pick..." \
+            git -C "$container" fetch origin "$pick" >/dev/null 2>&1 || true
+    fi
+
+    if [[ -n "$has_remote" && -n "$has_local" ]]; then
+        local remote_date local_date
+        remote_date=$(git -C "$container" log -1 --format=%ct "refs/remotes/origin/$pick")
+        local_date=$(git -C "$container" log -1 --format=%ct "refs/heads/$pick")
+        if ((remote_date > local_date)); then
+            echo "refs/remotes/origin/$pick"
+        else
+            echo "refs/heads/$pick"
+        fi
+    elif [[ -n "$has_remote" ]]; then
+        echo "refs/remotes/origin/$pick"
+    else
+        echo "refs/heads/$pick"
+    fi
+}
+
+# Create branch <name> off <base_ref>, then a worktree of the same name in the
+# container. Branch first (rather than `wt-add -b`) so the worktree path stays
+# wt-add's first argument, which is what its closing `cd` relies on — and, when
+# the base is a remote ref, it sets up remote tracking for free. Rolls the
+# branch back if the worktree fails, so a retry starts from a clean slate.
+# Returns 1 on failure; the caller reports it.
+create_worktree_branch() {
+    local container="$1" base_ref="$2" name="$3"
+    cd "$container" || return 1
+    git branch "$name" "$base_ref" || return 1
+    with_notification "Setting up worktree..." "$name" fish -c "wt-add $name $name" || {
+        git branch -D "$name" 2>/dev/null || true
+        return 1
+    }
 }
 
 # Find the container whose origin remote matches a GitHub "org/repo" slug.
@@ -290,15 +402,22 @@ unregister_claude_notification() {
 # Write the worktree's CLAUDE.local.md: the purpose text (may be multi-line)
 # followed by the container's workspace_claude_guidance output, if any.
 # Requires load_workspacerc to have run (it defines the guidance function).
+# Either part may be empty — a workspace with no stated purpose, a container
+# that opts out of guidance — so join only the parts that are actually there,
+# and write no file at all when both are empty.
 seed_claude_local_md() {
     local worktree_dir="$1" purpose="$2"
-    local guidance
+    local guidance body
     guidance=$(workspace_claude_guidance "$worktree_dir")
-    cat >"$worktree_dir/CLAUDE.local.md" <<EOF
-$purpose${guidance:+
+    if [[ -n "$purpose" && -n "$guidance" ]]; then
+        body="$purpose
 
-$guidance}
-EOF
+$guidance"
+    else
+        body="${purpose:-$guidance}"
+    fi
+    [[ -n "$body" ]] || return 0
+    printf '%s\n' "$body" >"$worktree_dir/CLAUDE.local.md"
 }
 
 # Source a container's .workspacerc and fill in defaults. Guarantees
