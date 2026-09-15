@@ -1,0 +1,53 @@
+#!/bin/bash
+set -e
+
+# Start a workspace that isn't tied to a ticket: pick a repo, pick a base
+# branch, name it. start-new-ticket's flow minus the GitHub issue — same
+# container/branch/worktree plumbing, taken from workspace-lib.sh.
+
+source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
+
+fail() {
+	notify-send -u critical "Start Workspace Failed" "$1"
+	exit 1
+}
+
+container=$(pick_container) || exit 0
+
+# A container is itself a valid git dir (its .git file points at .bare), so
+# worktrees are created straight from it — no main worktree involved.
+[[ -f "$container/.git" ]] || fail "$container is not a git container"
+
+load_workspacerc "$container"
+
+# pick_base_branch reports its own failures; 1 is just a dismissed prompt.
+set +e
+base_ref=$(pick_base_branch "$container" "Start Workspace")
+rc=$?
+set -e
+((rc == 1)) && exit 0
+((rc != 0)) && exit 1
+
+# `|| exit 0` as well as the empty check: under set -e the assignment itself
+# fails when the prompt is dismissed, which would exit non-zero.
+name=$(echo "" | fuzzel --dmenu --prompt "Workspace name: ") || exit 0
+[[ -z "$name" ]] && exit 0
+
+# The dir name becomes the niri workspace name and the repo/worktree handoff
+# slug resume-workspace splits on "/", so it can't contain slashes.
+name=$(printf %s "$name" | tr -cs 'a-zA-Z0-9._-' '-' | sed 's/^-*//; s/-*$//')
+[[ -z "$name" ]] && fail "Nothing usable left in that name"
+
+# Stop on a collision rather than adopting whatever is already there: an
+# existing worktree or branch of this name is work you didn't mean to touch.
+[[ -e "$container/$name" ]] && fail "Worktree already exists: $(basename "$container")/$name"
+git -C "$container" show-ref --verify --quiet "refs/heads/$name" &&
+	fail "Branch already exists: $name"
+
+create_worktree_branch "$container" "$base_ref" "$name" ||
+	fail "Failed to create worktree: $name"
+
+# No ticket to state, so the container's standing guidance is the whole file.
+seed_claude_local_md "$container/$name" ""
+
+resume-workspace "$(basename "$container")/$name"
