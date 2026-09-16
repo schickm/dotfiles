@@ -4,20 +4,28 @@
 # http/https/text/html default in mimeapps.list), so any app's URL opens land
 # here — including kitty, whose `open_url_with default` goes through xdg-open.
 #
-# Goal: open a clicked URL in whatever Chrome window lives on the same niri
-# workspace as the window the click happened in. No routing to claude-chrome
-# anymore — that's reserved for headless testing.
+# Goal: open a URL in whatever Chrome window lives on the same niri workspace
+# as the program that asked. No routing to claude-chrome anymore — that's
+# reserved for headless testing.
 #
-# Mechanism: Chrome has no CLI to target a window, but a URL handed to a
-# running instance opens as a new tab in the profile's last-activated window,
-# and on Wayland "activated" means "last received keyboard focus". So focus
-# the workspace's Chrome window, give Chrome a beat, then hand it the URL
-# with no --profile-directory.
+# Which workspace: the caller's, found by walking this script's parent pids
+# up to one that niri lists as a window's pid (kitty, for anything started in
+# a terminal — claude code included). That, not the focused workspace, is the
+# right one: a background agent opening a report must not land it in front
+# of whatever the user is looking at. When no ancestor is a niri window (the
+# chain is cut by a setsid, or the caller is a layer-shell launcher such as
+# fuzzel-open), the focused workspace is the caller's.
 #
-# The window the click happened in is focused, so the focused niri workspace
-# IS the workspace the click came from. Floating Chrome windows are skipped
-# (the picture-in-picture rule in niri's config makes those floating; they
-# aren't tabbed browser windows).
+# Mechanism: the chrome-tab-router extension (~/.config/chrome-tab-router)
+# opens the URL as a tab in the window whose active tab matches the niri
+# window title. No focus change, so it works for windows on workspaces that
+# aren't showing. Fallback without the extension: Chrome has no CLI to target
+# a window, but a URL handed to a running instance opens as a new tab in the
+# profile's last-activated window, so focus the target window first, give
+# Chrome a beat, then hand it the URL with no --profile-directory.
+#
+# Floating Chrome windows are skipped (the picture-in-picture rule in niri's
+# config makes those floating; they aren't tabbed browser windows).
 #
 # XDG_ACTIVATION_TOKEN is stripped everywhere so Chrome can't redeem a stale
 # token on some other window and yank focus across workspaces.
@@ -26,22 +34,43 @@ set -l url $argv[1]
 test -n "$url"; or exit 0
 
 set -l windows (niri msg --json windows)
-set -l ws_id (niri msg --json workspaces | jq '[.[] | select(.is_focused==true) | .id] | first')
+set -l workspaces (niri msg --json workspaces)
+set -l focused_ws (echo $workspaces | jq '[.[] | select(.is_focused==true) | .id] | first')
+set -l focused_win (echo $windows | jq '[.[] | select(.is_focused==true) | .id] | first // empty')
 
+# Nearest ancestor that owns a niri window decides the workspace.
+set -l ancestors
+set -l pid $fish_pid
+while test "$pid" -gt 1
+    set pid (ps -o ppid= -p $pid | string trim)
+    test -n "$pid"; or break
+    set -a ancestors $pid
+end
+set -l ws_id (echo $windows | jq --argjson anc "[$(string join , $ancestors)]" \
+    '. as $w | [$anc[] as $p | $w[] | select(.pid==$p) | .workspace_id] | first // empty')
+test -n "$ws_id"; or set ws_id $focused_ws
+
+# Chrome window on that workspace; the focused one when there are several.
 set -l win_id (echo $windows | jq --argjson ws "$ws_id" \
-    '[.[] | select(.app_id=="google-chrome" and .workspace_id==$ws and .is_floating==false) | .id] | first // empty')
+    '[.[] | select(.app_id=="google-chrome" and .workspace_id==$ws and .is_floating==false)]
+     | (map(select(.is_focused)) + .) | first | .id // empty')
 
 if test -n "$win_id"
-    # The focus change must be real: focus-window on the already-focused
-    # window is a no-op, so Chrome sees no activation and the tab lands in
-    # whichever window it last saw activated, possibly on another workspace.
-    # That's the case after a layer-shell launcher (fuzzel-open): the target
-    # Chrome window kept focus the whole time. Bounce focus through another
-    # window first — one on this workspace when there is one, else any.
-    set -l focused (echo $windows | jq '[.[] | select(.is_focused==true) | .id] | first // empty')
-    set -l other
-    if test "$focused" = "$win_id"
-        set other (echo $windows | jq --argjson ws "$ws_id" --argjson w "$win_id" \
+    # Preferred path: the extension. Exit 2 means the extension/host is not
+    # running → fall through to the focus-based path below.
+    set -l title (echo $windows | jq -r --argjson w "$win_id" '.[] | select(.id==$w) | .title')
+    if chrome-tab-router open $url "$title"
+        exit 0
+    end
+
+    # Fallback: the focus change must be real. focus-window on the
+    # already-focused window is a no-op, so Chrome sees no activation and the
+    # tab lands in whichever window it last saw activated. That's the case
+    # after a layer-shell launcher (fuzzel-open): the target Chrome window
+    # kept focus the whole time. Bounce focus through another window first —
+    # one on this workspace when there is one, else any.
+    if test "$focused_win" = "$win_id"
+        set -l other (echo $windows | jq --argjson ws "$ws_id" --argjson w "$win_id" \
             '([.[] | select(.workspace_id==$ws and .id!=$w) | .id]
               + [.[] | select(.id!=$w) | .id]) | first // empty')
         if test -n "$other"
@@ -52,9 +81,30 @@ if test -n "$win_id"
     niri msg action focus-window --id $win_id
     sleep 0.3
     env -u XDG_ACTIVATION_TOKEN google-chrome-stable $url
+    # Focusing a window on another workspace switched to it; go back.
+    if test "$ws_id" != "$focused_ws" -a -n "$focused_win"
+        sleep 0.3
+        niri msg action focus-window --id $focused_win
+    end
 else
-    # No Chrome here → open a fresh window. Tokenless windows map onto the
-    # currently focused workspace, i.e. right where the click happened.
+    # No Chrome there → open a fresh window. Tokenless windows map onto the
+    # focused workspace, so when the caller's is a different one, move the
+    # new window over once it appears (--focus false keeps the user put).
     # No --profile-directory: last-used profile, same as Chrome's default.
+    set -l before (echo $windows | jq -c '[.[] | select(.app_id=="google-chrome") | .id]')
     env -u XDG_ACTIVATION_TOKEN google-chrome-stable --new-window $url
+    test "$ws_id" != "$focused_ws"; or exit 0
+    # Workspace reference: name, else index. Index refs resolve on the
+    # focused output only, which is right whenever both are on one output.
+    set -l ws_ref (echo $workspaces | jq -r --argjson ws "$ws_id" \
+        '.[] | select(.id==$ws) | .name // .idx')
+    for i in (seq 30)
+        sleep 0.1
+        set -l new_id (niri msg --json windows | jq --argjson before "$before" \
+            '[.[] | select(.app_id=="google-chrome") | .id] - $before | first // empty')
+        if test -n "$new_id"
+            niri msg action move-window-to-workspace --window-id $new_id --focus false $ws_ref
+            break
+        end
+    end
 end

@@ -1,0 +1,7 @@
+{
+  "name": "com.schickm.chrome_tab_router",
+  "description": "Routes URLs from workspace-url-open into a specific Chrome window",
+  "path": "/home/matt/bin/chrome-tab-router",
+  "type": "stdio",
+  "allowed_origins": ["chrome-extension://aikcbelephbclpppoolammjcicigblii/"]
+}
