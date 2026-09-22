@@ -25,4 +25,4 @@ when filing tool failures; never feed raw environment dumps.
 
 ## Formatting
 
-When printing Pull requests numbers, format them as OSC 8 links so they are clickable in the terminal.
+When printing pull request numbers, write them as markdown links, e.g. `[#7106](https://github.com/org/repo/pull/7106)`. Claude Code renders markdown links as clickable terminal hyperlinks.
