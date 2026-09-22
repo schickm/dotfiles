@@ -38,7 +38,10 @@ if [[ -n "$TRANSCRIPT_PATH" && -f "$TRANSCRIPT_PATH" ]]; then
         [[ -n "$LAST_MESSAGE" ]] && break
         sleep 0.2
     done
-    LAST_MESSAGE=$(printf '%s' "$LAST_MESSAGE" | head -c 500)
+    # swaync caps a popup body at 5 lines, but Pango applies that cap per
+    # paragraph — so a multi-paragraph reply shows in full. Flatten it to one
+    # paragraph (dropping code fences) so the cap and its ellipsis kick in.
+    LAST_MESSAGE=$(printf '%s' "$LAST_MESSAGE" | head -c 500 | sed 's/```[a-z]*//g' | tr -s '[:space:]' ' ')
 fi
 [[ -z "$LAST_MESSAGE" ]] && LAST_MESSAGE="(no message)"
 
