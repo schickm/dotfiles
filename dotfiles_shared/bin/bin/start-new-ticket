@@ -11,15 +11,14 @@ issue_url=$(echo "" | fuzzel --dmenu --prompt "GitHub issue URL: ")
 issue_num=$(echo "$issue_url" | grep -oE '[0-9]+$')
 [[ -z "$issue_num" ]] && notify-send -u critical "Start Ticket Failed" "Could not extract issue number from URL" && exit 1
 
-# Pick the workspace container: infer it from the URL's org/repo slug by
-# matching each container's origin remote; fall back to a picker.
-container=""
+# Pick the workspace container. The one inferred from the URL's org/repo slug
+# (matched against each container's origin remote) is pinned on top, so Enter
+# confirms it; the issue may still belong in another repo's worktree.
+inferred=""
 if [[ "$issue_url" =~ github\.com[:/]([^/]+/[^/?#]+) ]]; then
-	container=$(container_for_github_slug "${BASH_REMATCH[1]}") || container=""
+	inferred=$(container_for_github_slug "${BASH_REMATCH[1]}") || inferred=""
 fi
-if [[ -z "$container" ]]; then
-	container=$(pick_container) || exit 0
-fi
+container=$(pick_container "$inferred") || exit 0
 
 load_workspacerc "$container"
 
@@ -74,6 +73,8 @@ $issue_url"
 # Work has started: move the ticket to In Progress on every project board
 # tracking it. Backgrounded — board updates must never delay the workspace.
 github-issue-set-status "$issue_url" "In Progress" &>/dev/null &
+# Add (not replace) — other assignees on the ticket stay put.
+gh issue edit "$issue_url" --add-assignee @me &>/dev/null &
 
 # Prompt to launch workspace
 action=$(notify-send --wait --action="yes=Yes" --action="no=No" "Workspace Ready" "Launch workspace $branch?")

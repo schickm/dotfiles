@@ -98,12 +98,17 @@ container_for_worktree() {
 }
 
 # Prompt for a workspace container with fuzzel; prints its absolute path.
-# Returns 1 when the prompt is dismissed (a normal cancel, not an error).
-# --only-match rejects free text, so the result is always a real container.
+# An optional container path is pinned on top (so Enter picks it); the rest
+# are sorted by name. Returns 1 when the prompt is dismissed (a normal
+# cancel, not an error). --only-match rejects free text, so the result is
+# always a real container.
 pick_container() {
-    local repo
-    repo=$(workspace_containers | xargs -rn1 basename |
-        fuzzel --dmenu --only-match --prompt "Repository: ") || return 1
+    local preferred="${1:+$(basename "$1")}" repo
+    repo=$({
+        [[ -n "$preferred" ]] && echo "$preferred"
+        workspace_containers | xargs -rn1 basename | sort -f |
+            grep -vxF "${preferred:-/}"
+    } | fuzzel --dmenu --only-match --prompt "Repository: ") || return 1
     [[ -n "$repo" ]] || return 1
     echo "$WORKVC_BASE/$repo"
 }
