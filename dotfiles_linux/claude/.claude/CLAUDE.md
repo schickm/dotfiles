@@ -25,4 +25,8 @@ when filing tool failures; never feed raw environment dumps.
 
 ## Formatting
 
-When printing pull request numbers, write them as markdown links, e.g. `[#7106](https://github.com/org/repo/pull/7106)`. Claude Code renders markdown links as clickable terminal hyperlinks.
+Every pull request or issue number shown to me must be a markdown link — in prose, tables, lists, and headings, and whether the number came from GitHub, logs, JSON, or other tool output. Claude Code renders markdown links as clickable terminal hyperlinks.
+
+- Format: `[#7106](https://github.com/<owner>/<repo>/pull/7106)`; use `/issues/` for issues.
+- Resolve `<owner>/<repo>` from the data (a `repo` field, a git remote) or the current project. If you can't resolve it, ask — don't print a bare number.
+- A bare `#1234` or `PR 1234` in a reply is a mistake. Scan for them before sending.
