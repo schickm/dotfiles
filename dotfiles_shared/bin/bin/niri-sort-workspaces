@@ -1,9 +1,9 @@
 #!/bin/bash
 # Gather niri workspaces into contiguous per-repo groups.
 #
-# Workspace names are derived from worktree dir names (resume-workspace
+# Workspace names are derived from worktree dir names (resume-worktree
 # passes workspace_name_for's output to niri-create-workspace), so scanning
-# the workspace containers on disk maps each workspace to its repo — same
+# the repo containers on disk maps each workspace to its repo — same
 # trick as waybar-workspace-colors.
 #
 # This is a stable gather, not a full sort, so manual ordering survives:
@@ -21,7 +21,7 @@
 #   -n  dry-run: print the moves without performing them
 set -e
 
-source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
+source "$(dirname "$(readlink -f "$0")")/worktree-lib.sh"
 
 dry_run=0
 [[ "$1" == "-n" ]] && dry_run=1
@@ -31,7 +31,7 @@ dry_run=0
 # found in two containers is ambiguous and left alone rather than gathered to
 # whichever repo wins.
 declare -A repo_of
-for container in $(workspace_containers); do
+for container in $(repo_containers); do
     for dir in "$container"/*/; do
         dir="${dir%/}"
         [[ -e "$dir/.git" ]] || continue

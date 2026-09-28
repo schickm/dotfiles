@@ -1,34 +1,34 @@
 #!/bin/bash
-# Shared plumbing for the workspace scripts (start-new-workspace, start-new-ticket,
-# resume-workspace).
+# Shared plumbing for the worktree scripts (start-new-worktree, start-new-ticket,
+# resume-worktree).
 # Source it, don't execute it. From a script in this same stow package:
-#   source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
+#   source "$(dirname "$(readlink -f "$0")")/worktree-lib.sh"
 # From anywhere else (another stow package, a hook), go through the installed
 # copy instead — the sibling form breaks as soon as the caller moves packages:
-#   source "$HOME/bin/workspace-lib.sh"
+#   source "$HOME/bin/worktree-lib.sh"
 #
-# Convention: ~/workvc/<repo>/ is a "workspace container" — machine-local
-# support files (.wt-addrc, .workspacerc, certs, ...) at the top level, git
+# Convention: ~/workvc/<repo>/ is a "repo container" — machine-local
+# support files (.wt-addrc, .worktreerc, certs, ...) at the top level, git
 # worktrees as subdirectories (the git dir itself may be a bare repo in
-# .bare). A directory counts as a container when it has a .workspacerc or
+# .bare). A directory counts as a container when it has a .worktreerc or
 # .wt-addrc.
 #
-# .workspacerc (optional, sourced bash) may define:
-#   WORKSPACE_COLOR         background color (CSS hex) for this repo's
+# .worktreerc (optional, sourced bash) may define:
+#   REPO_COLOR              background color (CSS hex) for this repo's
 #                           workspaces in waybar — pick something dark enough
 #                           for white text (default: hashed from repo name,
-#                           see workspace_color)
-#   workspace_urls <dir>    echo URLs (one per line) to open in the
-#                           workspace's Chrome, e.g. a dev-server hotlink
-#   workspace_launch <dir>  launch the workspace's terminal windows
+#                           see repo_color)
+#   worktree_urls <dir>     echo URLs (one per line) to open in the
+#                           worktree's Chrome, e.g. a dev-server hotlink
+#   worktree_launch <dir>   launch the worktree's terminal windows
 #                           (default: claude + editor)
-#   workspace_claude_guidance <dir>
+#   worktree_claude_guidance <dir>
 #                           echo repo-specific standing guidance appended to
 #                           a new worktree's CLAUDE.local.md (default: use
 #                           the Chrome MCP for in-browser testing; define an
 #                           empty function to omit)
 #
-# workspace_launch (and the Chrome spawn) run inside a fresh kernel session
+# worktree_launch (and the Chrome spawn) run inside a fresh kernel session
 # under niri-spawn-on-workspace: every window the launch's process tree opens
 # is moved onto the workspace even if focus has moved elsewhere by the time
 # the app gets around to mapping it. Recipes can keep plain `nohup ... &`
@@ -52,12 +52,12 @@ with_notification() {
     return $exit_code
 }
 
-# List workspace container dirs (absolute paths, one per line).
-workspace_containers() {
+# List repo container dirs (absolute paths, one per line).
+repo_containers() {
     local dir
     for dir in "$WORKVC_BASE"/*/; do
         dir="${dir%/}"
-        if [[ -f "$dir/.workspacerc" || -f "$dir/.wt-addrc" ]]; then
+        if [[ -f "$dir/.worktreerc" || -f "$dir/.wt-addrc" ]]; then
             echo "$dir"
         fi
     done
@@ -85,7 +85,7 @@ workspace_name_for() {
 container_for_worktree() {
     local target="$1" container dir found=""
     [[ -n "$target" ]] || return 1
-    for container in $(workspace_containers); do
+    for container in $(repo_containers); do
         for dir in "$container"/*/; do
             dir="${dir%/}"
             [[ -e "$dir/.git" ]] || continue
@@ -97,7 +97,7 @@ container_for_worktree() {
     [[ -n "$found" ]] && echo "$found"
 }
 
-# Prompt for a workspace container with fuzzel; prints its absolute path.
+# Prompt for a repo container with fuzzel; prints its absolute path.
 # An optional container path is pinned on top (so Enter picks it); the rest
 # are sorted by name. Returns 1 when the prompt is dismissed (a normal
 # cancel, not an error). --only-match rejects free text, so the result is
@@ -106,7 +106,7 @@ pick_container() {
     local preferred="${1:+$(basename "$1")}" repo
     repo=$({
         [[ -n "$preferred" ]] && echo "$preferred"
-        workspace_containers | xargs -rn1 basename | sort -f |
+        repo_containers | xargs -rn1 basename | sort -f |
             grep -vxF "${preferred:-/}"
     } | fuzzel --dmenu --only-match --prompt "Repository: ") || return 1
     [[ -n "$repo" ]] || return 1
@@ -217,7 +217,7 @@ create_worktree_branch() {
 container_for_github_slug() {
     local slug="$1" container remote
     local slug_lc="${slug,,}"
-    for container in $(workspace_containers); do
+    for container in $(repo_containers); do
         remote=$(git -C "$container" remote get-url origin 2>/dev/null) || continue
         local remote_lc="${remote,,}"
         if [[ "$remote_lc" == *[:/]"$slug_lc" || "$remote_lc" == *[:/]"$slug_lc".git ]]; then
@@ -239,15 +239,15 @@ palette_color_for() {
     echo "${palette[hash % ${#palette[@]}]}"
 }
 
-# Print the container's waybar background color: WORKSPACE_COLOR from its
-# .workspacerc, or a stable fallback picked from a palette by hashing the
+# Print the container's waybar background color: REPO_COLOR from its
+# .worktreerc, or a stable fallback picked from a palette by hashing the
 # repo name (so unconfigured repos still get consistent, distinct colors).
-workspace_color() {
+repo_color() {
     local container="$1" color=""
-    if [[ -f "$container/.workspacerc" ]]; then
-        color=$(unset WORKSPACE_COLOR
-                source "$container/.workspacerc" >/dev/null 2>&1
-                echo "${WORKSPACE_COLOR:-}")
+    if [[ -f "$container/.worktreerc" ]]; then
+        color=$(unset REPO_COLOR
+                source "$container/.worktreerc" >/dev/null 2>&1
+                echo "${REPO_COLOR:-}")
     fi
     [[ -z "$color" ]] && color=$(palette_color_for "$(basename "$container")")
     echo "$color"
@@ -292,20 +292,20 @@ workspace_name_for_window() {
     return 0
 }
 
-# Print the workspace container a working directory lives in; empty when the
+# Print the repo container a working directory lives in; empty when the
 # path isn't inside one.
 container_for_cwd() {
     local cwd="${1:-}"
     case "$cwd" in "$WORKVC_BASE"/*) ;; *) return 0 ;; esac
     local rel="${cwd#"$WORKVC_BASE"/}"
     local container="$WORKVC_BASE/${rel%%/*}"
-    [[ -f "$container/.workspacerc" || -f "$container/.wt-addrc" ]] && echo "$container"
+    [[ -f "$container/.worktreerc" || -f "$container/.wt-addrc" ]] && echo "$container"
     return 0
 }
 
 # Workspace label derived from a working directory: the worktree's workspace
-# name for paths inside a workspace container (matching the niri workspace
-# names resume-workspace assigns, see workspace_name_for), otherwise the
+# name for paths inside a repo container (matching the niri workspace
+# names resume-worktree assigns, see workspace_name_for), otherwise the
 # directory's basename.
 workspace_name_from_cwd() {
     local cwd="${1:-}" container
@@ -353,7 +353,7 @@ resolve_workspace_context() {
         container=$(container_for_worktree "$WS_NAME") || container=""
     fi
     if [[ -n "$container" ]]; then
-        WS_COLOR=$(workspace_color "$container")
+        WS_COLOR=$(repo_color "$container")
     else
         WS_COLOR=$(palette_color_for "$WS_NAME")
     fi
@@ -405,15 +405,15 @@ unregister_claude_notification() {
 
 # seed_claude_local_md <worktree_dir> <purpose>
 # Write the worktree's CLAUDE.local.md: the purpose text (may be multi-line)
-# followed by the container's workspace_claude_guidance output, if any.
-# Requires load_workspacerc to have run (it defines the guidance function).
-# Either part may be empty — a workspace with no stated purpose, a container
+# followed by the container's worktree_claude_guidance output, if any.
+# Requires load_worktreerc to have run (it defines the guidance function).
+# Either part may be empty — a worktree with no stated purpose, a container
 # that opts out of guidance — so join only the parts that are actually there,
 # and write no file at all when both are empty.
 seed_claude_local_md() {
     local worktree_dir="$1" purpose="$2"
     local guidance body
-    guidance=$(workspace_claude_guidance "$worktree_dir")
+    guidance=$(worktree_claude_guidance "$worktree_dir")
     if [[ -n "$purpose" && -n "$guidance" ]]; then
         body="$purpose
 
@@ -425,28 +425,28 @@ $guidance"
     printf '%s\n' "$body" >"$worktree_dir/CLAUDE.local.md"
 }
 
-# Source a container's .workspacerc and fill in defaults. Guarantees
-# workspace_urls / workspace_launch are defined.
-load_workspacerc() {
+# Source a container's .worktreerc and fill in defaults. Guarantees
+# worktree_urls / worktree_launch are defined.
+load_worktreerc() {
     local container="$1"
-    unset -f workspace_urls workspace_launch workspace_claude_guidance 2>/dev/null || true
+    unset -f worktree_urls worktree_launch worktree_claude_guidance 2>/dev/null || true
 
-    if [[ -f "$container/.workspacerc" ]]; then
-        source "$container/.workspacerc"
+    if [[ -f "$container/.worktreerc" ]]; then
+        source "$container/.worktreerc"
     fi
 
-    if ! declare -F workspace_urls >/dev/null; then
-        workspace_urls() { :; }
+    if ! declare -F worktree_urls >/dev/null; then
+        worktree_urls() { :; }
     fi
 
-    if ! declare -F workspace_claude_guidance >/dev/null; then
-        workspace_claude_guidance() {
+    if ! declare -F worktree_claude_guidance >/dev/null; then
+        worktree_claude_guidance() {
             echo "Be sure to use the Chrome MCP for anything that would benefit from in-browser testing / validation."
         }
     fi
 
-    if ! declare -F workspace_launch >/dev/null; then
-        workspace_launch() {
+    if ! declare -F worktree_launch >/dev/null; then
+        worktree_launch() {
             nohup env DISABLE_INSTALLATION_CHECKS=1 DISABLE_AUTOUPDATER=1 kitty-run claude --dangerously-skip-permissions &>/dev/null &
             nohup kitty-run k &>/dev/null &
         }

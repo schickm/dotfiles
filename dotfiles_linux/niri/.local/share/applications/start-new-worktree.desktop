@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=Start New Workspace
-Exec=start-new-workspace
+Name=Start New Worktree
+Exec=start-new-worktree
 Type=Application
 Terminal=false
 Keywords=rwgps;worktree;

@@ -58,8 +58,8 @@ CWD_DISPLAY="${CWD/#$HOME/\~}"
 # resolve_workspace_context sets WS_WINDOW_ID / WS_NAME / WS_COLOR / WS_TAG.
 # The lib ships in the shared bin package, so go through ~/bin rather than
 # resolving it next to this script (which lives in the claude package).
-WORKSPACE_LIB="$HOME/bin/workspace-lib.sh"
-source "$WORKSPACE_LIB"
+WORKTREE_LIB="$HOME/bin/worktree-lib.sh"
+source "$WORKTREE_LIB"
 resolve_workspace_context "$CWD"
 NIRI_ID="$WS_WINDOW_ID"
 
@@ -86,7 +86,7 @@ export CLAUDE_BODY="$BODY"
 export CLAUDE_NIRI_ID="$NIRI_ID"
 export CLAUDE_CATEGORY="${WS_NAME:+ws-$WS_NAME}"
 export CLAUDE_STOP_ID_FILE="${XDG_RUNTIME_DIR:-/tmp}/claude-stop-ids/claude-stop${WS_NAME:+-$WS_NAME}"
-export CLAUDE_LIB="$WORKSPACE_LIB"
+export CLAUDE_LIB="$WORKTREE_LIB"
 setsid bash -c '
     source "$CLAUDE_LIB"
     mkdir -p "$(dirname "$CLAUDE_STOP_ID_FILE")" 2>/dev/null || true

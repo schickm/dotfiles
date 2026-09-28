@@ -35,7 +35,7 @@ esac
 
 # --- Workspace context (sets WS_WINDOW_ID / WS_NAME / WS_COLOR / WS_TAG) ---
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
-source "$HOME/bin/workspace-lib.sh"
+source "$HOME/bin/worktree-lib.sh"
 resolve_workspace_context "$CWD"
 
 SUMMARY="Permission: $TOOL_NAME"

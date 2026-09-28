@@ -1,11 +1,11 @@
 #!/bin/bash
 set -e
 
-source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
+source "$(dirname "$(readlink -f "$0")")/worktree-lib.sh"
 
 # Internal mode: the whole app-launch phase, re-executed by the main flow
 # under niri-spawn-on-workspace so that Chrome, the terminals, and anything a
-# .workspacerc workspace_launch spawns share one fresh session — the watcher
+# .worktreerc worktree_launch spawns share one fresh session — the watcher
 # then routes their windows to the workspace even if focus has moved on.
 # Args: <repo>/<worktree> [chrome-urls...]
 if [[ "${1:-}" == "--spawn-apps" ]]; then
@@ -18,10 +18,10 @@ if [[ "${1:-}" == "--spawn-apps" ]]; then
     worktree_dir="$container/$worktree"
     ws_name=$(workspace_name_for "$container" "$worktree")
 
-    load_workspacerc "$container"
+    load_worktreerc "$container"
     cd "$worktree_dir"
 
-    # Launch this workspace's Chrome window from the regular work profile
+    # Launch this worktree's Chrome window from the regular work profile
     # (claude-chrome is now reserved for headless testing). The window comes
     # from the already-running Chrome instance, so it escapes
     # niri-spawn-on-workspace's session matching — snapshot window ids first
@@ -45,8 +45,8 @@ if [[ "${1:-}" == "--spawn-apps" ]]; then
         done
     ) &>/dev/null &
 
-    # Launch terminal windows (per-repo recipe from .workspacerc, or the default)
-    workspace_launch "$worktree_dir"
+    # Launch terminal windows (per-repo recipe from .worktreerc, or the default)
+    worktree_launch "$worktree_dir"
     exit 0
 fi
 
@@ -56,7 +56,7 @@ if [[ -n "$1" ]]; then
     selected="$1"
     issue_url="$2"
 else
-    # Interactive mode: prompt user to select a workspace across all
+    # Interactive mode: prompt user to select a worktree across all
     # containers, sorted by how recently anything inside each worktree
     # changed (most recent first). Heavy/churny dirs are pruned so the mtime
     # scan is fast AND reflects actual code work: node_modules/dist/build are
@@ -65,7 +65,7 @@ else
     # which would otherwise float whichever workspace you last browsed in to
     # the top.
     worktrees=$(
-        for container in $(workspace_containers); do
+        for container in $(repo_containers); do
             repo=$(basename "$container")
             for dir in "$container"/*/; do
                 [[ -e "$dir/.git" ]] || continue
@@ -78,7 +78,7 @@ else
             done
         done | sort -rn | cut -f2-
     )
-    selected=$(echo "$worktrees" | fuzzel --dmenu --prompt "Resume workspace: ")
+    selected=$(echo "$worktrees" | fuzzel --dmenu --prompt "Resume worktree: ")
     [[ -z "$selected" ]] && exit 0
 fi
 
@@ -88,13 +88,13 @@ container="$WORKVC_BASE/$repo"
 worktree_dir="$container/$worktree"
 ws_name=$(workspace_name_for "$container" "$worktree")
 
-[[ -d "$worktree_dir" ]] || { notify-send -u critical "Resume Workspace Failed" "No such worktree: $selected"; exit 1; }
+[[ -d "$worktree_dir" ]] || { notify-send -u critical "Resume Worktree Failed" "No such worktree: $selected"; exit 1; }
 
-load_workspacerc "$container"
+load_worktreerc "$container"
 cd "$worktree_dir"
 
 # Look up the PR for the current branch
-pr_url=$(with_notification "Resuming workspace..." "Looking up pull request..." \
+pr_url=$(with_notification "Resuming worktree..." "Looking up pull request..." \
     gh pr view --json url -q .url 2>/dev/null || true)
 
 # Create niri workspace with the descriptive name (no issue number); main
@@ -104,12 +104,12 @@ niri-create-workspace "$ws_name"
 # Refresh waybar's per-repo workspace colors (a new worktree has no rule yet)
 waybar-workspace-colors || true
 
-# Chrome opens the repo's own URLs (from the .workspacerc workspace_urls
+# Chrome opens the repo's own URLs (from the .worktreerc worktree_urls
 # hook, e.g. a dev-server hotlink) plus issue/PR if present.
 chrome_urls=()
 while IFS= read -r url; do
     [[ -n "$url" ]] && chrome_urls+=("$url")
-done < <(workspace_urls "$worktree_dir")
+done < <(worktree_urls "$worktree_dir")
 [[ -n "$issue_url" ]] && chrome_urls+=("$issue_url")
 [[ -n "$pr_url" ]] && chrome_urls+=("$pr_url")
 

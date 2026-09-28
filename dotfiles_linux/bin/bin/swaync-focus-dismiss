@@ -91,7 +91,7 @@ TITLE_RE = re.compile(r"^(?P<name>.+?) \([^)]+\) - .*Slack$")
 
 RUNTIME_DIR = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp"))
 # Where the Claude Code hooks register <notification id> -> <niri window id>
-# (see register_claude_notification in workspace-lib.sh).
+# (see register_claude_notification in worktree-lib.sh).
 CLAUDE_REGISTRY = RUNTIME_DIR / "claude-notifications"
 # Where swaync-slack-record registers <notification id> -> <summary>.
 SLACK_REGISTRY = RUNTIME_DIR / "swaync-slack-notifications"

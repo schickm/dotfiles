@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Automatically clean up git worktrees whose GitHub PRs have been merged,
-# across every workspace container in ~/workvc (see workspace-lib.sh).
+# across every repo container in ~/workvc (see worktree-lib.sh).
 # Exits non-zero if any worktree has uncommitted or unmerged work.
 # Usage: github-worktree-cleanup.sh [--dry-run]
 
-source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
+source "$(dirname "$(readlink -f "$0")")/worktree-lib.sh"
 
 dry_run=0
 if [ "${1:-}" = "--dry-run" ] || [ "${1:-}" = "-n" ]; then
@@ -32,7 +32,7 @@ is_excluded() {
     return 1
 }
 
-# Niri workspaces are named after worktree dir basenames (resume-workspace /
+# Niri workspaces are named after worktree dir basenames (resume-worktree /
 # niri-create-workspace; main worktrees get a repo prefix via
 # workspace_name_for, but those are excluded from cleanup anyway), so a
 # same-named workspace with windows means the worktree's apps are still
@@ -163,9 +163,9 @@ cleanup_repo() {
     done < <(git worktree list --porcelain && echo "")
 }
 
-containers=$(workspace_containers)
+containers=$(repo_containers)
 if [ -z "$containers" ]; then
-    echo "ERROR: no workspace containers found under $WORKVC_BASE" >&2
+    echo "ERROR: no repo containers found under $WORKVC_BASE" >&2
     exit 1
 fi
 

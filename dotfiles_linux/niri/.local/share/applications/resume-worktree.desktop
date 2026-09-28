@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=Resume Workspace
-Exec=resume-workspace
+Name=Resume Worktree
+Exec=resume-worktree
 Type=Application
 Terminal=false
 Keywords=rwgps;worktree;

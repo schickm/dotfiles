@@ -57,7 +57,7 @@ LOG_MAX_BYTES=524288
 mkdir -p "$STATE_DIR" "$(dirname "$LOG_FILE")" 2>/dev/null || true
 
 # Shared kitty/niri window resolution (resolve_claude_window_id).
-source "$(dirname "$(readlink -f "$0")")/workspace-lib.sh"
+source "$(dirname "$(readlink -f "$0")")/worktree-lib.sh"
 
 log() {
     printf '%s %s\n' "$(date '+%F %T')" "$*" >> "$LOG_FILE" 2>/dev/null || true
