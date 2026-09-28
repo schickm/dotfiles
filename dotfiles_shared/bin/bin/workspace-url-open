@@ -18,11 +18,20 @@
 #
 # Mechanism: the chrome-tab-router extension (~/.config/chrome-tab-router)
 # opens the URL as a tab in the window whose active tab matches the niri
-# window title. No focus change, so it works for windows on workspaces that
-# aren't showing. Fallback without the extension: Chrome has no CLI to target
-# a window, but a URL handed to a running instance opens as a new tab in the
-# profile's last-activated window, so focus the target window first, give
-# Chrome a beat, then hand it the URL with no --profile-directory.
+# window title. That needs no focus change, so it works for windows on
+# workspaces that aren't showing. Fallback without the extension: Chrome has
+# no CLI to target a window, but a URL handed to a running instance opens as
+# a new tab in the profile's last-activated window, so focus the target
+# window first, give Chrome a beat, then hand it the URL with no
+# --profile-directory.
+#
+# Whether Chrome then keeps (or takes) focus depends on who asked. The caller
+# window is the focused one — a link clicked in Slack, a command typed in the
+# focused terminal — or there is no caller window (a launcher): the user is
+# waiting for the page, so the Chrome window gets focus. Otherwise the caller
+# is a window the user isn't in, typically a background agent's terminal, and
+# focus stays where it is — whether that terminal is on another workspace or
+# right beside the window the user is reading.
 #
 # Floating Chrome windows are skipped (the picture-in-picture rule in niri's
 # config makes those floating; they aren't tabbed browser windows).
@@ -38,7 +47,8 @@ set -l workspaces (niri msg --json workspaces)
 set -l focused_ws (echo $workspaces | jq '[.[] | select(.is_focused==true) | .id] | first')
 set -l focused_win (echo $windows | jq '[.[] | select(.is_focused==true) | .id] | first // empty')
 
-# Nearest ancestor that owns a niri window decides the workspace.
+# Nearest ancestor that owns a niri window is the caller; its workspace is
+# where the URL goes.
 set -l ancestors
 set -l pid $fish_pid
 while test "$pid" -gt 1
@@ -46,9 +56,18 @@ while test "$pid" -gt 1
     test -n "$pid"; or break
     set -a ancestors $pid
 end
-set -l ws_id (echo $windows | jq --argjson anc "[$(string join , $ancestors)]" \
-    '. as $w | [$anc[] as $p | $w[] | select(.pid==$p) | .workspace_id] | first // empty')
+set -l caller (echo $windows | jq -r --argjson anc "[$(string join , $ancestors)]" \
+    '. as $w | [$anc[] as $p | $w[] | select(.pid==$p)] | first // empty
+     | "\(.id) \(.workspace_id)"' | string split ' ')
+set -l caller_win $caller[1]
+set -l ws_id $caller[2]
 test -n "$ws_id"; or set ws_id $focused_ws
+
+# Chrome gets focus when the user is waiting for the page (see the header).
+set -l take_focus 0
+if test -z "$caller_win" -o "$caller_win" = "$focused_win"
+    set take_focus 1
+end
 
 # Chrome window on that workspace; the focused one when there are several.
 set -l win_id (echo $windows | jq --argjson ws "$ws_id" \
@@ -60,6 +79,21 @@ if test -n "$win_id"
     # running → fall through to the focus-based path below.
     set -l title (echo $windows | jq -r --argjson w "$win_id" '.[] | select(.id==$w) | .title')
     if chrome-tab-router open $url "$title"
+        if test $take_focus = 1
+            niri msg action focus-window --id $win_id
+        else if test -n "$focused_win"
+            # Chrome activates the window it put the tab in whenever another
+            # Chrome window holds focus: the focused client gets valid
+            # xdg-activation tokens, so niri obeys — and yanks the user to a
+            # workspace they weren't on. Watch for that and put focus back.
+            for i in (seq 5)
+                sleep 0.1
+                set -l now (niri msg --json windows | jq '[.[] | select(.is_focused) | .id] | first // empty')
+                test "$now" != "$focused_win"; or continue
+                niri msg action focus-window --id $focused_win
+                break
+            end
+        end
         exit 0
     end
 
@@ -81,8 +115,9 @@ if test -n "$win_id"
     niri msg action focus-window --id $win_id
     sleep 0.3
     env -u XDG_ACTIVATION_TOKEN google-chrome-stable $url
-    # Focusing a window on another workspace switched to it; go back.
-    if test "$ws_id" != "$focused_ws" -a -n "$focused_win"
+    # The focus change was only to steer Chrome; undo it unless Chrome is
+    # meant to have focus (and switch back from another workspace).
+    if test $take_focus = 0 -a -n "$focused_win"
         sleep 0.3
         niri msg action focus-window --id $focused_win
     end
