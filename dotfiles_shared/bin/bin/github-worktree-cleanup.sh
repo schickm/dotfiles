@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Automatically clean up git worktrees whose GitHub PRs have been merged,
+# or that have no PR and no commits beyond the main branch,
 # across every repo container in ~/workvc (see worktree-lib.sh).
 # Exits non-zero if any worktree has uncommitted or unmerged work.
 # Usage: github-worktree-cleanup.sh [--dry-run]
@@ -114,41 +115,61 @@ cleanup_repo() {
                 open_prs=$(gh pr list --repo "$github_repo" --state open --head "$current_branch" --json number --jq 'length' 2>/dev/null || echo "0")
                 merged_prs=$(gh pr list --repo "$github_repo" --state merged --head "$current_branch" --json number --jq 'length' 2>/dev/null || echo "0")
 
+                # A branch with no PR and no commits beyond main holds no work
+                # of its own (a scratch or abandoned worktree), so it is as
+                # safe to remove as a merged one.
+                no_pr_empty=0
+                unpushed=""
                 if [ "$open_prs" -eq 0 ] && [ "$merged_prs" -eq 0 ]; then
-                    # No PR found — skip immediately, noting any local divergence
-                    unpushed=$(git rev-list --count "origin/$main_branch..$current_branch" 2>/dev/null || echo "0")
-                    if [ "$unpushed" -gt 0 ]; then
+                    unpushed=$(git rev-list --count "origin/$main_branch..$current_branch" 2>/dev/null) || unpushed=""
+                    [ "$unpushed" = "0" ] && no_pr_empty=1
+                fi
+
+                if [ "$open_prs" -eq 0 ] && [ "$merged_prs" -eq 0 ] && [ "$no_pr_empty" -eq 0 ]; then
+                    if [ -n "$unpushed" ]; then
                         echo "  Skipping $current_branch (no PR found, $unpushed commit(s) not in $main_branch)"
                     else
-                        echo "  Skipping $current_branch (no PR found)"
+                        echo "  ERROR: could not compare $current_branch with origin/$main_branch, skipping" >&2
+                        had_errors=1
                     fi
                 elif [ "$open_prs" -gt 0 ]; then
                     echo "  Skipping $current_branch (PR is open)"
                 elif workspace_has_windows "$local_dir_name"; then
                     echo "  Skipping $current_branch (niri workspace still has windows)"
                 elif [ -n "$(git -C "$current_path" status --porcelain 2>/dev/null)" ]; then
-                    echo "  ERROR: $current_path has uncommitted or untracked changes, skipping" >&2
-                    had_errors=1
+                    if [ "$no_pr_empty" -eq 1 ]; then
+                        # Without a PR, local changes are work in progress,
+                        # not leftovers — skip quietly rather than error.
+                        echo "  Skipping $current_branch (no PR found, has uncommitted or untracked changes)"
+                    else
+                        echo "  ERROR: $current_path has uncommitted or untracked changes, skipping" >&2
+                        had_errors=1
+                    fi
                 else
-                    # PR is merged — check for unpushed local commits. Compare
-                    # by patch (git cherry) rather than ancestry: squash- and
-                    # rebase-merges land the changes in main under different
-                    # SHAs, so rev-list would flag them forever.
-                    unpushed=$(git cherry "origin/$main_branch" "$current_branch" 2>/dev/null | grep -c '^+')
+                    if [ "$no_pr_empty" -eq 1 ]; then
+                        reason="no PR, no commits beyond $main_branch"
+                    else
+                        reason="PR merged"
+                        # PR is merged — check for unpushed local commits. Compare
+                        # by patch (git cherry) rather than ancestry: squash- and
+                        # rebase-merges land the changes in main under different
+                        # SHAs, so rev-list would flag them forever.
+                        unpushed=$(git cherry "origin/$main_branch" "$current_branch" 2>/dev/null | grep -c '^+')
+                    fi
                     if [ "$unpushed" -gt 0 ]; then
                         echo "  ERROR: $current_branch has $unpushed local commit(s) whose changes are not in $main_branch, skipping (PR merged but local commits may be lost)" >&2
                         had_errors=1
                     elif [ "$dry_run" -eq 1 ]; then
-                        echo "  Would remove worktree $current_path and branch $current_branch (PR merged)"
+                        echo "  Would remove worktree $current_path and branch $current_branch ($reason)"
                     else
-                        echo "  Removing worktree $current_path (PR merged)"
+                        echo "  Removing worktree $current_path ($reason)"
                         # wt-remove (fish) runs the container's .wt-removerc
                         # hook before removing — same delegation takeover-pr
                         # uses for wt-add. upfind resolves the hook from cwd,
                         # which is $repo_dir here.
                         # -D: a squash-merged branch is never an ancestor of
-                        # main, so -d would refuse; the cherry check above
-                        # already proved its changes are in main.
+                        # main, so -d would refuse; the cherry or rev-list
+                        # check above already proved its changes are in main.
                         fish -c 'wt-remove $argv[1]' "$current_path" && git branch -D "$current_branch" || {
                             echo "  ERROR: failed to remove worktree or branch for $current_branch" >&2
                             had_errors=1
