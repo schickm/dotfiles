@@ -5,6 +5,12 @@ set -euo pipefail
 
 INPUT=$(cat)
 
+# --- Skip background sessions (claude --bg, e.g. started by review-desk) ---
+# Hooks get a filtered environment; the one background marker that reaches
+# them is CLAUDE_JOB_DIR (~/.claude/jobs/<id>). A background session has no
+# window to focus, and review-desk shows its state, so send no notification.
+[[ -n "${CLAUDE_JOB_DIR:-}" ]] && exit 0
+
 # --- Flag the workspace "needs attention" while a permission prompt is up ---
 # (whether it ends up as the CLI prompt or our notification). The focused/CLI
 # path can't observe the answer; workspace-activity's PreToolUse/Stop events
