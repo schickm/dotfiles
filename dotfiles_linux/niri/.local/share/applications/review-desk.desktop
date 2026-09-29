@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Review Desk
+GenericName=PR review sessions
+Comment=Open review-desk (http://127.0.0.1:7788) as a Chrome app in the work profile
+Keywords=review;desk;pr;pull;request;claude;
+Icon=google-chrome
+Exec=env -u XDG_ACTIVATION_TOKEN /usr/bin/google-chrome-stable "--profile-directory=Profile 1" --app=http://127.0.0.1:7788
+Terminal=false
+StartupNotify=false
+Categories=Development;
