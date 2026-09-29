@@ -19,7 +19,6 @@ exclude_worktrees=(
     "master"
     "main"
     "trunk"
-    "pr-review"
 )
 
 is_excluded() {
