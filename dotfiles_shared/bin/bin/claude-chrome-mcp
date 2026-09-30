@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# Launch the chrome-devtools MCP server for the project in the current
+# directory. Claude Code starts stdio MCP servers with the project directory as
+# cwd, so this script can derive the per-project Chrome profile and debug port
+# itself (via claude-cdp-info, the single source of truth) instead of relying
+# on CDP_PROFILE/CDP_PORT being exported by whoever launched Claude. Sessions
+# started by the Claude Code daemon, review-desk, or the desktop app never went
+# through the `claude` fish function and ended up with the literal "${CDP_PORT}".
+#
+# If another live Chrome already holds the project profile (a second Claude
+# session in the same worktree), clone the profile to a per-session directory
+# and pick a free port so both sessions can drive a browser. The clone keeps
+# logins and extensions but drops caches, and is removed when the server exits.
+#
+# Extra arguments are appended to the chrome-devtools-mcp command line.
+set -euo pipefail
+
+log() { printf 'claude-chrome-mcp: %s\n' "$*" >&2; }
+
+template="$HOME/.cache/claude-chrome-template"
+clone_root="$HOME/.cache/claude-chrome-clones"
+
+mapfile -t info < <(fish -c 'claude-cdp-info "$argv[1]"' -- "$PWD")
+profile="${info[0]:-}"
+port="${info[1]:-}"
+if [[ -z "$profile" || -z "$port" ]]; then
+    log "claude-cdp-info gave no profile/port for $PWD"
+    exit 1
+fi
+
+# Seed the profile from the template on first use (logins/extensions), since the
+# MCP may launch Chrome before `claude-chrome` ever runs for this project.
+if [[ ! -d "$profile" ]]; then
+    mkdir -p "$(dirname "$profile")"
+    cp -r "$template" "$profile"
+    log "seeded $profile from template"
+fi
+
+# Chrome's SingletonLock is a symlink named <host>-<pid>. It is live only when
+# that pid still runs; Chrome itself reclaims a stale one.
+lock_pid() {
+    local target
+    target=$(readlink "$1/SingletonLock" 2>/dev/null) || return 1
+    printf '%s' "${target##*-}"
+}
+
+port_free() { ! ss -ltnH "sport = :$1" | grep -q .; }
+
+clone=""
+cleanup() {
+    if [[ -n "$clone" ]]; then
+        rm -rf "$clone"
+        log "removed clone $clone"
+    fi
+}
+
+holder=$(lock_pid "$profile" || true)
+if [[ -n "$holder" ]] && kill -0 "$holder" 2>/dev/null; then
+    clone="$clone_root/$(basename "$(dirname "$profile")")-$$"
+    log "$profile is held by live pid $holder; cloning to $clone"
+    mkdir -p "$clone_root"
+    cp -a "$profile" "$clone"
+    rm -f "$clone"/Singleton{Lock,Socket,Cookie}
+    rm -rf "$clone"/Default/{Cache,"Code Cache",GPUCache,"Service Worker/CacheStorage"} \
+           "$clone"/{extensions_crx_cache,component_crx_cache,optimization_guide_model_store,GrShaderCache,GraphiteDawnCache}
+    profile="$clone"
+    trap cleanup EXIT
+
+    candidate=$((port + 1))
+    while ! port_free "$candidate"; do candidate=$((candidate + 1)); done
+    port=$candidate
+fi
+
+log "profile=$profile port=$port"
+
+# Run as a child (not exec) so the EXIT trap can remove the clone. Forward
+# termination so the MCP shuts Chrome down cleanly. The explicit <&0 matters:
+# without job control, bash gives a backgrounded command /dev/null as stdin.
+npx -y chrome-devtools-mcp@latest \
+    --headless \
+    --userDataDir="$profile" \
+    --viewport=1440x900 \
+    --experimentalVision \
+    --chromeArg=--password-store=basic \
+    --chromeArg=--disable-features=LocalNetworkAccessChecks \
+    --chromeArg=--remote-debugging-port="$port" \
+    "$@" <&0 &
+child=$!
+trap 'kill -TERM "$child" 2>/dev/null' TERM INT
+wait "$child" || status=$?
+trap - TERM INT
+exit "${status:-0}"
