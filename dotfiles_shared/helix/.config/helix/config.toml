@@ -14,6 +14,20 @@ theme = "solarized_light"
 [keys.normal.space]
 u = ":update"
 
+# Toggle the file-picker filters, so `space /` and `space f` also reach
+# gitignored and hidden files. git-ignore goes last so the status line
+# reports it. Add file-picker.git-global / .git-exclude / .parents here
+# if those ever need toggling too.
+i = [":toggle file-picker.hidden", ":toggle file-picker.git-ignore"]
+
+# Git submenu, same key sequence as the Kakoune mapping (space t b).
+# tig gets a kitty overlay window, so Helix keeps its own screen intact.
+# `t` renders as a blank row in the space menu: a submenu built from config
+# always gets an empty name (KeyTrieNode::new("", ..) in helix keymap.rs),
+# and infobox() prints no line for an empty description. Nothing to fix here.
+[keys.normal.space.t]
+b = ":run-shell-command kitty @ launch --no-response --type=overlay --cwd=current tig blame +%{cursor_line} -- \"%{file_path_absolute}\""
+
 [keys.insert]
 C-c = "normal_mode"
 

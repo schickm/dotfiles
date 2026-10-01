@@ -4,6 +4,9 @@
 # or that have no PR and no commits beyond the main branch,
 # across every repo container in ~/workvc (see worktree-lib.sh).
 # Exits non-zero if any worktree has uncommitted or unmerged work.
+# When run from a terminal (stdin and stdout are TTYs; not the case under
+# systemd), each such error instead shows the worktree's diff and prompts to
+# open a kitty terminal there, force the removal, or skip.
 # Usage: github-worktree-cleanup.sh [--dry-run]
 
 source "$(dirname "$(readlink -f "$0")")/worktree-lib.sh"
@@ -15,6 +18,11 @@ if [ "${1:-}" = "--dry-run" ] || [ "${1:-}" = "-n" ]; then
 fi
 
 had_errors=0
+
+interactive=0
+if [ -t 0 ] && [ -t 1 ]; then
+    interactive=1
+fi
 
 exclude_worktrees=(
     "master"
@@ -47,6 +55,75 @@ workspace_has_windows() {
     jq -e --arg name "$name" \
         '.[] | select(.name == $name and .active_window_id != null)' \
         >/dev/null 2>&1 <<<"$niri_workspaces"
+}
+
+# Extra args (e.g. --force) go to `git worktree remove` via wt-remove.
+remove_worktree() {
+    local wt_path="$1" branch="$2"
+    shift 2
+    if [ "$dry_run" -eq 1 ]; then
+        echo "  Would remove worktree $wt_path and branch $branch"
+        return 0
+    fi
+    # wt-remove (fish) runs the container's .wt-removerc hook before
+    # removing — same delegation takeover-pr uses for wt-add. upfind
+    # resolves the hook from cwd, which is the repo container here. The
+    # hook only reads $argv[1], so the path must come before any flags.
+    # -D: a squash-merged branch is never an ancestor of main, so -d would
+    # refuse; callers have already proved its changes are in main (or the
+    # user chose to force it).
+    fish -c 'wt-remove $argv' "$wt_path" "$@" && git branch -D "$branch"
+}
+
+# Uncommitted changes, untracked files, and commits whose changes aren't in
+# main, paged. Reads $main_branch from the calling cleanup_repo.
+show_worktree_diff() {
+    local wt_path="$1" branch="$2"
+    {
+        echo "### git status: $wt_path"
+        git -C "$wt_path" -c color.ui=always status --short
+        echo
+        echo "### Uncommitted changes (vs HEAD)"
+        git -C "$wt_path" -c color.ui=always diff HEAD
+        echo
+        echo "### Commits on $branch whose changes are not in origin/$main_branch"
+        git -c color.ui=always log -p --cherry-pick --right-only \
+            "origin/$main_branch...$branch" 2>/dev/null
+    } | less -RFX
+}
+
+# Report a per-worktree error. Non-interactive runs flag it for the exit
+# status; interactive runs let the user inspect and resolve it instead.
+worktree_error() {
+    local message="$1" wt_path="$2" branch="$3" choice
+    echo "  ERROR: $message" >&2
+    if [ "$interactive" -eq 0 ]; then
+        had_errors=1
+        return
+    fi
+
+    show_worktree_diff "$wt_path" "$branch"
+    # Prompts read /dev/tty: stdin is the `git worktree list` loop.
+    while true; do
+        read -r -n1 -p "  [t]erminal, [d]elete anyway, [s]kip? " choice </dev/tty
+        echo
+        case "$choice" in
+            t)
+                setsid -f kitty --directory "$wt_path" >/dev/null 2>&1
+                ;;
+            d)
+                remove_worktree "$wt_path" "$branch" --force || {
+                    echo "  ERROR: forced removal failed for $branch" >&2
+                    had_errors=1
+                }
+                return
+                ;;
+            s)
+                echo "  Skipping $branch"
+                return
+                ;;
+        esac
+    done
 }
 
 cleanup_repo() {
@@ -129,8 +206,8 @@ cleanup_repo() {
                     if [ -n "$unpushed" ]; then
                         echo "  Skipping $current_branch (no PR found, $unpushed commit(s) not in $main_branch)"
                     else
-                        echo "  ERROR: could not compare $current_branch with origin/$main_branch, skipping" >&2
-                        had_errors=1
+                        worktree_error "could not compare $current_branch with origin/$main_branch, skipping" \
+                            "$current_path" "$current_branch"
                     fi
                 elif [ "$open_prs" -gt 0 ]; then
                     echo "  Skipping $current_branch (PR is open)"
@@ -142,8 +219,8 @@ cleanup_repo() {
                         # not leftovers — skip quietly rather than error.
                         echo "  Skipping $current_branch (no PR found, has uncommitted or untracked changes)"
                     else
-                        echo "  ERROR: $current_path has uncommitted or untracked changes, skipping" >&2
-                        had_errors=1
+                        worktree_error "$current_path has uncommitted or untracked changes, skipping" \
+                            "$current_path" "$current_branch"
                     fi
                 else
                     if [ "$no_pr_empty" -eq 1 ]; then
@@ -157,23 +234,13 @@ cleanup_repo() {
                         unpushed=$(git cherry "origin/$main_branch" "$current_branch" 2>/dev/null | grep -c '^+')
                     fi
                     if [ "$unpushed" -gt 0 ]; then
-                        echo "  ERROR: $current_branch has $unpushed local commit(s) whose changes are not in $main_branch, skipping (PR merged but local commits may be lost)" >&2
-                        had_errors=1
-                    elif [ "$dry_run" -eq 1 ]; then
-                        echo "  Would remove worktree $current_path and branch $current_branch ($reason)"
+                        worktree_error "$current_branch has $unpushed local commit(s) whose changes are not in $main_branch, skipping (PR merged but local commits may be lost)" \
+                            "$current_path" "$current_branch"
                     else
-                        echo "  Removing worktree $current_path ($reason)"
-                        # wt-remove (fish) runs the container's .wt-removerc
-                        # hook before removing — same delegation takeover-pr
-                        # uses for wt-add. upfind resolves the hook from cwd,
-                        # which is $repo_dir here.
-                        # -D: a squash-merged branch is never an ancestor of
-                        # main, so -d would refuse; the cherry or rev-list
-                        # check above already proved its changes are in main.
-                        fish -c 'wt-remove $argv[1]' "$current_path" && git branch -D "$current_branch" || {
-                            echo "  ERROR: failed to remove worktree or branch for $current_branch" >&2
-                            had_errors=1
-                        }
+                        [ "$dry_run" -eq 1 ] || echo "  Removing worktree $current_path ($reason)"
+                        remove_worktree "$current_path" "$current_branch" ||
+                            worktree_error "failed to remove worktree or branch for $current_branch" \
+                                "$current_path" "$current_branch"
                     fi
                 fi
             fi

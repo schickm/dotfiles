@@ -129,7 +129,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "ccstatusline",
+    "command": "input=$(cat); cwd=$(echo \"$input\" | jq -r '.workspace.current_dir'); printf '[%s@%s %s]' \"$(whoami)\" \"$(hostname -s)\" \"$(basename \"$cwd\")\"",
     "padding": 0
   },
   "enabledPlugins": {
@@ -151,17 +151,24 @@
       }
     }
   },
+  "outputStyle": "ELI5 (Simplified Technical English)",
   "sandbox": {
     "enabled": false,
     "autoAllowBashIfSandboxed": true
   },
+  "feedbackDrafts": "off",
   "alwaysThinkingEnabled": true,
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "high"
+    }
+  },
   "tui": "fullscreen",
+  "autoMemoryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "theme": "light",
   "preferredNotifChannel": "notifications_disabled",
   "remoteControlAtStartup": false,
   "inputNeededNotifEnabled": false,
-  "agentPushNotifEnabled": false,
-  "outputStyle": "ELI5 (Simplified Technical English)"
+  "agentPushNotifEnabled": false
 }
