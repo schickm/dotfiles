@@ -129,7 +129,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "input=$(cat); cwd=$(echo \"$input\" | jq -r '.workspace.current_dir'); printf '[%s@%s %s]' \"$(whoami)\" \"$(hostname -s)\" \"$(basename \"$cwd\")\"",
+    "command": "ccstatusline",
     "padding": 0
   },
   "enabledPlugins": {
