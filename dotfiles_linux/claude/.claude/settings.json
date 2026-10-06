@@ -125,6 +125,17 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.local/bin/corvid memory pinned"
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
