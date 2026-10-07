@@ -101,9 +101,6 @@ pr_url=$(with_notification "Resuming worktree..." "Looking up pull request..." \
 # worktrees get a repo-prefixed name (see workspace_name_for)
 niri-create-workspace "$ws_name"
 
-# Refresh waybar's per-repo workspace colors (a new worktree has no rule yet)
-waybar-workspace-colors || true
-
 # Chrome opens the repo's own URLs (from the .worktreerc worktree_urls
 # hook, e.g. a dev-server hotlink) plus issue/PR if present.
 chrome_urls=()

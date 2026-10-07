@@ -115,7 +115,7 @@ render_locked() {
        || ! workspaces=$(niri msg --json workspaces 2>/dev/null); then
         log "render: niri unreachable — leaving CSS as-is"
         # Still guarantee the file exists so style.css's @import never breaks.
-        [[ -f "$CSS_FILE" ]] || printf '%s\n' "$header" > "$CSS_FILE"
+        [[ -f "$CSS_FILE" || ! -d "${CSS_FILE%/*}" ]] || printf '%s\n' "$header" > "$CSS_FILE"
         return 0
     fi
     local now
@@ -190,6 +190,9 @@ render_locked() {
 }"
     done < <(printf '%s\n' "${!ws_state[@]}" | sort)
 
+    # waybar is retired (see deprecated/); without its config dir there is no
+    # consumer for the CSS. Claims above are still pruned for a future bar plugin.
+    [[ -d "${CSS_FILE%/*}" ]] || return 0
     if [[ ! -f "$CSS_FILE" ]] || [[ "$css" != "$(cat "$CSS_FILE")" ]]; then
         local tmp
         tmp=$(mktemp "$CSS_FILE.XXXXXX") || return 0

@@ -1,7 +1,5 @@
 .DS_Store
 dotfiles_linux/claude/.claude/skills/notify/config
-dotfiles_linux/waybar/.config/waybar/workspace-colors.css*
-dotfiles_linux/waybar/.config/waybar/workspace-activity.css*
 mise.toml
 # Machine-local Claude Code project config (settings.local.json etc.)
 # Root-anchored: dotfiles_linux/claude/.claude/ is tracked content (skills etc.)
