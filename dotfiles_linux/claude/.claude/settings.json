@@ -146,7 +146,8 @@
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,
     "workspace-manager-status@workspace-manager": false,
-    "cloudflare@cloudflare": false
+    "cloudflare@cloudflare": false,
+    "corvid@corvid": true
   },
   "extraKnownMarketplaces": {
     "mattpocock": {
@@ -159,6 +160,12 @@
       "source": {
         "source": "github",
         "repo": "cloudflare/skills"
+      }
+    },
+    "corvid": {
+      "source": {
+        "source": "directory",
+        "path": "/home/matt/workvc/corvid/live/capabilities/session/plugin"
       }
     }
   },
