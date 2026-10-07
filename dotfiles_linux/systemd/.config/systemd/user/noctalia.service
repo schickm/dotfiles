@@ -1,0 +1,19 @@
+[Unit]
+Description=Noctalia desktop shell (bar, launcher, notifications, lock screen)
+Documentation=https://docs.noctalia.dev/noctalia/
+PartOf=graphical-session.target
+After=graphical-session.target
+Requisite=graphical-session.target
+
+[Service]
+# Noctalia talks to niri over its IPC socket for workspaces and the ribbon
+# plugin; both variables are in the user manager's environment because niri
+# runs as niri.service.
+ExecCondition=/bin/sh -c '[ -n "$WAYLAND_DISPLAY" ] && [ -n "$NIRI_SOCKET" ]'
+ExecStart=/usr/bin/noctalia
+ExecReload=/usr/bin/noctalia msg config-reload
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

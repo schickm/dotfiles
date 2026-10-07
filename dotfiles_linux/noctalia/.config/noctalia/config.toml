@@ -1,0 +1,42 @@
+# Noctalia desktop shell (replaces waybar, swaync, swaylock and swayidle).
+# Started by noctalia.service (dotfiles_linux/systemd), wanted by niri.service.
+#
+# Settings changed in the GUI land in ~/.local/state/noctalia/settings.toml and
+# override this file. Keep durable choices here so a fresh machine matches.
+
+[theme]
+source = "builtin"
+builtin = "Noctalia"
+mode = "auto"
+
+[plugins]
+# Community plugins. `noctalia msg plugins enable <id>` fetches one; the list
+# here keeps it enabled on a fresh machine.
+enabled = ["luochen1990/niri-ribbon"]
+
+[widget.clock]
+format = "{:%l:%M}"
+
+# niri-ribbon: viewport strip for the niri scrolling layout.
+[widget.ribbon]
+type = "luochen1990/niri-ribbon:ribbon"
+# Match niri's layout { gaps 8; center-focused-column "never" }.
+gaps = 8.0
+viewport_model = "fit"
+show_active_window = true
+# Swapped from the plugin defaults (viewport_color "primary", active_window_color "secondary").
+viewport_color = "secondary"
+active_window_color = "primary"
+
+# Built-in workspaces widget: show niri workspace names instead of indices.
+# An unnamed workspace still shows its index. 20 is the widget's maximum.
+[widget.workspaces]
+show_labels = true
+label_source = "name"
+max_label_chars = 20
+labels_only_when_occupied = false
+
+[bar.default]
+start  = ["launcher", "wallpaper", "workspaces", "ribbon"]
+center = ["clock"]
+end    = ["tray", "notifications", "clipboard", "network", "bluetooth", "volume", "brightness", "battery", "cpu", "control-center", "session"]

@@ -27,7 +27,7 @@ input {
             // from org.freedesktop.locale1. You can control these using
             // localectl set-x11-keymap.
             // Programmer Dvorak first (default), plain qwerty second.
-            // Toggle with Mod+Space (switch-layout bind below).
+            // Toggle with Mod+Y (switch-layout bind below).
             layout "us,us"
             variant "dvp,"
         }
@@ -488,6 +488,21 @@ window-rule {
     clip-to-geometry true
 }
 
+// Noctalia's own windows (settings, plugin editors): float at the size the
+// Noctalia niri guide recommends instead of taking a tiling column.
+window-rule {
+    match app-id="dev.noctalia.Noctalia"
+    open-floating true
+    default-column-width { fixed 1080; }
+    default-window-height { fixed 920; }
+}
+
+// The Noctalia launcher and window switcher focus windows through
+// xdg-activation without a valid serial; without this niri ignores them.
+debug {
+    honor-xdg-activation-with-invalid-serial
+}
+
 // Drop shadow for the fuzzel launcher (it can't draw its own; niri shadows
 // the layer surface instead). Don't do this for mako: it renders every
 // notification on one surface, so the shadow wraps the whole stack — gaps
@@ -539,13 +554,14 @@ binds {
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+T hotkey-overlay-title="Open a Terminal: kitty" { spawn "kitty"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
+    Mod+Space hotkey-overlay-title="Run an Application: noctalia launcher" { spawn-sh "noctalia msg panel-toggle launcher"; }
     // fuzzel has no file mode; fuzzel-open pipes `fd` into it and opens the pick
     // with xdg-open. Set FUZZEL_OPEN_WIDTH to change the window width.
     Mod+Shift+D hotkey-overlay-title="Open a File: fuzzel-open" { spawn "fuzzel-open"; }
     Mod+E hotkey-overlay-title="Emoji Picker: bemoji" { spawn "bemoji" "-t"; }
     // Moved off Super+Alt+L so Mod+Alt+L is free for move-workspace-to-monitor-right.
     // Mod resolves to Super, so Mod+Alt+L and Super+Alt+L are the same key.
-    Mod+Ctrl+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
+    Mod+Ctrl+Alt+L hotkey-overlay-title="Lock the Screen: noctalia" { spawn-sh "noctalia msg session lock"; }
 
     // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
     // Note: the entire command goes as a single argument. It's passed verbatim to `sh -c`.
@@ -781,8 +797,8 @@ binds {
     // a matching layout switch hotkey configured in xkb options above.
     // Having both at once on the same hotkey will break the switching,
     // since it will switch twice upon pressing the hotkey (once by xkb, once by niri).
-    Mod+Space       { switch-layout "next"; }
-    Mod+Shift+Space { switch-layout "prev"; }
+    Mod+Y       { switch-layout "next"; }
+    Mod+Shift+Y { switch-layout "prev"; }
 
     Print { screenshot; }
     Ctrl+Print { screenshot-screen; }
