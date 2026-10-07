@@ -17,7 +17,14 @@ mode = "auto"
 [plugins]
 # Community plugins. `noctalia msg plugins enable <id>` fetches one; the list
 # here keeps it enabled on a fresh machine.
-enabled = ["luochen1990/niri-ribbon"]
+enabled = ["luochen1990/niri-ribbon", "matt/corvid-activity"]
+
+# corvid-activity is a local plugin (~/vc/noctalia-corvid-activity).
+[[plugins.source]]
+name     = "corvid-dev"
+kind     = "path"
+location = "~/vc/noctalia-corvid-activity"
+enabled  = true
 
 [widget.clock]
 format = "{:%l:%M}"
@@ -33,6 +40,10 @@ show_active_window = true
 viewport_color = "secondary"
 active_window_color = "primary"
 
+# Corvid Activity: one indicator per Corvid Workspace (Waiting, Working, Idle).
+[widget.corvid]
+type = "matt/corvid-activity:activity"
+
 # Built-in workspaces widget: show niri workspace names instead of indices.
 # An unnamed workspace still shows its index. 20 is the widget's maximum.
 [widget.workspaces]
@@ -42,6 +53,6 @@ max_label_chars = 20
 labels_only_when_occupied = false
 
 [bar.default]
-start  = ["launcher", "wallpaper", "workspaces", "ribbon"]
+start  = ["launcher", "wallpaper", "workspaces", "ribbon", "corvid"]
 center = ["clock"]
 end    = ["tray", "notifications", "clipboard", "network", "bluetooth", "volume", "brightness", "battery", "cpu", "control-center", "session"]
