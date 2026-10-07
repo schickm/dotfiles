@@ -4,6 +4,11 @@
 # Settings changed in the GUI land in ~/.local/state/noctalia/settings.toml and
 # override this file. Keep durable choices here so a fresh machine matches.
 
+[shell]
+# Noctalia's own polkit authentication agent. polkit-gnome is no longer
+# started by the display-server role, so this is the only agent in the session.
+polkit_agent = true
+
 [theme]
 source = "builtin"
 builtin = "Noctalia"
