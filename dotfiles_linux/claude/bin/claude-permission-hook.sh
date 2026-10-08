@@ -5,6 +5,19 @@ set -euo pipefail
 
 INPUT=$(cat)
 
+# --- Auto-approve entering Corvid worktrees ---
+# EnterWorktree prompts for any path outside .claude/worktrees/, which covers
+# every Corvid worktree. Placed before the background-session skip so bg jobs
+# get the approval too.
+if jq -e --arg root "$HOME/corvid-workspaces/" '
+    .tool_name == "EnterWorktree"
+    and ((.tool_input.path // "") | startswith($root))
+    and ((.tool_input.path // "") | contains("/../") | not)
+' <<<"$INPUT" >/dev/null; then
+    jq -n '{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow"}}}'
+    exit 0
+fi
+
 # --- Skip background sessions (claude --bg, e.g. started by review-desk) ---
 # Hooks get a filtered environment; the one background marker that reaches
 # them is CLAUDE_JOB_DIR (~/.claude/jobs/<id>). A background session has no
