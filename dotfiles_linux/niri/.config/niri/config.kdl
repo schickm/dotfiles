@@ -519,6 +519,18 @@ layer-rule {
     geometry-corner-radius 8
 }
 
+// The Mod+Dollar drop-down kitty (kitten quick-access-terminal).
+layer-rule {
+    match namespace="^kitty-quick-access$"
+    shadow {
+        on
+        softness 30
+        spread 5
+        offset x=0 y=5
+        color "#0007"
+    }
+}
+
 binds {
     // Keys consist of modifiers separated by + signs, followed by an XKB key name
     // in the end. To find an XKB name for a particular key, you may use a program
@@ -553,6 +565,10 @@ binds {
 
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+T hotkey-overlay-title="Open a Terminal: kitty" { spawn "kitty"; }
+    // Drop-down kitty running a one-off Claude session; press again to show/hide.
+    // The key left of 1: Dollar in Programmer Dvorak, Grave in qwerty.
+    Mod+Dollar hotkey-overlay-title="Drop-down Claude" { spawn "kitten" "quick-access-terminal" "claude" "--model" "haiku"; }
+    Mod+Grave hotkey-overlay-title=null { spawn "kitten" "quick-access-terminal" "claude" "--model" "haiku"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
     Mod+Space hotkey-overlay-title="Run an Application: noctalia launcher" { spawn-sh "noctalia msg panel-toggle launcher"; }
     // fuzzel has no file mode; fuzzel-open pipes `fd` into it and opens the pick
