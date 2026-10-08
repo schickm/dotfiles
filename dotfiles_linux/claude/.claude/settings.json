@@ -20,7 +20,7 @@
       "Skill(qa-notes)",
       "Bash(~/.claude/skills/notify/push.sh:*)"
     ],
-    "defaultMode": "auto",
+    "defaultMode": "bypassPermissions",
     "additionalDirectories": [
       "~/workvc/rwgps-ui/",
       "/tmp"
@@ -144,7 +144,7 @@
     "padding": 0
   },
   "enabledPlugins": {
-    "typescript-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": false,
     "workspace-manager-status@workspace-manager": false,
     "cloudflare@cloudflare": false,
     "corvid@corvid": true
@@ -165,7 +165,7 @@
     "corvid": {
       "source": {
         "source": "directory",
-        "path": "/home/matt/workvc/corvid/live/capabilities/session/plugin"
+        "path": "/home/matt/.local/share/corvid/live/capabilities/session/plugin"
       }
     }
   },
