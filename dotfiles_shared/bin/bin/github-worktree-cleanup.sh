@@ -177,6 +177,19 @@ cleanup_repo() {
         elif [ -z "$line" ]; then
             # End of worktree entry — process it
             if [ -n "$current_branch" ] && [ "$current_branch" != "$main_branch" ] && [ -n "$current_path" ]; then
+                # Corvid Worktrees live under a Workspace Directory, outside the
+                # container, and are not this script's to remove — a fresh one
+                # with no commits would otherwise match "no PR, no commits".
+                case "$current_path" in
+                "$repo_dir"/*) ;;
+                *)
+                    echo "  Skipping worktree outside this container: $current_path"
+                    current_path=""
+                    current_branch=""
+                    continue
+                    ;;
+                esac
+
                 # Check if worktree directory is excluded
                 local_dir_name="${current_path##*/}"
                 if is_excluded "$local_dir_name"; then
