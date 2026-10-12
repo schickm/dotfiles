@@ -18,7 +18,8 @@
       "mcp__chrome-devtools__*",
       "Skill(notify)",
       "Skill(qa-notes)",
-      "Bash(~/.claude/skills/notify/push.sh:*)"
+      "Bash(~/.claude/skills/notify/push.sh:*)",
+      "Bash(corvid:*)"
     ],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [
@@ -147,7 +148,11 @@
     "typescript-lsp@claude-plugins-official": false,
     "workspace-manager-status@workspace-manager": false,
     "cloudflare@cloudflare": false,
-    "corvid@corvid": true
+    "corvid@corvid": true,
+    "cc-plugin-plugin-authoring@builtin": false,
+    "cc-plugin-telemetry@builtin": false,
+    "cc-plugin-sec-default@builtin": false,
+    "cc-plugin-diff@builtin": false
   },
   "extraKnownMarketplaces": {
     "mattpocock": {
