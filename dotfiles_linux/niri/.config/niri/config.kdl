@@ -565,10 +565,11 @@ binds {
 
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+T hotkey-overlay-title="Open a Terminal: kitty" { spawn "kitty"; }
-    // Drop-down kitty running a one-off Claude session; press again to show/hide.
+    // Drop-down kitty attached to the persistent Corvid Session `dropdown` (Haiku, auto mode, no bypass);
+    // press again to show/hide. Closing the panel detaches; the Session keeps running.
     // The key left of 1: Dollar in Programmer Dvorak, Grave in qwerty.
-    Mod+Dollar hotkey-overlay-title="Drop-down Claude" { spawn "kitten" "quick-access-terminal" "claude" "--model" "haiku"; }
-    Mod+Grave hotkey-overlay-title=null { spawn "kitten" "quick-access-terminal" "claude" "--model" "haiku"; }
+    Mod+Dollar hotkey-overlay-title="Drop-down Claude" { spawn-sh "kitten quick-access-terminal corvid session open dropdown --dir ~ --model haiku --permission-mode auto"; }
+    Mod+Grave hotkey-overlay-title=null { spawn-sh "kitten quick-access-terminal corvid session open dropdown --dir ~ --model haiku --permission-mode auto"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
     Mod+Space hotkey-overlay-title="Run an Application: noctalia launcher" { spawn-sh "noctalia msg panel-toggle launcher"; }
     // fuzzel has no file mode; fuzzel-open pipes `fd` into it and opens the pick
