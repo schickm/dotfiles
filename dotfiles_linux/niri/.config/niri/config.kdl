@@ -8,7 +8,6 @@
 // https://yalter.github.io/niri/Configuration:-Input
 
 workspace "personal"
-workspace "rwgps"
 // Off-screen holding workspace for the "hide floating windows" toggle
 // (niri-toggle-hide-floating.sh).
 workspace "scratch"
