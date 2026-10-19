@@ -40,3 +40,9 @@ Every pull request or issue number shown to me must be a markdown link — in pr
 ## System Configuration
 
 Much of my configuration is version controlled in my "dotfiles" repository found at ~/vc/dotfiles. If you're trying to edit a dotfile anywhere on this machine, check if it's a symlink first. If it is, then edit the target of the symlink instead.
+
+## Preferred Tooling
+
+When building software, I prefer the following tooling to be used when it makes sense:
+- [Mise-en-place](https://mise.jdx.dev/) for managing dependencies
+- [fnox](https://fnox.jdx.dev/) for managing secrets
