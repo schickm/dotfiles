@@ -1,0 +1,11 @@
+#!/bin/sh
+# Install every VS Code extension listed in extensions.txt (one ID per line).
+# Already-installed extensions are skipped, so this is safe to re-run.
+set -eu
+
+LIST="${XDG_CONFIG_HOME:-$HOME/.config}/Code - OSS/User/extensions.txt"
+
+while read -r id; do
+    case "$id" in '' | '#'*) continue ;; esac
+    code --install-extension "$id"
+done <"$LIST"
