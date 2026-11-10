@@ -126,17 +126,6 @@
           }
         ]
       }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.local/bin/corvid memory pinned"
-          }
-        ]
-      }
     ]
   },
   "statusLine": {
@@ -148,7 +137,7 @@
     "typescript-lsp@claude-plugins-official": false,
     "workspace-manager-status@workspace-manager": false,
     "cloudflare@cloudflare": false,
-    "corvid@corvid": true,
+    "corvid@corvid": false,
     "cc-plugin-plugin-authoring@builtin": false,
     "cc-plugin-telemetry@builtin": false,
     "cc-plugin-sec-default@builtin": false,
