@@ -2,5 +2,11 @@
     "workbench.colorTheme": "Solarized Light",
     "workbench.editorAssociations": {
         "*.pdf": "pdf.preview"
+    },
+    "git.confirmSync": false,
+    "git.autofetch": true,
+    "editor.minimap.enabled": false,
+    "[yaml]": {
+        "editor.wordWrap": "on"
     }
 }
