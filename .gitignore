@@ -3,5 +3,6 @@ dotfiles_linux/claude/.claude/skills/notify/config
 mise.toml
 # Machine-local Claude Code project config (settings.local.json etc.)
 # Root-anchored: dotfiles_linux/claude/.claude/ is tracked content (skills etc.)
-/.claude/
+/.claude/*
+!/.claude/skills/
 __pycache__/
