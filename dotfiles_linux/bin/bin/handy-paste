@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Handy external paste script: add a final period when the transcription
+# has no terminal punctuation, then paste it via the clipboard and restore
+# the previous clipboard contents.
+text="$1"
+[[ -z "${text//[[:space:]]/}" ]] && exit 0
+
+# Keep any trailing whitespace (Handy's append_trailing_space) to re-add later.
+body="${text%"${text##*[![:space:]]}"}"
+tail="${text:${#body}}"
+
+# Look past closing quotes/brackets: `"stop."` is terminated, `(the docs)` is not.
+core="$body"
+while [[ "$core" == *[\"\'\)\]”’] ]]; do core="${core%?}"; done
+case "${core: -1}" in
+  [.\?\!:\;,…]) ;;
+  *) body="${body}." ;;
+esac
+
+out="${body}${tail}"
+
+# Save the current clipboard (its first offered MIME type) so it can be restored.
+saved="$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/handy-clip.XXXXXX")"
+trap 'rm -f "$saved"' EXIT
+type="$(wl-paste --list-types 2>/dev/null | head -n1)"
+if [[ -n "$type" ]]; then
+  wl-paste --no-newline --type "$type" >"$saved" 2>/dev/null || type=""
+fi
+
+printf '%s' "$out" | wl-copy --type 'text/plain;charset=utf-8'
+sleep 0.05
+wtype -M ctrl -k v -m ctrl
+# Give the focused app time to read the clipboard before restoring it.
+sleep 0.25
+
+if [[ -n "$type" ]]; then
+  wl-copy --type "$type" <"$saved"
+else
+  wl-copy --clear
+fi
