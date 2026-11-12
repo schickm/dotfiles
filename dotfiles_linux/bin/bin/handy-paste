@@ -1,7 +1,33 @@
 #!/usr/bin/env bash
-# Handy external paste script: add a final period when the transcription
-# has no terminal punctuation, then paste it via the clipboard and restore
-# the previous clipboard contents.
+# handy-paste — external paste script for Handy (https://github.com/cjpais/Handy)
+#
+# Why: Handy's Parakeet model often omits the final period, so consecutive
+# dictations run together. This script adds a "." when the transcription has
+# no terminal punctuation (existing ? ! . : ; , … are kept, including when
+# followed by closing quotes/brackets), then pastes the text via the
+# clipboard and restores whatever was on the clipboard before.
+#
+# Setup:
+#   1. Stow this package so the script is at ~/bin/handy-paste
+#      (stow -d ~/vc/dotfiles/dotfiles_linux -t ~ bin).
+#   2. In Handy's settings (advanced/experimental section):
+#        - Paste method:  External script
+#        - Script path:   /home/<user>/bin/handy-paste   (absolute path)
+#      These map to "paste_method": "external_script" and
+#      "external_script_path" in ~/.local/share/com.pais.handy/settings_store.json.
+#   3. Keep "append trailing space" on if you want dictations separated;
+#      Handy appends the space before calling this script, and it is preserved.
+#
+# Interface: Handy runs `handy-paste "<text>"` (text is argv[1]; stdin/stdout
+# are not connected) and waits for it to exit. The script must do the paste.
+#
+# Requirements: Wayland, wl-clipboard (wl-copy/wl-paste), wtype.
+#
+# Limitations:
+#   - Pastes with Ctrl+V; terminals that need Ctrl+Shift+V won't receive it.
+#   - Only the clipboard's first MIME type is saved/restored.
+#   - If an app reads the clipboard later than the 0.25s delay below, it gets
+#     the old contents; raise the sleep if that happens.
 text="$1"
 [[ -z "${text//[[:space:]]/}" ]] && exit 0
 
